@@ -1,5 +1,5 @@
 -- 2) Security: helper functions, column permissions and RLS policies
--- Run this second.
+-- Run this second. Safe to run more than once.
 
 -- Helper functions live in a "private" schema that the public API cannot call.
 -- They are SECURITY DEFINER so policies on profiles can look up the caller's
@@ -45,11 +45,13 @@ grant select on public.academies to authenticated;
 
 -- PROFILES -----------------------------------------------------------------
 
+drop policy if exists "Users can read their own profile" on public.profiles;
 create policy "Users can read their own profile"
   on public.profiles for select
   to authenticated
   using (id = (select auth.uid()));
 
+drop policy if exists "Academy admins can read profiles in their academy" on public.profiles;
 create policy "Academy admins can read profiles in their academy"
   on public.profiles for select
   to authenticated
@@ -59,11 +61,13 @@ create policy "Academy admins can read profiles in their academy"
     and academy_id = (select private.current_user_academy_id())
   );
 
+drop policy if exists "Super admins can read all profiles" on public.profiles;
 create policy "Super admins can read all profiles"
   on public.profiles for select
   to authenticated
   using ((select private.current_user_role()) = 'super_admin');
 
+drop policy if exists "Users can update their own profile" on public.profiles;
 create policy "Users can update their own profile"
   on public.profiles for update
   to authenticated
@@ -89,17 +93,20 @@ begin
 end;
 $$;
 
+drop trigger if exists profiles_prevent_role_change on public.profiles;
 create trigger profiles_prevent_role_change
   before update on public.profiles
   for each row execute function private.prevent_role_change();
 
 -- ACADEMIES ----------------------------------------------------------------
 
+drop policy if exists "Members can read their own academy" on public.academies;
 create policy "Members can read their own academy"
   on public.academies for select
   to authenticated
   using (id = (select private.current_user_academy_id()));
 
+drop policy if exists "Super admins can read all academies" on public.academies;
 create policy "Super admins can read all academies"
   on public.academies for select
   to authenticated
