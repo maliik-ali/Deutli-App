@@ -13,5 +13,5 @@ npm run build && npm run lint
 
 ## Deploy
 
-Live: https://g2d-app-ali-3548.vercel.app — hosted on Vercel, connected to this repo: every push to `main` deploys automatically.
+Live: https://g2d-app.vercel.app — hosted on Vercel, connected to this repo: every push to `main` deploys automatically.
 Environment variables to set in Vercel are listed in [docs/SETUP.md](docs/SETUP.md) (section C).
