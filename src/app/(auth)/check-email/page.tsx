@@ -33,6 +33,22 @@ export default async function CheckEmailPage(props: PageProps<"/check-email">) {
         <li>• The email can take a minute to arrive.</li>
         <li>• Check your spam or promotions folder.</li>
         <li>• Open the link on this device, in this browser.</li>
+        {!isReset && (
+          <li>
+            • Already have an account with this email? Then no new email is sent —{" "}
+            <Link href="/login" className="py-3 font-semibold text-foreground underline underline-offset-4 hover:text-gold-ink">
+              log in
+            </Link>{" "}
+            or{" "}
+            <Link
+              href="/forgot-password"
+              className="py-3 font-semibold text-foreground underline underline-offset-4 hover:text-gold-ink"
+            >
+              reset your password
+            </Link>
+            .
+          </li>
+        )}
       </ul>
       <div className="grid gap-3">
         <Button asChild size="lg" variant="outline">
