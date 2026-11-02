@@ -1,0 +1,115 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/*
+ * Gateway2Deutsch design tokens (g2d-ui skill).
+ * Every colour lives here. Components use the Tailwind names below
+ * (bg-ink, text-gold-ink, border-border …), never raw hex values.
+ */
+:root {
+  /* Brand */
+  --ink: #0d0e1a;
+  --ink-foreground: #ffffff;
+  --gold: #f2b53a;
+  --gold-foreground: #0d0e1a;
+  --gold-ink: #8a5a00; /* dark-gold text */
+  --gold-soft: #fff3d6; /* active nav fill */
+  --success: #166534;
+  --success-soft: #e8f6ec;
+
+  /* Surfaces & text */
+  --background: #f7f7fb;
+  --foreground: #14151f;
+  --card: #ffffff;
+  --card-foreground: #14151f;
+  --popover: #ffffff;
+  --popover-foreground: #14151f;
+  --muted: #f0f0f6;
+  --muted-foreground: #4f5266;
+  --subtle-foreground: #5b5e70;
+  --border: #e6e7ef;
+  --input: #d9dae5;
+  --ring: #0d0e1a;
+
+  /* shadcn semantic aliases */
+  --primary: var(--gold);
+  --primary-foreground: var(--gold-foreground);
+  --secondary: #ffffff;
+  --secondary-foreground: var(--ink);
+  --accent: var(--gold-soft);
+  --accent-foreground: var(--ink);
+  --destructive: #b42318;
+  --destructive-soft: #fdecea;
+
+  --radius: 1rem; /* 16px cards */
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+  --color-gold-ink: var(--gold-ink);
+  --color-gold-soft: var(--gold-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-soft: var(--destructive-soft);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-jakarta), var(--font-inter), ui-sans-serif, sans-serif;
+  --font-urdu: var(--font-nastaliq), serif;
+
+  --radius-sm: calc(var(--radius) - 8px);
+  --radius-md: calc(var(--radius) - 6px);
+  --radius-lg: calc(var(--radius) - 4px);
+  --radius-xl: var(--radius);
+  --radius-2xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-size: 15px;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-heading tracking-tight;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+@utility urdu {
+  font-family: var(--font-urdu);
+  line-height: 2.1;
+}
