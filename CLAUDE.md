@@ -47,4 +47,5 @@ Always use the `g2d-ui` skill (.claude/skills/g2d-ui) for any screen.
 - Always check user + role with `requireUser()` from `src/lib/auth/dal.ts` in protected pages.
 - Dashboard uses sample data from `src/lib/sample-data.ts`.
 - Setup steps for Supabase/Vercel: `docs/SETUP.md`.
-- Live site: https://g2d-app.vercel.app (Supabase project ref epawkdeosmuvczpsyoru). Supabase Site URL + redirect URL are set to it.
+- Live app: https://app.werkui.com (custom domain on Vercel; g2d-app.vercel.app also works). werkui.com (root) is reserved for a separate landing page, not this app.
+- Supabase project ref: epawkdeosmuvczpsyoru. Supabase Site URL and Vercel SITE_URL must both be https://app.werkui.com.

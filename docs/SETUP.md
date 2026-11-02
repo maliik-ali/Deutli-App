@@ -1,5 +1,7 @@
 # Setup guide (Supabase + Vercel)
 
+The app lives at **https://app.werkui.com**. (`werkui.com` itself is kept for a separate landing page.)
+
 Do these once. Takes about 15 minutes.
 
 ## A. Supabase — create the database tables
@@ -20,8 +22,8 @@ a green "RLS enabled" label.
 ## B. Supabase — login settings
 
 1. **Authentication → URL Configuration**
-   - Site URL: your Vercel address, e.g. `https://g2d-app.vercel.app`
-   - Redirect URLs → Add: `https://g2d-app.vercel.app/**` and `http://localhost:3000/**`
+   - Site URL: `https://app.werkui.com`
+   - Redirect URLs → Add: `https://app.werkui.com/**` and `http://localhost:3000/**`
 2. **Authentication → Email Templates** (recommended — makes email links work on any device)
    - "Confirm signup": replace the link with
      `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/dashboard`
@@ -39,7 +41,7 @@ a green "RLS enabled" label.
 2. In Vercel: your project → **Settings → Environment Variables** → add:
    - `SUPABASE_URL` = the Project URL
    - `SUPABASE_PUBLISHABLE_KEY` = the publishable key
-   - `SITE_URL` = your Vercel address (no slash at the end)
+   - `SITE_URL` = `https://app.werkui.com` (no slash at the end)
 3. **Deployments** → latest → **⋯ → Redeploy**.
 
 Never paste the **secret** key (`sb_secret_…` / service_role) into Vercel with a
