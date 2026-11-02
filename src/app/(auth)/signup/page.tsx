@@ -18,7 +18,7 @@ export default async function SignupPage() {
       <SignupForm />
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login" className="font-semibold text-foreground underline underline-offset-4 hover:text-gold-ink">
+        <Link href="/login" className="py-3 font-semibold text-foreground underline underline-offset-4 hover:text-gold-ink">
           Log in
         </Link>
       </p>

@@ -12,7 +12,7 @@ export default function ForgotPasswordPage() {
     <div className="grid gap-8">
       <Link
         href="/login"
-        className="inline-flex w-fit items-center gap-1.5 rounded text-sm font-medium text-muted-foreground hover:text-foreground"
+        className="-my-3 inline-flex min-h-11 w-fit items-center gap-1.5 rounded text-sm font-medium text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-4" aria-hidden /> Back to log in
       </Link>

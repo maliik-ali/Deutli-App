@@ -42,7 +42,7 @@ export default async function CheckEmailPage(props: PageProps<"/check-email">) {
           Wrong email?{" "}
           <Link
             href={isReset ? "/forgot-password" : "/signup"}
-            className="font-semibold text-foreground underline underline-offset-4 hover:text-gold-ink"
+            className="py-3 font-semibold text-foreground underline underline-offset-4 hover:text-gold-ink"
           >
             Try again
           </Link>

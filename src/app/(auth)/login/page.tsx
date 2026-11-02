@@ -26,7 +26,7 @@ export default async function LoginPage(props: PageProps<"/login">) {
       <LoginForm message={message} />
       <p className="text-center text-sm text-muted-foreground">
         New to Gateway2Deutsch?{" "}
-        <Link href="/signup" className="font-semibold text-foreground underline underline-offset-4 hover:text-gold-ink">
+        <Link href="/signup" className="py-3 font-semibold text-foreground underline underline-offset-4 hover:text-gold-ink">
           Create an account
         </Link>
       </p>

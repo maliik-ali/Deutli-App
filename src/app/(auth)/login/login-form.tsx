@@ -56,7 +56,7 @@ export function LoginForm({
         labelAction={
           <Link
             href="/forgot-password"
-            className="rounded text-sm font-medium text-gold-ink underline-offset-4 hover:underline"
+            className="-my-3 rounded py-3 text-sm font-medium text-gold-ink underline-offset-4 hover:underline"
           >
             Forgot password?
           </Link>

@@ -6,13 +6,15 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="grid min-h-dvh bg-card lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
       <div className="flex flex-col px-4 py-6 sm:px-10 sm:py-8">
-        <Logo />
+        <header>
+          <Logo />
+        </header>
         <main className="flex flex-1 items-center justify-center py-10">
           <div className="w-full max-w-[400px]">{children}</div>
         </main>
-        <p className="text-center text-[13px] text-subtle-foreground lg:text-left">
+        <footer className="text-center text-[13px] text-subtle-foreground lg:text-left">
           © Gateway2Deutsch · German B1 exam preparation
-        </p>
+        </footer>
       </div>
       <PromisePanel />
     </div>

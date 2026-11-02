@@ -37,6 +37,13 @@ Always use the `g2d-ui` skill (.claude/skills/g2d-ui) for any screen.
 5. Playbook PDF sales with free preview and discount code
 
 ## Status
-- [ ] Project setup + design tokens
-- [ ] Login, signup, password reset, logout
-- [ ] Role-based redirect + student dashboard (UI with sample data)
+- [x] Project setup + design tokens
+- [x] Login, signup, password reset, logout
+- [x] Role-based redirect + student dashboard (UI with sample data)
+
+## Notes for the next session
+- Next.js 16: `src/proxy.ts` (was middleware). cacheComponents is off on purpose (auth reads cookies per request).
+- Supabase keys are read only on the server at runtime (`src/lib/supabase/env.ts`); auth runs in server actions (`src/app/(auth)/actions.ts`).
+- Always check user + role with `requireUser()` from `src/lib/auth/dal.ts` in protected pages.
+- Dashboard uses sample data from `src/lib/sample-data.ts`.
+- Setup steps for Supabase/Vercel: `docs/SETUP.md`.
