@@ -2,44 +2,47 @@
 @import "tw-animate-css";
 
 /*
- * Gateway2Deutsch design tokens (g2d-ui skill).
+ * Deutli design tokens (from the Deutli Figma file, g2d-ui skill).
  * Every colour lives here. Components use the Tailwind names below
  * (bg-ink, text-gold-ink, border-border …), never raw hex values.
  */
 :root {
-  /* Brand */
-  --ink: #0d0e1a;
+  /* Brand (from the Deutli Figma file) */
+  --ink: #12245c; /* raised navy panel */
   --ink-foreground: #ffffff;
-  --gold: #f2b53a;
-  --gold-foreground: #0d0e1a;
-  --gold-ink: #8a5a00; /* dark-gold text */
-  --gold-soft: #fff3d6; /* active nav fill */
-  --success: #166534;
-  --success-soft: #e8f6ec;
+  --gold: #7161ff; /* Brand/Primary purple (token name kept for compatibility) */
+  --gold-foreground: #ffffff;
+  --gold-ink: #a79fff; /* readable purple for links on dark */
+  --gold-soft: #1d2560; /* active nav fill */
+  --brand-cyan: #00c2ff; /* Brand/Secondary */
+  --brand-magenta: #cb3cff; /* Brand/Territory */
+  --brand-gradient: linear-gradient(135deg, #7f25fb 30%, #cb3cff 91%);
+  --success: #39ffac;
+  --success-soft: #0e3b33;
 
-  /* Surfaces & text */
-  --background: #f7f7fb;
-  --foreground: #14151f;
-  --card: #ffffff;
-  --card-foreground: #14151f;
-  --popover: #ffffff;
-  --popover-foreground: #14151f;
-  --muted: #f0f0f6;
-  --muted-foreground: #4f5266;
-  --subtle-foreground: #5b5e70;
-  --border: #e6e7ef;
-  --input: #d9dae5;
-  --ring: #0d0e1a;
+  /* Surfaces & text (dark theme) */
+  --background: #081028; /* Background/Main */
+  --foreground: #ffffff;
+  --card: #0b1739; /* Background/Card */
+  --card-foreground: #ffffff;
+  --popover: #0b1739;
+  --popover-foreground: #ffffff;
+  --muted: #12245c;
+  --muted-foreground: #aeb9e1; /* Typography/Grey */
+  --subtle-foreground: #aeb9e1;
+  --border: #343b4f;
+  --input: #343b4f;
+  --ring: #a79fff;
 
   /* shadcn semantic aliases */
   --primary: var(--gold);
   --primary-foreground: var(--gold-foreground);
-  --secondary: #ffffff;
-  --secondary-foreground: var(--ink);
+  --secondary: #0b1739;
+  --secondary-foreground: #ffffff;
   --accent: var(--gold-soft);
-  --accent-foreground: var(--ink);
-  --destructive: #b42318;
-  --destructive-soft: #fdecea;
+  --accent-foreground: #ffffff;
+  --destructive: #ff6b6b;
+  --destructive-soft: #3b1222;
 
   --radius: 1rem; /* 16px cards */
 }
@@ -51,6 +54,8 @@
   --color-gold-foreground: var(--gold-foreground);
   --color-gold-ink: var(--gold-ink);
   --color-gold-soft: var(--gold-soft);
+  --color-brand-cyan: var(--brand-cyan);
+  --color-brand-magenta: var(--brand-magenta);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
 
@@ -75,8 +80,10 @@
   --color-destructive: var(--destructive);
   --color-destructive-soft: var(--destructive-soft);
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-jakarta), var(--font-inter), ui-sans-serif, sans-serif;
+  /* Brand font is "AOK Buenos Aires" (licensed). Until its web files are added,
+     Figtree is the closest free fallback. */
+  --font-sans: "AOK Buenos Aires", var(--font-figtree), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "AOK Buenos Aires", var(--font-figtree), ui-sans-serif, sans-serif;
   --font-urdu: var(--font-nastaliq), serif;
 
   --radius-sm: calc(var(--radius) - 8px);
@@ -92,6 +99,7 @@
   }
   html {
     -webkit-text-size-adjust: 100%;
+    color-scheme: dark;
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
@@ -112,4 +120,8 @@
 @utility urdu {
   font-family: var(--font-urdu);
   line-height: 2.1;
+}
+
+@utility bg-brand-gradient {
+  background-image: var(--brand-gradient);
 }

@@ -13,7 +13,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
           <div className="w-full max-w-[400px]">{children}</div>
         </main>
         <footer className="text-center text-[13px] text-subtle-foreground lg:text-left">
-          © Gateway2Deutsch · German B1 exam preparation
+          © Deutli · German B1 exam preparation
         </footer>
       </div>
       <PromisePanel />
@@ -24,10 +24,10 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
 function PromisePanel() {
   return (
     <aside
-      aria-label="About Gateway2Deutsch"
+      aria-label="About Deutli"
       className="relative hidden overflow-hidden bg-ink p-12 text-ink-foreground lg:flex lg:flex-col lg:justify-between xl:p-16"
     >
-      <p className="text-[13px] font-semibold tracking-[0.14em] text-gold uppercase">
+      <p className="text-[13px] font-semibold tracking-[0.14em] text-brand-cyan uppercase">
         Goethe · telc · ÖSD B1
       </p>
 
@@ -54,7 +54,7 @@ function PromisePanel() {
                   <span className="text-muted-foreground">{skill}</span>
                   <span className="h-1.5 overflow-hidden rounded-full bg-muted">
                     <span
-                      className={`block h-full rounded-full ${tone === "gold" ? "bg-gold" : "bg-ink"}`}
+                      className={`block h-full rounded-full ${tone === "gold" ? "bg-gold" : "bg-brand-cyan"}`}
                       style={{ width: `${v}%` }}
                     />
                   </span>

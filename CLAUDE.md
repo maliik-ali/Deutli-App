@@ -1,4 +1,4 @@
-# Gateway2Deutsch platform (g2d-app)
+# Deutli platform (deutli-app, formerly Gateway2Deutsch / g2d-app)
 
 German B1 exam-prep platform. Pilot inside a German academy in Pakistan (100+ students).
 Owner: Malik Ali (designer, not a developer — explain decisions in plain words, short).
@@ -23,6 +23,7 @@ Stored in `public.profiles.role`. Students sign up themselves. Teachers and acad
 
 ## Design
 Always use the `g2d-ui` skill (.claude/skills/g2d-ui) for any screen.
+Brand source of truth: Deutli Figma file https://www.figma.com/design/4pD07O1cSsoPm5yTw6czDG/Deutli (dark navy UI, purple gradient, owl mascot). Figma wins over older notes.
 
 ## Git workflow (do this automatically)
 - After each working step (builds with `npm run build`, no lint errors), commit with a clear message and `git push` to `main`.
@@ -47,5 +48,5 @@ Always use the `g2d-ui` skill (.claude/skills/g2d-ui) for any screen.
 - Always check user + role with `requireUser()` from `src/lib/auth/dal.ts` in protected pages.
 - Dashboard uses sample data from `src/lib/sample-data.ts`.
 - Setup steps for Supabase/Vercel: `docs/SETUP.md`.
-- Live app: https://app.werkui.com (custom domain on Vercel; g2d-app.vercel.app also works). werkui.com (root) is reserved for a separate landing page, not this app.
-- Supabase project ref: epawkdeosmuvczpsyoru. Supabase Site URL and Vercel SITE_URL must both be https://app.werkui.com.
+- Live app: https://app.deutli.com (custom domain on Vercel; g2d-app.vercel.app also works). www.deutli.com is the marketing website (repo maliik-ali/Deutli-Website).
+- Supabase project ref: epawkdeosmuvczpsyoru. Supabase Site URL and Vercel SITE_URL must both be https://app.deutli.com.

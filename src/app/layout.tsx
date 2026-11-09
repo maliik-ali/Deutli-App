@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Noto_Nastaliq_Urdu, Plus_Jakarta_Sans } from "next/font/google";
+import { Figtree, Inter, Noto_Nastaliq_Urdu } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
+// Fallback for the brand font "AOK Buenos Aires" (see globals.css).
+const figtree = Figtree({
+  variable: "--font-figtree",
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 const nastaliq = Noto_Nastaliq_Urdu({
@@ -19,21 +20,21 @@ const nastaliq = Noto_Nastaliq_Urdu({
 
 export const metadata: Metadata = {
   title: {
-    default: "Gateway2Deutsch",
-    template: "%s · Gateway2Deutsch",
+    default: "Deutli",
+    template: "%s · Deutli",
   },
   description: "Pass your German B1 — with AI and a real teacher.",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0d0e1a",
+  themeColor: "#081028",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${jakarta.variable} ${nastaliq.variable} h-full`}
+      className={`${inter.variable} ${figtree.variable} ${nastaliq.variable} h-full`}
     >
       <body className="min-h-full">{children}</body>
     </html>

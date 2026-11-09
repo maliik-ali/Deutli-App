@@ -9,9 +9,9 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-gold/85",
+        default: "bg-brand-gradient text-primary-foreground hover:opacity-90",
         outline:
-          "border border-ink/80 bg-transparent text-ink hover:bg-ink hover:text-ink-foreground",
+          "border border-border bg-card text-foreground hover:bg-ink hover:text-ink-foreground",
         ink: "bg-ink text-ink-foreground hover:bg-ink/90",
         ghost: "text-foreground hover:bg-muted",
         link: "rounded-none px-0 text-foreground underline underline-offset-4 hover:text-gold-ink",

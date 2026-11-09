@@ -11,7 +11,7 @@ export function PasswordStrength({ password }: { password: string }) {
             key={i}
             className={cn(
               "h-1 rounded-full bg-border transition-colors",
-              password && i <= score && (score >= 3 ? "bg-ink" : "bg-gold")
+              password && i <= score && (score >= 3 ? "bg-success" : "bg-gold")
             )}
           />
         ))}

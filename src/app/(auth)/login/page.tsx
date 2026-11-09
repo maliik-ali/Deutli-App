@@ -25,7 +25,7 @@ export default async function LoginPage(props: PageProps<"/login">) {
       <AuthHeading title="Welcome back" subtitle="Log in to continue your B1 preparation." />
       <LoginForm message={message} />
       <p className="text-center text-sm text-muted-foreground">
-        New to Gateway2Deutsch?{" "}
+        New to Deutli?{" "}
         <Link href="/signup" className="py-3 font-semibold text-foreground underline underline-offset-4 hover:text-gold-ink">
           Create an account
         </Link>

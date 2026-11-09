@@ -1,4 +1,4 @@
-# Gateway2Deutsch platform
+# Deutli platform
 
 German B1 exam preparation — Next.js + Supabase, deployed on Vercel.
 
@@ -13,5 +13,5 @@ npm run build && npm run lint
 
 ## Deploy
 
-Live: https://app.werkui.com — hosted on Vercel, connected to this repo: every push to `main` deploys automatically.
+Live: https://app.deutli.com — hosted on Vercel, connected to this repo: every push to `main` deploys automatically.
 Environment variables to set in Vercel are listed in [docs/SETUP.md](docs/SETUP.md) (section C).
