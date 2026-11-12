@@ -165,7 +165,7 @@ export async function translateVocabularyWord(
   return error ? { error, word } : { word };
 }
 
-const meaningsSchema = z.record(
+const meaningsSchema = z.partialRecord(
   z.enum(LANGUAGE_CODES),
   z.string().trim().max(200, "Keep each meaning short (up to 200 letters)."),
 );

@@ -85,7 +85,7 @@ export type PracticeTrack = {
 export async function getPracticeTrack(
   trackId: string,
   userId: string,
-  languages: LanguageCode[]
+  languages: LanguageCode[],
 ): Promise<PracticeTrack | null> {
   if (!/^[0-9a-f-]{36}$/i.test(trackId)) return null;
   const supabase = await createClient();
@@ -97,9 +97,11 @@ export async function getPracticeTrack(
     .maybeSingle();
   if (!track) return null;
 
-  const set = (Array.isArray(track.practice_sets) ? track.practice_sets[0] : track.practice_sets) as
-    | { id: string; title: string; level: string }
-    | null;
+  const set = (Array.isArray(track.practice_sets) ? track.practice_sets[0] : track.practice_sets) as {
+    id: string;
+    title: string;
+    level: string;
+  } | null;
   if (!set) return null;
 
   const today = todayPKT();
@@ -140,7 +142,34 @@ export async function getSavedWords(userId: string, limit = 5): Promise<SavedWor
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error) return [];
-  return (data ?? []) as SavedWord[];
+  const words = (data ?? []) as SavedWord[];
+  if (words.length === 0) return words;
+
+  // Fill meanings the student doesn't have yet (e.g. a language added later) from the
+  // shared dictionary. Free: no AI. The student's own meanings always win.
+  const keys = [...new Set(words.map((w) => w.word.trim().toLowerCase()))];
+  const chunks: string[][] = [];
+  for (let i = 0; i < keys.length; i += 100) chunks.push(keys.slice(i, i + 100));
+  const results = await Promise.all(
+    chunks.map((chunk) =>
+      supabase.from("word_dictionary").select("word_key, dictionary_form, translations").in("word_key", chunk),
+    ),
+  );
+  const entries = results.flatMap((r) => r.data ?? []);
+  const byKey = new Map(
+    (entries as { word_key: string; dictionary_form: string | null; translations: Record<string, string> }[]).map(
+      (e) => [e.word_key, e],
+    ),
+  );
+  return words.map((w) => {
+    const entry = byKey.get(w.word.trim().toLowerCase());
+    if (!entry) return w;
+    return {
+      ...w,
+      dictionaryForm: w.dictionaryForm ?? entry.dictionary_form,
+      translations: { ...entry.translations, ...w.translations },
+    };
+  });
 }
 
 export type AdminTrack = { id: string; title: string; position: number; transcript: string; audioPath: string | null };
@@ -152,7 +181,9 @@ export async function getAdminSet(setId: string): Promise<AdminSet | null> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("practice_sets")
-    .select("id, title, description, level, is_published, practice_tracks (id, title, position, transcript, audio_path)")
+    .select(
+      "id, title, description, level, is_published, practice_tracks (id, title, position, transcript, audio_path)",
+    )
     .eq("id", setId)
     .maybeSingle();
   if (!data) return null;
@@ -171,6 +202,12 @@ export async function getAdminSet(setId: string): Promise<AdminSet | null> {
     isPublished: data.is_published,
     tracks: [...tracks]
       .sort((a, b) => a.position - b.position)
-      .map((t) => ({ id: t.id, title: t.title, position: t.position, transcript: t.transcript, audioPath: t.audio_path })),
+      .map((t) => ({
+        id: t.id,
+        title: t.title,
+        position: t.position,
+        transcript: t.transcript,
+        audioPath: t.audio_path,
+      })),
   };
 }
