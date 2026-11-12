@@ -147,7 +147,11 @@ function LanguageSelect({
         {label}
         {optional && <span className="ml-1.5 font-normal text-subtle-foreground">(optional)</span>}
       </label>
-      <Select value={value ?? NONE} onValueChange={(v) => onChange(v === NONE ? null : (v as LanguageCode))}>
+      {/* No choice yet: "" shows the placeholder; the optional list starts on "None". */}
+      <Select
+        value={value ?? (optional ? NONE : "")}
+        onValueChange={(v) => onChange(v === NONE || v === "" ? null : (v as LanguageCode))}
+      >
         <SelectTrigger
           id={id}
           aria-labelledby={`${id}-label`}
