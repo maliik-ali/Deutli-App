@@ -8,7 +8,6 @@ import {
   BookOpen,
   CalendarDays,
   Check,
-  ChevronDown,
   CircleHelp,
   Headphones,
   Layers,
@@ -22,6 +21,9 @@ import {
 
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LANGUAGES, getLanguage, type LanguageCode } from "@/lib/languages";
 import { completeOnboarding } from "@/lib/onboarding/actions";
 import {
@@ -99,6 +101,27 @@ function Heading({ title, text }: { title: string; text: string }) {
   );
 }
 
+const NONE = "none";
+
+/** Dates as YYYY-MM-DD in the student's local time (no time-zone shift). */
+function toIso(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function fromIso(iso: string) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+function startOfToday() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+function longDate(iso: string) {
+  return new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "long", year: "numeric" }).format(
+    fromIso(iso),
+  );
+}
+
 /** Dropdown of all languages, each shown in English and in its own script. */
 function LanguageSelect({
   id,
@@ -120,33 +143,39 @@ function LanguageSelect({
   const chosen = value ? getLanguage(value) : null;
   return (
     <div className="grid gap-2">
-      <label htmlFor={id} className="text-[15px] font-semibold">
+      <label id={`${id}-label`} htmlFor={id} className="text-[15px] font-semibold">
         {label}
         {optional && <span className="ml-1.5 font-normal text-subtle-foreground">(optional)</span>}
       </label>
-      <div className="relative">
-        <select
+      <Select value={value ?? NONE} onValueChange={(v) => onChange(v === NONE ? null : (v as LanguageCode))}>
+        <SelectTrigger
           id={id}
-          value={value ?? ""}
-          onChange={(e) => onChange((e.target.value || null) as LanguageCode | null)}
+          aria-labelledby={`${id}-label`}
           aria-describedby={`${id}-hint`}
-          className={cn(
-            "h-14 w-full appearance-none rounded-2xl border bg-card pr-12 pl-4 text-base [color-scheme:dark] outline-none transition-colors focus-visible:border-gold-ink",
-            value ? "border-gold-ink/60 text-foreground" : "border-border text-muted-foreground",
-          )}
+          className={cn(value && "border-gold-ink/60")}
         >
-          <option value="">{optional ? "None" : "Choose a language"}</option>
+          <SelectValue placeholder="Choose a language" />
+        </SelectTrigger>
+        <SelectContent>
+          {optional && <SelectItem value={NONE}>None</SelectItem>}
           {LANGUAGES.filter((l) => l.code !== exclude).map((l) => (
-            <option key={l.code} value={l.code}>
-              {l.native !== l.name ? `${l.name} · ${l.native}` : l.name}
-            </option>
+            <SelectItem key={l.code} value={l.code} textValue={l.name}>
+              <span className="flex items-baseline gap-2">
+                {l.name}
+                {l.native !== l.name && (
+                  <span
+                    lang={l.code}
+                    dir={l.rtl ? "rtl" : "ltr"}
+                    className={cn("font-normal text-muted-foreground", l.code === "ur" && "urdu leading-none")}
+                  >
+                    {l.native}
+                  </span>
+                )}
+              </span>
+            </SelectItem>
           ))}
-        </select>
-        <ChevronDown
-          className="pointer-events-none absolute top-1/2 right-4 size-5 -translate-y-1/2 text-muted-foreground"
-          aria-hidden
-        />
-      </div>
+        </SelectContent>
+      </Select>
       <p id={`${id}-hint`} className="text-sm text-muted-foreground">
         {chosen && chosen.native !== chosen.name ? (
           <>
@@ -189,10 +218,10 @@ export function Onboarding({
   const [examDate, setExamDate] = useState("");
   const [focus, setFocus] = useState<SkillId[]>([]);
   const [emailTips, setEmailTips] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, startBusy] = useTransition();
 
-  const today = new Date().toISOString().slice(0, 10);
   const skills = SKILLS.filter((s) => !s.onlyFor || !exam || s.onlyFor.includes(exam));
   // Plans for the chosen worries, in the order they appear on the list ("not sure" only on its own).
   const chosen = skills.filter((s) => focus.includes(s.id));
@@ -298,12 +327,13 @@ export function Onboarding({
 
       <main className="mx-auto grid w-full max-w-[1040px] content-start gap-8 px-4 py-8 sm:px-6 sm:py-10">
         {step === 0 && (
-          <>
+          // First screen: one centred column (heading, text and both dropdowns).
+          <div className="mx-auto grid w-full max-w-xl gap-8 text-center sm:pt-6">
             <Heading
               title={firstName ? `Welcome to Deutli, ${firstName}!` : "Welcome to Deutli!"}
               text="Which languages do you speak? We'll show the meaning of new German words in them."
             />
-            <div className="grid max-w-xl gap-6">
+            <div className="grid gap-6 text-left">
               <LanguageSelect
                 id="first-language"
                 label="My first language"
@@ -324,7 +354,7 @@ export function Onboarding({
                 optional
               />
             </div>
-          </>
+          </div>
         )}
 
         {step === 1 && (
@@ -392,7 +422,10 @@ export function Onboarding({
                     type="button"
                     role="radio"
                     aria-checked={timeline === "date"}
-                    onClick={() => setTimeline("date")}
+                    onClick={() => {
+                      setTimeline("date");
+                      if (!examDate) setCalendarOpen(true);
+                    }}
                     className={cn(
                       "flex h-14 items-center gap-3 rounded-xl border px-4 text-left font-semibold transition-colors",
                       timeline === "date" ? "border-gold-ink bg-gold-soft" : "border-border hover:border-gold-ink/60",
@@ -401,16 +434,41 @@ export function Onboarding({
                     <CalendarDays className="size-5 text-gold-ink" aria-hidden /> I have a specific date
                   </button>
                   {timeline === "date" && (
-                    <label className="grid gap-1.5 text-sm">
-                      <span className="text-muted-foreground">Exam day</span>
-                      <input
-                        type="date"
-                        min={today}
-                        value={examDate}
-                        onChange={(e) => setExamDate(e.target.value)}
-                        className="h-12 rounded-xl border border-input bg-background px-3 text-[15px] [color-scheme:dark] outline-none focus-visible:border-gold-ink"
-                      />
-                    </label>
+                    <div className="grid gap-1.5 text-sm">
+                      <span id="exam-day-label" className="text-muted-foreground">
+                        Exam day
+                      </span>
+                      <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            aria-labelledby="exam-day-label"
+                            className={cn(
+                              "flex h-12 items-center justify-between gap-2 rounded-xl border bg-background px-4 text-left text-[15px] outline-none transition-colors focus-visible:border-gold-ink",
+                              examDate ? "border-gold-ink/60 text-foreground" : "border-border text-muted-foreground",
+                            )}
+                          >
+                            {examDate ? longDate(examDate) : "Pick a date"}
+                            <CalendarDays className="size-5 text-gold-ink" aria-hidden />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent align="end">
+                          <Calendar
+                            mode="single"
+                            weekStartsOn={1}
+                            selected={examDate ? fromIso(examDate) : undefined}
+                            defaultMonth={examDate ? fromIso(examDate) : undefined}
+                            disabled={{ before: startOfToday() }}
+                            startMonth={startOfToday()}
+                            onSelect={(d) => {
+                              if (!d) return;
+                              setExamDate(toIso(d));
+                              setCalendarOpen(false);
+                            }}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   )}
                   <div className="grid grid-cols-2 gap-3">
                     {TIMELINES.map((t) => {
