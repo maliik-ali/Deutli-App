@@ -66,7 +66,16 @@ function SelectContent({
   );
 }
 
-function SelectItem({ className, children, ...props }: React.ComponentProps<typeof SelectPrimitive.Item>) {
+/**
+ * One option. `aside` is extra text on the right of the list row only
+ * (e.g. a language in its own script); the field shows just `children`.
+ */
+function SelectItem({
+  className,
+  children,
+  aside,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Item> & { aside?: React.ReactNode }) {
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
@@ -78,6 +87,7 @@ function SelectItem({ className, children, ...props }: React.ComponentProps<type
       {...props}
     >
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      {aside && <span className="ml-auto font-normal text-muted-foreground">{aside}</span>}
       <span className="absolute right-3 flex size-4 items-center justify-center text-gold-ink">
         <SelectPrimitive.ItemIndicator>
           <CheckIcon className="size-4" aria-hidden />

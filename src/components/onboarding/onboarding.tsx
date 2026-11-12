@@ -163,19 +163,23 @@ function LanguageSelect({
         <SelectContent>
           {optional && <SelectItem value={NONE}>None</SelectItem>}
           {LANGUAGES.filter((l) => l.code !== exclude).map((l) => (
-            <SelectItem key={l.code} value={l.code} textValue={l.name}>
-              <span className="flex items-baseline gap-2">
-                {l.name}
-                {l.native !== l.name && (
+            <SelectItem
+              key={l.code}
+              value={l.code}
+              textValue={l.name}
+              aside={
+                l.native !== l.name && (
                   <span
                     lang={l.code}
                     dir={l.rtl ? "rtl" : "ltr"}
-                    className={cn("font-normal text-muted-foreground", l.code === "ur" && "urdu leading-none")}
+                    className={cn(l.code === "ur" && "urdu leading-none")}
                   >
                     {l.native}
                   </span>
-                )}
-              </span>
+                )
+              }
+            >
+              {l.name}
             </SelectItem>
           ))}
         </SelectContent>
