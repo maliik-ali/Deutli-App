@@ -41,6 +41,7 @@ Brand source of truth: Deutli Figma file https://www.figma.com/design/4pD07O1cSs
 - [x] Project setup + design tokens
 - [x] Login, signup, password reset, logout
 - [x] Role-based redirect + student dashboard (UI with sample data)
+- [x] Account page `/dashboard/account` (name, email shown, phone, password change with current password, meaning languages, time zone PKT) + sidebar user menu (Account, Log out). Not yet: photo upload, email change (needs a tested confirm-email flow), plan/payments (comes with Fees), delete account.
 - [x] Daily Practice (listen → listen and read → speak along): student page `/dashboard/daily-practice`, full-screen reader `/practice/[trackId]` with audio player, admin upload `/admin/daily-practice`. Real data (tables `practice_sets`, `practice_tracks`, `practice_log`, private bucket `practice-audio`).
 
 ## Notes for the next session
