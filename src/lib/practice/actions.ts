@@ -7,7 +7,7 @@ import { requireUser } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { AUDIO_BUCKET } from "./data";
 import { LEVELS } from "./levels";
-import { todayPKT, type SavedWord } from "./plan";
+import { SAVED_WORD_COLUMNS, todayPKT, type SavedWord } from "./plan";
 
 export type PracticeActionResult = { error: string } | undefined;
 
@@ -60,7 +60,7 @@ export async function saveVocabularyWord(input: unknown): Promise<{ error: strin
   const supabase = await createClient();
   const existing = await supabase
     .from("vocabulary_words")
-    .select("id, word, meaning")
+    .select(SAVED_WORD_COLUMNS)
     .eq("user_id", user.id)
     .ilike("word", word.replace(/[%_\\]/g, "\\$&"))
     .maybeSingle();
@@ -69,21 +69,30 @@ export async function saveVocabularyWord(input: unknown): Promise<{ error: strin
   const { data, error } = await supabase
     .from("vocabulary_words")
     .insert({ user_id: user.id, word, context: context || null, track_id: trackId ?? null })
-    .select("id, word, meaning")
+    .select(SAVED_WORD_COLUMNS)
     .single();
   if (error || !data) return { error: WORD_ERROR };
   revalidatePath("/dashboard");
   return { word: data as SavedWord };
 }
 
-export async function setVocabularyMeaning(wordId: unknown, meaning: unknown): Promise<PracticeActionResult> {
+const meaningsSchema = z.object({
+  english: z.string().trim().max(200, "Keep the English meaning short (up to 200 letters)."),
+  urdu: z.string().trim().max(200, "Keep the Urdu meaning short (up to 200 letters)."),
+});
+
+/** Save the English and Urdu meaning of a saved word (both optional). */
+export async function setVocabularyMeaning(wordId: unknown, meanings: unknown): Promise<PracticeActionResult> {
   await requireUser(LEARNERS);
   const id = uuid.safeParse(wordId);
-  const text = z.string().trim().max(200, "Keep the meaning short (up to 200 letters).").safeParse(meaning);
+  const text = meaningsSchema.safeParse(meanings);
   if (!id.success) return { error: GENERIC };
   if (!text.success) return { error: text.error.issues[0].message };
   const supabase = await createClient();
-  const { error } = await supabase.from("vocabulary_words").update({ meaning: text.data || null }).eq("id", id.data);
+  const { error } = await supabase
+    .from("vocabulary_words")
+    .update({ meaning: text.data.english || null, meaning_ur: text.data.urdu || null })
+    .eq("id", id.data);
   if (error) return { error: WORD_ERROR };
   revalidatePath("/dashboard");
 }

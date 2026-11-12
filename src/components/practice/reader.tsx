@@ -212,15 +212,17 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
     });
   }
 
-  function saveMeaning(id: string, meaning: string) {
+  function saveMeaning(id: string, english: string, urdu: string) {
     setWordError(null);
     startWord(async () => {
-      const result = await setVocabularyMeaning(id, meaning);
+      const result = await setVocabularyMeaning(id, { english, urdu });
       if (result?.error) {
         setWordError(result.error);
         return;
       }
-      setWords((list) => list.map((w) => (w.id === id ? { ...w, meaning: meaning.trim() || null } : w)));
+      setWords((list) =>
+        list.map((w) => (w.id === id ? { ...w, meaning: english.trim() || null, meaningUr: urdu.trim() || null } : w))
+      );
       setOpenWord(null);
     });
   }
@@ -264,7 +266,7 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
           data-word
           role="button"
           tabIndex={0}
-          aria-label={`${part}, saved word${saved.meaning ? `: ${saved.meaning}` : ""}`}
+          aria-label={`${part}, saved word${saved.meaning ? `: ${saved.meaning}` : ""}${saved.meaningUr ? `, ${saved.meaningUr}` : ""}`}
           onClick={(e) => open(e.currentTarget)}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
@@ -453,17 +455,18 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
         </div>
       )}
 
-      {/* Box for a saved word: meaning + remove */}
+      {/* Box for a saved word: English + Urdu meaning, remove */}
       {openWord && active && (
         <form
           data-word-box
           key={active.id}
           aria-label={`Saved word ${active.word}`}
-          style={floatStyle(openWord.at, 216, "below")}
+          style={floatStyle(openWord.at, 300, "below")}
           className="fixed z-40 grid w-[280px] gap-3 rounded-2xl border border-border bg-ink p-4 shadow-lg shadow-black/40"
           onSubmit={(e) => {
             e.preventDefault();
-            saveMeaning(active.id, String(new FormData(e.currentTarget).get("meaning") ?? ""));
+            const form = new FormData(e.currentTarget);
+            saveMeaning(active.id, String(form.get("meaning") ?? ""), String(form.get("meaning_ur") ?? ""));
           }}
         >
           <div className="flex items-start justify-between gap-2">
@@ -486,7 +489,7 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
           </div>
           <div className="grid gap-1.5">
             <label htmlFor="word-meaning" className="text-[13px] font-medium text-muted-foreground">
-              Meaning (optional)
+              English meaning (optional)
             </label>
             <input
               id="word-meaning"
@@ -494,8 +497,24 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
               defaultValue={active.meaning ?? ""}
               maxLength={200}
               autoComplete="off"
-              placeholder="Type what it means"
+              placeholder="Type what it means in English"
               className="h-11 w-full rounded-xl border border-input bg-card px-3 text-[15px] outline-none placeholder:text-muted-foreground/70 focus-visible:border-gold-ink"
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <label htmlFor="word-meaning-ur" className="text-[13px] font-medium text-muted-foreground">
+              Urdu meaning (optional)
+            </label>
+            <input
+              id="word-meaning-ur"
+              name="meaning_ur"
+              lang="ur"
+              dir="rtl"
+              defaultValue={active.meaningUr ?? ""}
+              maxLength={200}
+              autoComplete="off"
+              placeholder="اردو میں معنی لکھیں"
+              className="urdu h-12 w-full rounded-xl border border-input bg-card px-3 text-right text-[17px] leading-normal outline-none placeholder:text-muted-foreground/70 focus-visible:border-gold-ink"
             />
           </div>
           {wordError && (

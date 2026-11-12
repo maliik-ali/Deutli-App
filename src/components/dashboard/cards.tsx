@@ -254,11 +254,21 @@ export function TodaysWordsCard({ className, saved = [] }: { className?: string;
                 <Badge variant="gold">Saved</Badge>
               </span>
               <span className="col-start-1 row-start-2 text-sm text-muted-foreground md:col-start-auto md:row-start-auto md:text-[15px]">
-                {w.meaning ?? "No meaning added yet"}
+                {w.meaning ?? (w.meaningUr ? "" : "No meaning added yet")}
               </span>
-              <span className="hidden text-right text-muted-foreground md:block" aria-hidden>
-                —
-              </span>
+              {w.meaningUr ? (
+                <span
+                  lang="ur"
+                  dir="rtl"
+                  className="urdu col-start-2 row-span-2 row-start-1 text-right text-lg text-foreground md:col-start-auto md:row-span-1 md:row-start-auto"
+                >
+                  {w.meaningUr}
+                </span>
+              ) : (
+                <span className="hidden text-right text-muted-foreground md:block" aria-hidden>
+                  —
+                </span>
+              )}
             </li>
           ))}
           {todaysWords.map((w) => (

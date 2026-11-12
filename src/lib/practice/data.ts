@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import { todayPKT, type SavedWord, type TrackSummary } from "./plan";
+import { SAVED_WORD_COLUMNS, todayPKT, type SavedWord, type TrackSummary } from "./plan";
 
 export const AUDIO_BUCKET = "practice-audio";
 export { LEVELS } from "./levels";
@@ -127,7 +127,7 @@ export async function getSavedWords(userId: string, limit = 5): Promise<SavedWor
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("vocabulary_words")
-    .select("id, word, meaning")
+    .select(SAVED_WORD_COLUMNS)
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(limit);

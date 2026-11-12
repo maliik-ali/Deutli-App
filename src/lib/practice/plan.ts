@@ -111,4 +111,8 @@ export function lastPractisedLabel(track: TrackSummary, today: string): string |
 }
 
 /** A word or phrase the student saved while reading. */
-export type SavedWord = { id: string; word: string; meaning: string | null };
+/** A saved word. `meaning` is English, `meaningUr` is Urdu. */
+export type SavedWord = { id: string; word: string; meaning: string | null; meaningUr: string | null };
+
+/** Columns to read for a SavedWord (Urdu is renamed to meaningUr). */
+export const SAVED_WORD_COLUMNS = "id, word, meaning, meaningUr:meaning_ur";
