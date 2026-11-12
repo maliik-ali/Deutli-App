@@ -142,11 +142,16 @@ export async function getSavedWords(userId: string, limit = 5): Promise<SavedWor
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error) return [];
-  const words = (data ?? []) as SavedWord[];
-  if (words.length === 0) return words;
+  return fillFromDictionary((data ?? []) as SavedWord[]);
+}
 
-  // Fill meanings the student doesn't have yet (e.g. a language added later) from the
-  // shared dictionary. Free: no AI. The student's own meanings always win.
+/**
+ * Fill meanings the student doesn't have yet (e.g. a language added later) from the
+ * shared dictionary. Free: no AI. The student's own meanings always win.
+ */
+export async function fillFromDictionary<T extends SavedWord>(words: T[]): Promise<T[]> {
+  if (words.length === 0) return words;
+  const supabase = await createClient();
   const keys = [...new Set(words.map((w) => w.word.trim().toLowerCase()))];
   const chunks: string[][] = [];
   for (let i = 0; i < keys.length; i += 100) chunks.push(keys.slice(i, i + 100));
