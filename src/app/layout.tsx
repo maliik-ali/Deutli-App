@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Figtree, Inter, Noto_Nastaliq_Urdu } from "next/font/google";
+import { Figtree, Inter, Noto_Nastaliq_Urdu, Noto_Sans_Devanagari } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -14,6 +14,14 @@ const figtree = Figtree({
 const nastaliq = Noto_Nastaliq_Urdu({
   variable: "--font-nastaliq",
   subsets: ["arabic"],
+  weight: ["400", "600"],
+  preload: false,
+});
+
+// Hindi meanings of saved words.
+const devanagari = Noto_Sans_Devanagari({
+  variable: "--font-devanagari",
+  subsets: ["devanagari"],
   weight: ["400", "600"],
   preload: false,
 });
@@ -34,7 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${figtree.variable} ${nastaliq.variable} h-full`}
+      className={`${inter.variable} ${figtree.variable} ${nastaliq.variable} ${devanagari.variable} h-full`}
     >
       <body className="min-h-full">{children}</body>
     </html>

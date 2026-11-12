@@ -16,21 +16,16 @@ import {
   Repeat,
   RotateCcw,
   RotateCw,
-  Trash2,
   X,
   type LucideIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  removeVocabularyWord,
-  saveVocabularyWord,
-  setPractisedToday,
-  setVocabularyMeaning,
-} from "@/lib/practice/actions";
+import { saveVocabularyWord, setPractisedToday } from "@/lib/practice/actions";
 import type { PracticeTrack } from "@/lib/practice/data";
 import type { SavedWord } from "@/lib/practice/plan";
 import { cn } from "@/lib/utils";
+import { WordBox, wordBoxHeight } from "./word-box";
 
 const STEPS: { title: string; hint: string; icon: LucideIcon }[] = [
   { title: "Listen", hint: "Round 1: just listen. The text is hidden so your ears do the work.", icon: Ear },
@@ -113,6 +108,7 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
   // Saved words: select a word in the text to save it; saved words are marked in the text.
   const articleRef = useRef<HTMLElement>(null);
   const [words, setWords] = useState<SavedWord[]>(track.words);
+  const [languages, setLanguages] = useState(track.languages);
   const [pick, setPick] = useState<{ text: string; context: string; at: Anchor } | null>(null);
   const [openWord, setOpenWord] = useState<{ id: string; at: Anchor } | null>(null);
   const [wordError, setWordError] = useState<string | null>(null);
@@ -212,33 +208,7 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
     });
   }
 
-  function saveMeaning(id: string, english: string, urdu: string) {
-    setWordError(null);
-    startWord(async () => {
-      const result = await setVocabularyMeaning(id, { english, urdu });
-      if (result?.error) {
-        setWordError(result.error);
-        return;
-      }
-      setWords((list) =>
-        list.map((w) => (w.id === id ? { ...w, meaning: english.trim() || null, meaningUr: urdu.trim() || null } : w))
-      );
-      setOpenWord(null);
-    });
-  }
-
-  function removeWord(id: string) {
-    setWordError(null);
-    startWord(async () => {
-      const result = await removeVocabularyWord(id);
-      if (result?.error) {
-        setWordError(result.error);
-        return;
-      }
-      setWords((list) => list.filter((w) => w.id !== id));
-      setOpenWord(null);
-    });
-  }
+  const meaningOf = (w: SavedWord) => languages.map((c) => w.translations[c]).find(Boolean) ?? "";
 
   // Marks every saved word inside a line of text.
   const wordPattern = words.length
@@ -266,7 +236,7 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
           data-word
           role="button"
           tabIndex={0}
-          aria-label={`${part}, saved word${saved.meaning ? `: ${saved.meaning}` : ""}${saved.meaningUr ? `, ${saved.meaningUr}` : ""}`}
+          aria-label={`${part}, saved word${meaningOf(saved) ? `: ${meaningOf(saved)}` : ""}`}
           onClick={(e) => open(e.currentTarget)}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
@@ -455,89 +425,21 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
         </div>
       )}
 
-      {/* Box for a saved word: English + Urdu meaning, remove */}
+      {/* Box for a saved word: meanings in the student's languages, remove */}
       {openWord && active && (
-        <form
-          data-word-box
+        <WordBox
           key={active.id}
-          aria-label={`Saved word ${active.word}`}
-          style={floatStyle(openWord.at, 300, "below")}
-          className="fixed z-40 grid w-[280px] gap-3 rounded-2xl border border-border bg-ink p-4 shadow-lg shadow-black/40"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const form = new FormData(e.currentTarget);
-            saveMeaning(active.id, String(form.get("meaning") ?? ""), String(form.get("meaning_ur") ?? ""));
+          word={active}
+          languages={languages}
+          style={floatStyle(openWord.at, wordBoxHeight(languages.length), "below")}
+          onClose={() => setOpenWord(null)}
+          onUpdate={(updated) => setWords((list) => list.map((w) => (w.id === updated.id ? updated : w)))}
+          onRemoved={(id) => {
+            setWords((list) => list.filter((w) => w.id !== id));
+            setOpenWord(null);
           }}
-        >
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <p className="flex items-center gap-1.5 text-[12px] font-semibold text-success">
-                <Check className="size-3.5" aria-hidden /> Saved to your vocabulary
-              </p>
-              <p className="truncate font-heading text-lg font-bold" lang="de">
-                {active.word}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setOpenWord(null)}
-              aria-label="Close"
-              className="-m-2 grid size-11 shrink-0 place-items-center rounded-full text-muted-foreground hover:text-foreground"
-            >
-              <X className="size-4" aria-hidden />
-            </button>
-          </div>
-          <div className="grid gap-1.5">
-            <label htmlFor="word-meaning" className="text-[13px] font-medium text-muted-foreground">
-              English meaning (optional)
-            </label>
-            <input
-              id="word-meaning"
-              name="meaning"
-              defaultValue={active.meaning ?? ""}
-              maxLength={200}
-              autoComplete="off"
-              placeholder="Type what it means in English"
-              className="h-11 w-full rounded-xl border border-input bg-card px-3 text-[15px] outline-none placeholder:text-muted-foreground/70 focus-visible:border-gold-ink"
-            />
-          </div>
-          <div className="grid gap-1.5">
-            <label htmlFor="word-meaning-ur" className="text-[13px] font-medium text-muted-foreground">
-              Urdu meaning (optional)
-            </label>
-            <input
-              id="word-meaning-ur"
-              name="meaning_ur"
-              lang="ur"
-              dir="rtl"
-              defaultValue={active.meaningUr ?? ""}
-              maxLength={200}
-              autoComplete="off"
-              placeholder="اردو میں معنی لکھیں"
-              className="urdu h-12 w-full rounded-xl border border-input bg-card px-3 text-right text-[17px] leading-normal outline-none placeholder:text-muted-foreground/70 focus-visible:border-gold-ink"
-            />
-          </div>
-          {wordError && (
-            <p className="text-[13px] text-destructive" role="alert">
-              {wordError}
-            </p>
-          )}
-          <div className="flex items-center justify-between gap-2">
-            <Button type="submit" size="sm" disabled={wordBusy}>
-              {wordBusy ? "Saving…" : "Save"}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground"
-              disabled={wordBusy}
-              onClick={() => removeWord(active.id)}
-            >
-              <Trash2 aria-hidden /> Remove
-            </Button>
-          </div>
-        </form>
+          onLanguagesChange={setLanguages}
+        />
       )}
 
       {/* Bottom bar: audio player, then texts of this set + Done + previous/next */}

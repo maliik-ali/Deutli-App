@@ -122,6 +122,10 @@
   line-height: 2.1;
 }
 
+@utility devanagari {
+  font-family: var(--font-devanagari), var(--font-sans);
+}
+
 @utility bg-brand-gradient {
   background-image: var(--brand-gradient);
 }

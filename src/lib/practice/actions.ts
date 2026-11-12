@@ -6,6 +6,8 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { AUDIO_BUCKET } from "./data";
+import { LANGUAGE_CODES, MAX_LANGUAGES, type LanguageCode } from "@/lib/languages";
+import { translateWord } from "@/lib/translate/word";
 import { LEVELS } from "./levels";
 import { SAVED_WORD_COLUMNS, todayPKT, type SavedWord } from "./plan";
 
@@ -76,25 +78,106 @@ export async function saveVocabularyWord(input: unknown): Promise<{ error: strin
   return { word: data as SavedWord };
 }
 
-const meaningsSchema = z.object({
-  english: z.string().trim().max(200, "Keep the English meaning short (up to 200 letters)."),
-  urdu: z.string().trim().max(200, "Keep the Urdu meaning short (up to 200 letters)."),
-});
+// Limits automatic translation per student per day (keeps costs predictable).
+const DAILY_TRANSLATIONS = 150;
 
-/** Save the English and Urdu meaning of a saved word (both optional). */
-export async function setVocabularyMeaning(wordId: unknown, meanings: unknown): Promise<PracticeActionResult> {
-  await requireUser(LEARNERS);
+/**
+ * Fill in the meanings of a saved word in the student's languages, automatically.
+ * Only languages that have no meaning yet are translated. Returns the updated word.
+ */
+export async function translateVocabularyWord(wordId: unknown): Promise<{ error: string } | { word: SavedWord }> {
+  const user = await requireUser(LEARNERS);
   const id = uuid.safeParse(wordId);
-  const text = meaningsSchema.safeParse(meanings);
   if (!id.success) return { error: GENERIC };
-  if (!text.success) return { error: text.error.issues[0].message };
+
   const supabase = await createClient();
+  const { data: row } = await supabase
+    .from("vocabulary_words")
+    .select("id, word, context, dictionary_form, translations")
+    .eq("id", id.data)
+    .maybeSingle();
+  if (!row) return { error: GENERIC };
+  const current = (row.translations ?? {}) as Record<string, string>;
+  const asWord = (translations: Record<string, string>, dictionaryForm: string | null): SavedWord => ({
+    id: row.id,
+    word: row.word,
+    dictionaryForm,
+    translations,
+  });
+
+  const missing = user.languages.filter((code) => !current[code]);
+  if (missing.length === 0) return { word: asWord(current, row.dictionary_form) };
+
+  const since = new Date(Date.now() - 86_400_000).toISOString();
+  const { count } = await supabase
+    .from("vocabulary_words")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .gte("created_at", since);
+  if ((count ?? 0) > DAILY_TRANSLATIONS) {
+    return { error: "You've saved a lot of words today, so please type the meaning yourself." };
+  }
+
+  const result = await translateWord(row.word, row.context, missing);
+  if (!result) return { error: "We couldn't translate this word right now. You can type the meaning yourself." };
+
+  const translations = { ...result.translations, ...current };
+  const dictionaryForm = row.dictionary_form ?? result.dictionaryForm;
   const { error } = await supabase
     .from("vocabulary_words")
-    .update({ meaning: text.data.english || null, meaning_ur: text.data.urdu || null })
-    .eq("id", id.data);
+    .update({ translations, dictionary_form: dictionaryForm })
+    .eq("id", row.id);
   if (error) return { error: WORD_ERROR };
   revalidatePath("/dashboard");
+  return { word: asWord(translations, dictionaryForm) };
+}
+
+const meaningsSchema = z.record(
+  z.enum(LANGUAGE_CODES),
+  z.string().trim().max(200, "Keep each meaning short (up to 200 letters).")
+);
+
+/** Save the meanings a student typed or corrected (empty = remove that meaning). */
+export async function setVocabularyMeaning(
+  wordId: unknown,
+  meanings: unknown
+): Promise<{ error: string } | { translations: Record<string, string> }> {
+  await requireUser(LEARNERS);
+  const id = uuid.safeParse(wordId);
+  const parsed = meaningsSchema.safeParse(meanings);
+  if (!id.success) return { error: GENERIC };
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  const supabase = await createClient();
+  const { data: row } = await supabase.from("vocabulary_words").select("translations").eq("id", id.data).maybeSingle();
+  if (!row) return { error: GENERIC };
+  const translations: Record<string, string> = { ...((row.translations ?? {}) as Record<string, string>) };
+  for (const [code, text] of Object.entries(parsed.data)) {
+    if (text) translations[code] = text;
+    else delete translations[code];
+  }
+  const { error } = await supabase.from("vocabulary_words").update({ translations }).eq("id", id.data);
+  if (error) return { error: WORD_ERROR };
+  revalidatePath("/dashboard");
+  return { translations };
+}
+
+const languagesSchema = z
+  .array(z.enum(LANGUAGE_CODES))
+  .min(1, "Pick at least one language.")
+  .max(MAX_LANGUAGES, `Pick up to ${MAX_LANGUAGES} languages.`)
+  .refine((list) => new Set(list).size === list.length, "Pick each language once.");
+
+/** Change the languages the student gets word meanings in. */
+export async function setMyLanguages(languages: unknown): Promise<{ error: string } | { languages: LanguageCode[] }> {
+  const user = await requireUser();
+  const parsed = languagesSchema.safeParse(languages);
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const supabase = await createClient();
+  const { error } = await supabase.from("profiles").update({ languages: parsed.data }).eq("id", user.id);
+  if (error) return { error: "We couldn't save your languages. Please try again." };
+  revalidatePath("/dashboard");
+  return { languages: parsed.data };
 }
 
 export async function removeVocabularyWord(wordId: unknown): Promise<PracticeActionResult> {

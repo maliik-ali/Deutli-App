@@ -5,14 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import {
-  continueLearning,
-  homeworkFeedback,
-  mockExam,
-  readiness,
-  speakingClub,
-  todaysWords,
-} from "@/lib/sample-data";
+import { continueLearning, homeworkFeedback, mockExam, readiness, speakingClub, todaysWords } from "@/lib/sample-data";
+import { getLanguage, textProps, type LanguageCode } from "@/lib/languages";
 import type { SavedWord } from "@/lib/practice/plan";
 import { cn } from "@/lib/utils";
 
@@ -149,7 +143,12 @@ export function ContinueLearningCard({ className }: { className?: string }) {
             <Clock className="size-3.5" aria-hidden /> {c.minutesLeft} min left
           </span>
         </div>
-        <Progress value={c.progress} tone="gold" className="bg-ink-foreground/15" aria-label={`Lesson ${c.progress}% done`} />
+        <Progress
+          value={c.progress}
+          tone="gold"
+          className="bg-ink-foreground/15"
+          aria-label={`Lesson ${c.progress}% done`}
+        />
       </CardContent>
       <CardFooter>
         <Button asChild>
@@ -222,15 +221,62 @@ export function MockExamCard({ className }: { className?: string }) {
   );
 }
 
-export function TodaysWordsCard({ className, saved = [] }: { className?: string; saved?: SavedWord[] }) {
+/** One meaning in the words table, in the right script, direction and font. */
+function Meaning({ code, text, first }: { code: LanguageCode; text: string | null | undefined; first: boolean }) {
+  const props = textProps(code);
+  if (!text) {
+    return (
+      <span
+        className={cn(
+          "text-sm text-muted-foreground",
+          !first && "hidden md:block",
+          props.dir === "rtl" && "md:text-right",
+        )}
+      >
+        {first ? "No meaning yet" : "—"}
+      </span>
+    );
+  }
+  return (
+    <span
+      lang={props.lang}
+      dir={props.dir}
+      className={cn(
+        "min-w-0 text-sm text-muted-foreground md:text-[15px]",
+        props.dir === "rtl" && "text-right",
+        props.className,
+        code === "ur" && "text-lg text-foreground md:text-lg",
+      )}
+    >
+      {text}
+    </span>
+  );
+}
+
+export function TodaysWordsCard({
+  className,
+  saved = [],
+  languages = ["en"],
+}: {
+  className?: string;
+  saved?: SavedWord[];
+  languages?: LanguageCode[];
+}) {
+  // German column + one column per language the student chose.
+  const cols = {
+    gridTemplateColumns: `1.3fr repeat(${languages.length}, minmax(0, 1fr))`,
+  };
+  const sampleMeaning = (w: (typeof todaysWords)[number], code: string) =>
+    code === "en" ? w.english : code === "ur" ? w.urdu : null;
+
   return (
     <Card className={className}>
       <CardHeader>
         <div className="grid gap-1">
           <CardTitle>Today&apos;s words</CardTitle>
           <CardDescription>
-            {saved.length > 0 && `${saved.length} saved by you in Daily Practice · `}Kapitel 7 · Wohnen — {todaysWords.length} new
-            words
+            {saved.length > 0 && `${saved.length} saved by you in Daily Practice · `}
+            Kapitel 7 · Wohnen — {todaysWords.length} new words
           </CardDescription>
         </div>
         <Button asChild variant="outline" size="sm" className="h-11 sm:h-9">
@@ -238,58 +284,50 @@ export function TodaysWordsCard({ className, saved = [] }: { className?: string;
         </Button>
       </CardHeader>
       <CardContent>
-        <div className="hidden grid-cols-[1.3fr_1fr_1fr] gap-4 border-b border-border pb-2 text-[13px] font-medium text-subtle-foreground md:grid">
+        <div
+          style={cols}
+          className="hidden gap-4 border-b border-border pb-2 text-[13px] font-medium text-subtle-foreground md:grid"
+        >
           <span>German</span>
-          <span>English</span>
-          <span className="text-right">Urdu</span>
+          {languages.map((code) => (
+            <span key={code} className={cn(textProps(code).dir === "rtl" && "text-right")}>
+              {getLanguage(code)?.name ?? code}
+            </span>
+          ))}
         </div>
         <ul className="divide-y divide-border">
           {saved.map((w) => (
             <li
               key={w.id}
-              className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-0.5 py-3 md:grid-cols-[1.3fr_1fr_1fr]"
+              className="grid gap-1 py-3 md:items-center md:gap-4 md:[grid-template-columns:var(--cols)]"
+              style={{ "--cols": cols.gridTemplateColumns } as React.CSSProperties}
             >
               <span lang="de" className="flex flex-wrap items-center gap-2 text-[15px] font-semibold">
                 {w.word}
                 <Badge variant="gold">Saved</Badge>
               </span>
-              <span className="col-start-1 row-start-2 text-sm text-muted-foreground md:col-start-auto md:row-start-auto md:text-[15px]">
-                {w.meaning ?? (w.meaningUr ? "" : "No meaning added yet")}
-              </span>
-              {w.meaningUr ? (
-                <span
-                  lang="ur"
-                  dir="rtl"
-                  className="urdu col-start-2 row-span-2 row-start-1 text-right text-lg text-foreground md:col-start-auto md:row-span-1 md:row-start-auto"
-                >
-                  {w.meaningUr}
-                </span>
-              ) : (
-                <span className="hidden text-right text-muted-foreground md:block" aria-hidden>
-                  —
-                </span>
-              )}
+              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 md:contents">
+                {languages.map((code, i) => (
+                  <Meaning key={code} code={code} text={w.translations[code]} first={i === 0} />
+                ))}
+              </div>
             </li>
           ))}
           {todaysWords.map((w) => (
             <li
               key={w.noun}
-              className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-0.5 py-3 md:grid-cols-[1.3fr_1fr_1fr]"
+              className="grid gap-1 py-3 md:items-center md:gap-4 md:[grid-template-columns:var(--cols)]"
+              style={{ "--cols": cols.gridTemplateColumns } as React.CSSProperties}
             >
               <span lang="de" className="text-[15px]">
                 <span className="text-muted-foreground">{w.article}</span>{" "}
                 <span className="font-semibold">{w.noun}</span>
               </span>
-              <span className="col-start-1 row-start-2 text-sm text-muted-foreground md:col-start-auto md:row-start-auto md:text-[15px]">
-                {w.english}
-              </span>
-              <span
-                lang="ur"
-                dir="rtl"
-                className="urdu col-start-2 row-span-2 row-start-1 text-right text-lg text-foreground md:col-start-auto md:row-span-1 md:row-start-auto"
-              >
-                {w.urdu}
-              </span>
+              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 md:contents">
+                {languages.map((code, i) => (
+                  <Meaning key={code} code={code} text={sampleMeaning(w, code)} first={i === 0} />
+                ))}
+              </div>
             </li>
           ))}
         </ul>

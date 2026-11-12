@@ -76,7 +76,7 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
         <ContinueLearningCard />
         <SpeakingClubCard />
         <MockExamCard className="md:col-span-2 xl:col-span-1" />
-        <TodaysWordsCard className="md:col-span-2 xl:col-span-3" saved={savedWords} />
+        <TodaysWordsCard className="md:col-span-2 xl:col-span-3" saved={savedWords} languages={user.languages} />
       </div>
     </main>
   );

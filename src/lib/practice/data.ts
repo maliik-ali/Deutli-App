@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import type { LanguageCode } from "@/lib/languages";
 import { SAVED_WORD_COLUMNS, todayPKT, type SavedWord, type TrackSummary } from "./plan";
 
 export const AUDIO_BUCKET = "practice-audio";
@@ -74,12 +75,18 @@ export type PracticeTrack = {
   doneToday: boolean;
   /** The student's saved words (all of them), so known words are marked in every text. */
   words: SavedWord[];
+  /** Languages the student gets meanings in. */
+  languages: LanguageCode[];
   set: { id: string; title: string; level: string };
   siblings: { id: string; title: string; doneToday: boolean }[];
 };
 
 /** One track with its text, a signed audio link and the other tracks of its set. */
-export async function getPracticeTrack(trackId: string, userId: string): Promise<PracticeTrack | null> {
+export async function getPracticeTrack(
+  trackId: string,
+  userId: string,
+  languages: LanguageCode[]
+): Promise<PracticeTrack | null> {
   if (!/^[0-9a-f-]{36}$/i.test(trackId)) return null;
   const supabase = await createClient();
 
@@ -113,6 +120,7 @@ export async function getPracticeTrack(trackId: string, userId: string): Promise
     audioUrl: audioRes.data?.signedUrl ?? null,
     doneToday: doneIds.has(track.id),
     words,
+    languages,
     set,
     siblings: ((siblingsRes.data ?? []) as { id: string; title: string }[]).map((s) => ({
       id: s.id,

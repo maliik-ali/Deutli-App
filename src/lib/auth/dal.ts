@@ -6,6 +6,7 @@ import { connection } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseEnv } from "@/lib/supabase/env";
+import { cleanLanguages, type LanguageCode } from "@/lib/languages";
 import { homeForRole, isRole, type Role } from "./roles";
 
 export type CurrentUser = {
@@ -13,6 +14,8 @@ export type CurrentUser = {
   email: string | null;
   fullName: string | null;
   role: Role;
+  /** Languages the user wants word meanings in (at least English). */
+  languages: LanguageCode[];
 };
 
 /**
@@ -32,7 +35,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role")
+    .select("full_name, role, languages")
     .eq("id", claims.sub)
     .maybeSingle();
 
@@ -42,6 +45,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     fullName: profile?.full_name ?? null,
     // No profile row (should not happen) => lowest permissions.
     role: isRole(profile?.role) ? profile.role : "student",
+    languages: cleanLanguages(profile?.languages),
   };
 });
 

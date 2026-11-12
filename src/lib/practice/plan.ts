@@ -110,9 +110,15 @@ export function lastPractisedLabel(track: TrackSummary, today: string): string |
   return `${diff} days ago`;
 }
 
-/** A word or phrase the student saved while reading. */
-/** A saved word. `meaning` is English, `meaningUr` is Urdu. */
-export type SavedWord = { id: string; word: string; meaning: string | null; meaningUr: string | null };
+/** A word or phrase the student saved while reading, with meanings by language code. */
+export type SavedWord = {
+  id: string;
+  word: string;
+  /** Dictionary form, e.g. "der Arbeitsbereich" for "Arbeitsbereiche". */
+  dictionaryForm: string | null;
+  /** Meanings by language code, e.g. { en: "work area", ur: "کام کی جگہ" }. */
+  translations: Record<string, string>;
+};
 
-/** Columns to read for a SavedWord (Urdu is renamed to meaningUr). */
-export const SAVED_WORD_COLUMNS = "id, word, meaning, meaningUr:meaning_ur";
+/** Columns to read for a SavedWord. */
+export const SAVED_WORD_COLUMNS = "id, word, dictionaryForm:dictionary_form, translations";
