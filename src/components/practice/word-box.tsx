@@ -53,22 +53,19 @@ export function WordBox({
   useEffect(() => {
     if (missing.length === 0 || tried.current.has(missingKey)) return;
     tried.current.add(missingKey);
-    let cancelled = false;
+    // The box is re-created for each word (key), so no need to cancel.
     setTranslating(true);
     setError(null);
     translateVocabularyWord(word.id)
       .then((result) => {
-        if (cancelled) return;
+        setTranslating(false);
         if ("error" in result) setError(result.error);
-        else onUpdate(result.word);
+        if (result.word) onUpdate(result.word);
       })
-      .catch(
-        () => !cancelled && setError("We couldn't translate this word right now. You can type the meaning yourself."),
-      )
-      .finally(() => !cancelled && setTranslating(false));
-    return () => {
-      cancelled = true;
-    };
+      .catch(() => {
+        setTranslating(false);
+        setError("We couldn't translate this word right now. You can type the meaning yourself.");
+      });
     // missingKey covers the word and the missing languages.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [missingKey]);

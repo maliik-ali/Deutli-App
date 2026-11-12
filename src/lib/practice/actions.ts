@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { requireUser } from "@/lib/auth/dal";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { AUDIO_BUCKET } from "./data";
 import { LANGUAGE_CODES, MAX_LANGUAGES, type LanguageCode } from "@/lib/languages";
@@ -78,14 +79,20 @@ export async function saveVocabularyWord(input: unknown): Promise<{ error: strin
   return { word: data as SavedWord };
 }
 
-// Limits automatic translation per student per day (keeps costs predictable).
-const DAILY_TRANSLATIONS = 150;
+// AI translations per student per Pakistan day. Words already in the shared dictionary are free and don't count.
+const DAILY_TRANSLATIONS = 10;
+const LIMIT_REACHED =
+  "You've used today's 10 automatic translations. Type the meaning yourself, or try again tomorrow.";
+const NO_TRANSLATION = "We couldn't translate this word right now. You can type the meaning yourself.";
 
 /**
  * Fill in the meanings of a saved word in the student's languages, automatically.
- * Only languages that have no meaning yet are translated. Returns the updated word.
+ * First from the shared dictionary (free), then with AI for what is still missing.
+ * Returns the updated word.
  */
-export async function translateVocabularyWord(wordId: unknown): Promise<{ error: string } | { word: SavedWord }> {
+export async function translateVocabularyWord(
+  wordId: unknown,
+): Promise<{ error: string; word?: SavedWord } | { word: SavedWord }> {
   const user = await requireUser(LEARNERS);
   const id = uuid.safeParse(wordId);
   if (!id.success) return { error: GENERIC };
@@ -97,50 +104,76 @@ export async function translateVocabularyWord(wordId: unknown): Promise<{ error:
     .eq("id", id.data)
     .maybeSingle();
   if (!row) return { error: GENERIC };
-  const current = (row.translations ?? {}) as Record<string, string>;
-  const asWord = (translations: Record<string, string>, dictionaryForm: string | null): SavedWord => ({
-    id: row.id,
-    word: row.word,
-    dictionaryForm,
-    translations,
-  });
 
-  const missing = user.languages.filter((code) => !current[code]);
-  if (missing.length === 0) return { word: asWord(current, row.dictionary_form) };
+  let translations = { ...((row.translations ?? {}) as Record<string, string>) };
+  let dictionaryForm: string | null = row.dictionary_form;
+  const missingNow = () => user.languages.filter((code) => !translations[code]);
+  if (missingNow().length === 0) return { word: { id: row.id, word: row.word, dictionaryForm, translations } };
 
-  const since = new Date(Date.now() - 86_400_000).toISOString();
-  const { count } = await supabase
-    .from("vocabulary_words")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .gte("created_at", since);
-  if ((count ?? 0) > DAILY_TRANSLATIONS) {
-    return { error: "You've saved a lot of words today, so please type the meaning yourself." };
+  // The shared dictionary and the usage counter need the server's secret key.
+  const admin = createAdminClient();
+  if (!admin) return { error: NO_TRANSLATION };
+
+  const key = row.word.trim().toLowerCase();
+  const { data: entry } = await admin
+    .from("word_dictionary")
+    .select("dictionary_form, translations")
+    .eq("word_key", key)
+    .maybeSingle();
+  const shared = (entry?.translations ?? {}) as Record<string, string>;
+  translations = { ...shared, ...translations };
+  dictionaryForm ??= entry?.dictionary_form ?? null;
+
+  const missing = missingNow();
+  let error: string | null = null;
+  if (missing.length > 0) {
+    const { data: allowed, error: usageError } = await admin.rpc("use_translation", {
+      p_user: user.id,
+      p_day: todayPKT(),
+      p_limit: DAILY_TRANSLATIONS,
+    });
+    if (usageError) error = NO_TRANSLATION;
+    else if (!allowed) error = LIMIT_REACHED;
+    else {
+      const result = await translateWord(row.word, row.context, missing);
+      if (!result) error = NO_TRANSLATION;
+      else {
+        translations = { ...result.translations, ...translations };
+        dictionaryForm ??= result.dictionaryForm;
+        // Share the new meanings with every student.
+        await admin.from("word_dictionary").upsert({
+          word_key: key,
+          dictionary_form: entry?.dictionary_form ?? result.dictionaryForm,
+          translations: { ...result.translations, ...shared },
+          updated_at: new Date().toISOString(),
+        });
+      }
+    }
   }
 
-  const result = await translateWord(row.word, row.context, missing);
-  if (!result) return { error: "We couldn't translate this word right now. You can type the meaning yourself." };
-
-  const translations = { ...result.translations, ...current };
-  const dictionaryForm = row.dictionary_form ?? result.dictionaryForm;
-  const { error } = await supabase
-    .from("vocabulary_words")
-    .update({ translations, dictionary_form: dictionaryForm })
-    .eq("id", row.id);
-  if (error) return { error: WORD_ERROR };
-  revalidatePath("/dashboard");
-  return { word: asWord(translations, dictionaryForm) };
+  const changed =
+    JSON.stringify(translations) !== JSON.stringify(row.translations ?? {}) || dictionaryForm !== row.dictionary_form;
+  if (changed) {
+    const { error: saveError } = await supabase
+      .from("vocabulary_words")
+      .update({ translations, dictionary_form: dictionaryForm })
+      .eq("id", row.id);
+    if (saveError) return { error: WORD_ERROR };
+    revalidatePath("/dashboard");
+  }
+  const word: SavedWord = { id: row.id, word: row.word, dictionaryForm, translations };
+  return error ? { error, word } : { word };
 }
 
 const meaningsSchema = z.record(
   z.enum(LANGUAGE_CODES),
-  z.string().trim().max(200, "Keep each meaning short (up to 200 letters).")
+  z.string().trim().max(200, "Keep each meaning short (up to 200 letters)."),
 );
 
 /** Save the meanings a student typed or corrected (empty = remove that meaning). */
 export async function setVocabularyMeaning(
   wordId: unknown,
-  meanings: unknown
+  meanings: unknown,
 ): Promise<{ error: string } | { translations: Record<string, string> }> {
   await requireUser(LEARNERS);
   const id = uuid.safeParse(wordId);
@@ -220,7 +253,10 @@ export async function setPracticeSetPublished(setId: unknown, published: unknown
   const id = uuid.safeParse(setId);
   if (!id.success) return { error: GENERIC };
   const supabase = await createClient();
-  const { error } = await supabase.from("practice_sets").update({ is_published: Boolean(published) }).eq("id", id.data);
+  const { error } = await supabase
+    .from("practice_sets")
+    .update({ is_published: Boolean(published) })
+    .eq("id", id.data);
   if (error) return { error: GENERIC };
   refresh(id.data);
 }
@@ -235,7 +271,9 @@ export async function deletePracticeSet(setId: unknown): Promise<PracticeActionR
   const { error } = await supabase.from("practice_sets").delete().eq("id", id.data);
   if (error) return { error: GENERIC };
 
-  const paths = ((tracks ?? []) as { audio_path: string | null }[]).map((t) => t.audio_path).filter((p): p is string => !!p);
+  const paths = ((tracks ?? []) as { audio_path: string | null }[])
+    .map((t) => t.audio_path)
+    .filter((p): p is string => !!p);
   if (paths.length) await supabase.storage.from(AUDIO_BUCKET).remove(paths);
   refresh(id.data);
 }
@@ -248,14 +286,13 @@ const AUDIO_EXT = ["mp3", "m4a", "mp4", "aac", "wav", "ogg", "webm"];
  */
 export async function createAudioUploadUrl(
   setId: unknown,
-  fileName: unknown
+  fileName: unknown,
 ): Promise<{ error: string } | { path: string; signedUrl: string }> {
   await requireUser(ADMINS);
   const id = uuid.safeParse(setId);
   const ext = typeof fileName === "string" ? fileName.split(".").pop()?.toLowerCase() : undefined;
   if (!id.success) return { error: GENERIC };
-  if (!ext || !AUDIO_EXT.includes(ext))
-    return { error: "Please choose an audio file (MP3, M4A, WAV or OGG)." };
+  if (!ext || !AUDIO_EXT.includes(ext)) return { error: "Please choose an audio file (MP3, M4A, WAV or OGG)." };
 
   const supabase = await createClient();
   const path = `${id.data}/${crypto.randomUUID()}.${ext}`;
@@ -322,7 +359,11 @@ export async function deletePracticeTrack(trackId: unknown): Promise<PracticeAct
   const id = uuid.safeParse(trackId);
   if (!id.success) return { error: GENERIC };
   const supabase = await createClient();
-  const { data: track } = await supabase.from("practice_tracks").select("set_id, audio_path").eq("id", id.data).maybeSingle();
+  const { data: track } = await supabase
+    .from("practice_tracks")
+    .select("set_id, audio_path")
+    .eq("id", id.data)
+    .maybeSingle();
   const { error } = await supabase.from("practice_tracks").delete().eq("id", id.data);
   if (error) return { error: GENERIC };
   if (track?.audio_path) await supabase.storage.from(AUDIO_BUCKET).remove([track.audio_path]);
