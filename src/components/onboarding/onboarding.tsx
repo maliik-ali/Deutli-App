@@ -8,6 +8,7 @@ import {
   BookOpen,
   CalendarDays,
   Check,
+  ChevronDown,
   CircleHelp,
   Headphones,
   Layers,
@@ -21,7 +22,7 @@ import {
 
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
-import { LANGUAGES, type LanguageCode } from "@/lib/languages";
+import { LANGUAGES, getLanguage, type LanguageCode } from "@/lib/languages";
 import { completeOnboarding } from "@/lib/onboarding/actions";
 import {
   EXAMS,
@@ -37,7 +38,7 @@ import {
 } from "@/lib/onboarding/options";
 import { cn } from "@/lib/utils";
 
-const STEP_COUNT = 6;
+const STEP_COUNT = 5;
 const SKILL_ICONS: Record<SkillId, LucideIcon> = {
   lesen: BookOpen,
   sprachbausteine: Puzzle,
@@ -98,6 +99,75 @@ function Heading({ title, text }: { title: string; text: string }) {
   );
 }
 
+/** Dropdown of all languages, each shown in English and in its own script. */
+function LanguageSelect({
+  id,
+  label,
+  hint,
+  value,
+  onChange,
+  exclude,
+  optional,
+}: {
+  id: string;
+  label: string;
+  hint: string;
+  value: LanguageCode | null;
+  onChange: (code: LanguageCode | null) => void;
+  exclude?: LanguageCode | null;
+  optional?: boolean;
+}) {
+  const chosen = value ? getLanguage(value) : null;
+  return (
+    <div className="grid gap-2">
+      <label htmlFor={id} className="text-[15px] font-semibold">
+        {label}
+        {optional && <span className="ml-1.5 font-normal text-subtle-foreground">(optional)</span>}
+      </label>
+      <div className="relative">
+        <select
+          id={id}
+          value={value ?? ""}
+          onChange={(e) => onChange((e.target.value || null) as LanguageCode | null)}
+          aria-describedby={`${id}-hint`}
+          className={cn(
+            "h-14 w-full appearance-none rounded-2xl border bg-card pr-12 pl-4 text-base [color-scheme:dark] outline-none transition-colors focus-visible:border-gold-ink",
+            value ? "border-gold-ink/60 text-foreground" : "border-border text-muted-foreground",
+          )}
+        >
+          <option value="">{optional ? "None" : "Choose a language"}</option>
+          {LANGUAGES.filter((l) => l.code !== exclude).map((l) => (
+            <option key={l.code} value={l.code}>
+              {l.native !== l.name ? `${l.name} · ${l.native}` : l.name}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          className="pointer-events-none absolute top-1/2 right-4 size-5 -translate-y-1/2 text-muted-foreground"
+          aria-hidden
+        />
+      </div>
+      <p id={`${id}-hint`} className="text-sm text-muted-foreground">
+        {chosen && chosen.native !== chosen.name ? (
+          <>
+            Meanings will appear in{" "}
+            <span
+              lang={chosen.code}
+              dir={chosen.rtl ? "rtl" : "ltr"}
+              className={cn("text-foreground", chosen.code === "ur" && "urdu")}
+            >
+              {chosen.native}
+            </span>
+            .
+          </>
+        ) : (
+          hint
+        )}
+      </p>
+    </div>
+  );
+}
+
 export function Onboarding({
   firstName,
   languages: initialLanguages,
@@ -117,15 +187,17 @@ export function Onboarding({
   const [exam, setExam] = useState<ExamId | null>(null);
   const [timeline, setTimeline] = useState<TimelineId | null>(null);
   const [examDate, setExamDate] = useState("");
-  const [focus, setFocus] = useState<SkillId | null>(null);
+  const [focus, setFocus] = useState<SkillId[]>([]);
   const [emailTips, setEmailTips] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, startBusy] = useTransition();
 
   const today = new Date().toISOString().slice(0, 10);
   const skills = SKILLS.filter((s) => !s.onlyFor || !exam || s.onlyFor.includes(exam));
-  const plan = skillById(focus) ?? skillById("unsure")!;
-  const PlanIcon = SKILL_ICONS[plan.id];
+  // Plans for the chosen worries, in the order they appear on the list ("not sure" only on its own).
+  const chosen = skills.filter((s) => focus.includes(s.id));
+  const plans = chosen.length ? chosen : [skillById("unsure")!];
+  const start = plans[0].start;
 
   // Native language first, then the second one, then English (if there is room).
   function finalLanguages(): LanguageCode[] {
@@ -147,6 +219,14 @@ export function Onboarding({
     });
   }
 
+  function toggleFocus(id: SkillId) {
+    setFocus((f) => {
+      if (id === "unsure") return f.includes("unsure") ? [] : ["unsure"];
+      const rest = f.filter((x) => x !== "unsure");
+      return rest.includes(id) ? rest.filter((x) => x !== id) : [...rest, id];
+    });
+  }
+
   function finish(href: string) {
     setError(null);
     startBusy(async () => {
@@ -156,7 +236,7 @@ export function Onboarding({
         exam,
         examTimeline: timeline,
         examDate: timeline === "date" && examDate ? examDate : null,
-        focusSkill: focus,
+        focusSkills: chosen.map((s) => s.id),
         emailTips,
       });
       if ("error" in result) {
@@ -168,10 +248,11 @@ export function Onboarding({
     });
   }
 
-  const canContinue = [!!first, true, goals.length > 0, !!exam && (timeline !== "date" || !!examDate), !!focus, true][
+  const canContinue = [!!first, goals.length > 0, !!exam && (timeline !== "date" || !!examDate), focus.length > 0][
     step
   ];
   const skippable = step < STEP_COUNT - 1;
+  const actionWidth = "w-full sm:w-80";
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
@@ -207,7 +288,7 @@ export function Onboarding({
           </div>
           <div className="flex justify-end">
             {skippable && (
-              <Button variant="ghost" className="text-muted-foreground" onClick={() => go(step === 0 ? 2 : step + 1)}>
+              <Button variant="ghost" className="text-muted-foreground" onClick={() => go(step + 1)}>
                 Skip
               </Button>
             )}
@@ -219,67 +300,34 @@ export function Onboarding({
         {step === 0 && (
           <>
             <Heading
-              title={
-                firstName
-                  ? `Welcome to Deutli, ${firstName}! What's your first language?`
-                  : "What's your first language?"
-              }
-              text="We'll show the meaning of new German words in your language."
+              title={firstName ? `Welcome to Deutli, ${firstName}!` : "Welcome to Deutli!"}
+              text="Which languages do you speak? We'll show the meaning of new German words in them."
             />
-            <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="First language">
-              {LANGUAGES.map((l) => (
-                <Choice key={l.code} kind="radio" selected={first === l.code} onClick={() => setFirst(l.code)}>
-                  <span className="flex items-baseline justify-between gap-3">
-                    <span className="font-semibold">{l.name}</span>
-                    {l.native !== l.name && (
-                      <span
-                        lang={l.code}
-                        dir={l.rtl ? "rtl" : "ltr"}
-                        className={cn("text-muted-foreground", l.code === "ur" && "urdu text-lg leading-none")}
-                      >
-                        {l.native}
-                      </span>
-                    )}
-                  </span>
-                </Choice>
-              ))}
+            <div className="grid max-w-xl gap-6">
+              <LanguageSelect
+                id="first-language"
+                label="My first language"
+                hint="The language you know best."
+                value={first}
+                onChange={(code) => {
+                  setFirst(code);
+                  if (code && code === second) setSecond(null);
+                }}
+              />
+              <LanguageSelect
+                id="second-language"
+                label="I also speak"
+                hint="Saved words can show up to three meanings, for example Urdu and English."
+                value={second}
+                onChange={setSecond}
+                exclude={first}
+                optional
+              />
             </div>
           </>
         )}
 
         {step === 1 && (
-          <>
-            <Heading
-              title="Do you know another language?"
-              text="Optional. Saved words can show up to three meanings, for example Urdu and English."
-            />
-            <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Second language">
-              {LANGUAGES.filter((l) => l.code !== first).map((l) => (
-                <Choice
-                  key={l.code}
-                  kind="radio"
-                  selected={second === l.code}
-                  onClick={() => setSecond(second === l.code ? null : l.code)}
-                >
-                  <span className="flex items-baseline justify-between gap-3">
-                    <span className="font-semibold">{l.name}</span>
-                    {l.native !== l.name && (
-                      <span
-                        lang={l.code}
-                        dir={l.rtl ? "rtl" : "ltr"}
-                        className={cn("text-muted-foreground", l.code === "ur" && "urdu text-lg leading-none")}
-                      >
-                        {l.native}
-                      </span>
-                    )}
-                  </span>
-                </Choice>
-              ))}
-            </div>
-          </>
-        )}
-
-        {step === 2 && (
           <>
             <Heading
               title="What do you need your certificate for?"
@@ -309,7 +357,7 @@ export function Onboarding({
           </>
         )}
 
-        {step === 3 && (
+        {step === 2 && (
           <>
             <Heading title="Which exam are you preparing for?" text="We'll plan your practice around it." />
             <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -375,7 +423,7 @@ export function Onboarding({
                           aria-checked={timeline === t.id}
                           onClick={() => setTimeline(t.id)}
                           className={cn(
-                            "grid min-h-24 justify-items-center content-center gap-2 rounded-xl border px-2 text-center text-sm font-semibold transition-colors",
+                            "grid min-h-24 content-center justify-items-center gap-2 rounded-xl border px-2 text-center text-sm font-semibold transition-colors",
                             timeline === t.id
                               ? "border-gold-ink bg-gold-soft"
                               : "border-border hover:border-gold-ink/60",
@@ -393,14 +441,17 @@ export function Onboarding({
           </>
         )}
 
-        {step === 4 && (
+        {step === 3 && (
           <>
-            <Heading title="What worries you most about the exam?" text="We'll show you how to tackle it." />
-            <div className="grid gap-3" role="radiogroup" aria-label="Biggest worry">
+            <Heading
+              title="What worries you most about the exam?"
+              text="Pick everything that applies. We'll show you how to tackle it."
+            />
+            <div className="grid gap-3">
               {skills.map((s) => {
                 const Icon = SKILL_ICONS[s.id];
                 return (
-                  <Choice key={s.id} kind="radio" selected={focus === s.id} onClick={() => setFocus(s.id)}>
+                  <Choice key={s.id} kind="check" selected={focus.includes(s.id)} onClick={() => toggleFocus(s.id)}>
                     <span className="flex items-center gap-4">
                       <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-gold-soft text-gold-ink">
                         <Icon className="size-6" aria-hidden />
@@ -422,44 +473,62 @@ export function Onboarding({
           </>
         )}
 
-        {step === 5 && (
+        {step === 4 && (
           <>
-            <div className="flex items-center gap-4">
-              <span className="grid size-16 shrink-0 place-items-center rounded-2xl bg-gold-soft text-gold-ink">
-                <PlanIcon className="size-8" aria-hidden />
-              </span>
-              <div className="grid gap-0.5">
-                <h1
-                  lang={plan.id === "unsure" ? undefined : "de"}
-                  className="text-[26px] leading-tight font-extrabold sm:text-[32px]"
-                >
-                  {plan.id === "unsure" ? "Your B1 exam at a glance" : plan.name}
-                </h1>
-                <p className="text-muted-foreground">
-                  {plan.id === "unsure" ? "Four skills, one certificate" : plan.english}
-                </p>
-              </div>
+            <Heading
+              title={
+                plans[0].id === "unsure"
+                  ? "Your B1 exam at a glance"
+                  : plans.length === 1
+                    ? "Here's how to tackle it"
+                    : `Here's how to tackle these ${plans.length}`
+              }
+              text={
+                plans[0].id === "unsure"
+                  ? "Four skills, one certificate."
+                  : "A few tips for each, and how Deutli helps you practise."
+              }
+            />
+            <div className="grid gap-4">
+              {plans.map((plan) => {
+                const Icon = SKILL_ICONS[plan.id];
+                return (
+                  <section key={plan.id} className="grid gap-4 rounded-2xl border border-border bg-card p-5 sm:p-6">
+                    <div className="flex items-center gap-4">
+                      <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-gold-soft text-gold-ink">
+                        <Icon className="size-6" aria-hidden />
+                      </span>
+                      <h2 className="flex flex-wrap items-baseline gap-x-2">
+                        <span lang={plan.id === "unsure" ? undefined : "de"} className="text-xl font-extrabold">
+                          {plan.id === "unsure" ? "The four skills" : plan.name}
+                        </span>
+                        {plan.id !== "unsure" && <span className="text-muted-foreground">{plan.english}</span>}
+                      </h2>
+                    </div>
+                    <p className="text-[15px] leading-relaxed text-muted-foreground">{plan.about}</p>
+                    <ol className="grid gap-3 sm:grid-cols-2">
+                      {plan.parts.map((p, i) => (
+                        <li key={p.title} className="flex gap-3 rounded-xl bg-background/60 p-4">
+                          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-ink text-sm font-bold text-gold-ink">
+                            {i + 1}
+                          </span>
+                          <span className="grid gap-0.5">
+                            <span className="font-semibold">{p.title}</span>
+                            <span className="text-sm text-muted-foreground">{p.text}</span>
+                          </span>
+                        </li>
+                      ))}
+                    </ol>
+                    <p className="text-[15px] leading-relaxed">
+                      <span className="font-semibold">How Deutli helps: </span>
+                      {plan.help}
+                    </p>
+                  </section>
+                );
+              })}
             </div>
-            <p className="max-w-3xl text-[17px] leading-relaxed">{plan.about}</p>
-            <ol className="divide-y divide-border rounded-2xl border border-border bg-card">
-              {plan.parts.map((p, i) => (
-                <li key={p.title} className="flex gap-4 p-5">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-ink font-heading font-bold text-gold-ink">
-                    {i + 1}
-                  </span>
-                  <span className="grid gap-1">
-                    <span className="font-semibold">{p.title}</span>
-                    <span className="text-[15px] text-muted-foreground">{p.text}</span>
-                  </span>
-                </li>
-              ))}
-            </ol>
-            <p className="max-w-3xl text-[17px] leading-relaxed">
-              <span className="font-semibold">How Deutli helps: </span>
-              {plan.help}
-            </p>
 
-            <Choice kind="check" selected={emailTips} onClick={() => setEmailTips((v) => !v)} className="bg-card">
+            <Choice kind="check" selected={emailTips} onClick={() => setEmailTips((v) => !v)}>
               <span className="grid gap-0.5">
                 <span className="font-semibold">Study tips and reminders</span>
                 <span className="text-[15px] text-muted-foreground">
@@ -473,37 +542,29 @@ export function Onboarding({
                 {error}
               </p>
             )}
-
-            <div className="grid gap-3">
-              <button
-                type="button"
-                onClick={() => finish(plan.start.href)}
-                disabled={busy}
-                className="flex min-h-20 w-full items-center justify-between gap-4 rounded-2xl bg-brand-gradient px-6 py-4 text-left text-white transition-opacity hover:opacity-95 disabled:opacity-60"
-              >
-                <span className="grid gap-0.5">
-                  <span className="text-lg font-bold">{busy ? "Saving…" : "Start practising now"}</span>
-                  <span className="text-[15px] text-white/85">
-                    {plan.start.label} · {plan.start.detail}
-                  </span>
-                </span>
-                <ArrowRight className="size-6 shrink-0" aria-hidden />
-              </button>
-              <Button variant="ghost" className="justify-self-center" onClick={() => finish(home)} disabled={busy}>
-                Go to my dashboard
-              </Button>
-            </div>
           </>
         )}
 
-        {step < 5 && (
-          // On phones the button stays at the bottom of the screen, so long lists don't hide it.
-          <div className="sticky bottom-0 -mx-4 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
-            <Button className="h-14 w-full text-base" disabled={!canContinue} onClick={() => go(step + 1)}>
+        {/* Same button on every step; on phones it stays at the bottom of the screen. */}
+        <div className="sticky bottom-0 -mx-4 grid justify-items-center gap-2 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+          {step < STEP_COUNT - 1 ? (
+            <Button className={cn("h-12 text-base", actionWidth)} disabled={!canContinue} onClick={() => go(step + 1)}>
               Continue <ArrowRight aria-hidden />
             </Button>
-          </div>
-        )}
+          ) : (
+            <>
+              <Button className={cn("h-12 text-base", actionWidth)} disabled={busy} onClick={() => finish(start.href)}>
+                {busy ? "Saving…" : "Start practising now"} <ArrowRight aria-hidden />
+              </Button>
+              <p className="text-sm text-muted-foreground">
+                {start.label} · {start.detail}
+              </p>
+              <Button variant="ghost" size="sm" onClick={() => finish(home)} disabled={busy}>
+                Go to my dashboard
+              </Button>
+            </>
+          )}
+        </div>
       </main>
     </div>
   );

@@ -22,7 +22,7 @@ const schema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .nullable(),
-  focusSkill: z.enum(["lesen", "hoeren", "schreiben", "sprechen", "sprachbausteine", "unsure"]).nullable(),
+  focusSkills: z.array(z.enum(["lesen", "hoeren", "schreiben", "sprechen", "sprachbausteine", "unsure"])).max(6),
   emailTips: z.boolean(),
 });
 
@@ -43,7 +43,7 @@ export async function completeOnboarding(input: unknown): Promise<{ error: strin
       exam: a.exam,
       exam_timeline: a.examTimeline,
       exam_date: a.examTimeline === "date" ? a.examDate : null,
-      focus_skill: a.focusSkill,
+      focus_skills: [...new Set(a.focusSkills)],
       email_tips: a.emailTips,
       onboarded_at: new Date().toISOString(),
     })

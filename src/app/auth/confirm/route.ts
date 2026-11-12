@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
-const ALLOWED_NEXT = new Set(["/dashboard", "/reset-password", "/"]);
+const ALLOWED_NEXT = new Set(["/dashboard", "/onboarding", "/reset-password", "/"]);
 
 /**
  * Email links (confirm signup, reset password) land here.
