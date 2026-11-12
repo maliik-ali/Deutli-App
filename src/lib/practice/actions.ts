@@ -7,7 +7,7 @@ import { requireUser } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { AUDIO_BUCKET } from "./data";
 import { LEVELS } from "./levels";
-import { todayPKT } from "./plan";
+import { todayPKT, type SavedWord } from "./plan";
 
 export type PracticeActionResult = { error: string } | undefined;
 
@@ -41,6 +41,61 @@ export async function setPractisedToday(trackId: unknown, done: unknown): Promis
 
   revalidatePath("/dashboard/daily-practice");
   revalidatePath(`/practice/${id.data}`);
+}
+
+const wordSchema = z.object({
+  word: z.string().trim().min(1).max(80, "Select a shorter piece of text (up to 80 letters)."),
+  context: z.string().trim().max(500).optional(),
+  trackId: uuid.optional(),
+});
+const WORD_ERROR = "We couldn't save this word. Check your internet and try again.";
+
+/** Save a word or phrase the student selected in a text. Saving it twice returns the existing one. */
+export async function saveVocabularyWord(input: unknown): Promise<{ error: string } | { word: SavedWord }> {
+  const user = await requireUser(LEARNERS);
+  const parsed = wordSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const { word, context, trackId } = parsed.data;
+
+  const supabase = await createClient();
+  const existing = await supabase
+    .from("vocabulary_words")
+    .select("id, word, meaning")
+    .eq("user_id", user.id)
+    .ilike("word", word.replace(/[%_\\]/g, "\\$&"))
+    .maybeSingle();
+  if (existing.data) return { word: existing.data as SavedWord };
+
+  const { data, error } = await supabase
+    .from("vocabulary_words")
+    .insert({ user_id: user.id, word, context: context || null, track_id: trackId ?? null })
+    .select("id, word, meaning")
+    .single();
+  if (error || !data) return { error: WORD_ERROR };
+  revalidatePath("/dashboard");
+  return { word: data as SavedWord };
+}
+
+export async function setVocabularyMeaning(wordId: unknown, meaning: unknown): Promise<PracticeActionResult> {
+  await requireUser(LEARNERS);
+  const id = uuid.safeParse(wordId);
+  const text = z.string().trim().max(200, "Keep the meaning short (up to 200 letters).").safeParse(meaning);
+  if (!id.success) return { error: GENERIC };
+  if (!text.success) return { error: text.error.issues[0].message };
+  const supabase = await createClient();
+  const { error } = await supabase.from("vocabulary_words").update({ meaning: text.data || null }).eq("id", id.data);
+  if (error) return { error: WORD_ERROR };
+  revalidatePath("/dashboard");
+}
+
+export async function removeVocabularyWord(wordId: unknown): Promise<PracticeActionResult> {
+  await requireUser(LEARNERS);
+  const id = uuid.safeParse(wordId);
+  if (!id.success) return { error: GENERIC };
+  const supabase = await createClient();
+  const { error } = await supabase.from("vocabulary_words").delete().eq("id", id.data);
+  if (error) return { error: "We couldn't remove this word. Please try again." };
+  revalidatePath("/dashboard");
 }
 
 // ADMIN --------------------------------------------------------------------

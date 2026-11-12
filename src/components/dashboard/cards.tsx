@@ -13,6 +13,7 @@ import {
   speakingClub,
   todaysWords,
 } from "@/lib/sample-data";
+import type { SavedWord } from "@/lib/practice/plan";
 import { cn } from "@/lib/utils";
 
 export function ReadinessCard({ className }: { className?: string }) {
@@ -221,13 +222,16 @@ export function MockExamCard({ className }: { className?: string }) {
   );
 }
 
-export function TodaysWordsCard({ className }: { className?: string }) {
+export function TodaysWordsCard({ className, saved = [] }: { className?: string; saved?: SavedWord[] }) {
   return (
     <Card className={className}>
       <CardHeader>
         <div className="grid gap-1">
           <CardTitle>Today&apos;s words</CardTitle>
-          <CardDescription>Kapitel 7 · Wohnen — {todaysWords.length} new words</CardDescription>
+          <CardDescription>
+            {saved.length > 0 && `${saved.length} saved by you in Daily Practice · `}Kapitel 7 · Wohnen — {todaysWords.length} new
+            words
+          </CardDescription>
         </div>
         <Button asChild variant="outline" size="sm" className="h-11 sm:h-9">
           <Link href="/dashboard/vocabulary">Practise</Link>
@@ -240,6 +244,23 @@ export function TodaysWordsCard({ className }: { className?: string }) {
           <span className="text-right">Urdu</span>
         </div>
         <ul className="divide-y divide-border">
+          {saved.map((w) => (
+            <li
+              key={w.id}
+              className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-0.5 py-3 md:grid-cols-[1.3fr_1fr_1fr]"
+            >
+              <span lang="de" className="flex flex-wrap items-center gap-2 text-[15px] font-semibold">
+                {w.word}
+                <Badge variant="gold">Saved</Badge>
+              </span>
+              <span className="col-start-1 row-start-2 text-sm text-muted-foreground md:col-start-auto md:row-start-auto md:text-[15px]">
+                {w.meaning ?? "No meaning added yet"}
+              </span>
+              <span className="hidden text-right text-muted-foreground md:block" aria-hidden>
+                —
+              </span>
+            </li>
+          ))}
           {todaysWords.map((w) => (
             <li
               key={w.noun}

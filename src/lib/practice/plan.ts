@@ -109,3 +109,6 @@ export function lastPractisedLabel(track: TrackSummary, today: string): string |
   if (diff === 1) return "yesterday";
   return `${diff} days ago`;
 }
+
+/** A word or phrase the student saved while reading. */
+export type SavedWord = { id: string; word: string; meaning: string | null };

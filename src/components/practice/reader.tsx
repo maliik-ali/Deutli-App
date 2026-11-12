@@ -12,16 +12,24 @@ import {
   Mic,
   Pause,
   Play,
+  Plus,
   Repeat,
   RotateCcw,
   RotateCw,
+  Trash2,
   X,
   type LucideIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { setPractisedToday } from "@/lib/practice/actions";
+import {
+  removeVocabularyWord,
+  saveVocabularyWord,
+  setPractisedToday,
+  setVocabularyMeaning,
+} from "@/lib/practice/actions";
 import type { PracticeTrack } from "@/lib/practice/data";
+import type { SavedWord } from "@/lib/practice/plan";
 import { cn } from "@/lib/utils";
 
 const STEPS: { title: string; hint: string; icon: LucideIcon }[] = [
@@ -72,6 +80,19 @@ function parseTranscript(text: string): Line[] {
   return lines;
 }
 
+/** Where a floating box should sit on screen, from the rectangle of the selected or clicked word. */
+type Anchor = { x: number; top: number; bottom: number };
+const anchorOf = (r: DOMRect): Anchor => ({ x: r.left + r.width / 2, top: r.top, bottom: r.bottom });
+const escapeRegExp = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const TRIM = /^[\s.,;:!?„“”"'»«()–-]+|[\s.,;:!?„“”"'»«()–-]+$/g;
+
+function floatStyle(a: Anchor, height: number, prefer: "above" | "below" = "above"): React.CSSProperties {
+  const vh = typeof window === "undefined" ? 800 : window.innerHeight;
+  const below = prefer === "below" ? a.bottom + height + 24 < vh : a.top < height + 24;
+  const x = typeof window === "undefined" ? a.x : Math.min(Math.max(a.x, 150), window.innerWidth - 150);
+  return { left: x, top: below ? a.bottom + 8 : a.top - height - 8, transform: "translateX(-50%)" };
+}
+
 export function PracticeReader({ track }: { track: PracticeTrack }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const hasAudio = Boolean(track.audioUrl);
@@ -88,6 +109,15 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
   const [done, setDone] = useState(track.doneToday);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, startSaving] = useTransition();
+
+  // Saved words: select a word in the text to save it; saved words are marked in the text.
+  const articleRef = useRef<HTMLElement>(null);
+  const [words, setWords] = useState<SavedWord[]>(track.words);
+  const [pick, setPick] = useState<{ text: string; context: string; at: Anchor } | null>(null);
+  const [openWord, setOpenWord] = useState<{ id: string; at: Anchor } | null>(null);
+  const [wordError, setWordError] = useState<string | null>(null);
+  const [wordBusy, startWord] = useTransition();
+  const active = openWord ? words.find((w) => w.id === openWord.id) : undefined;
 
   const lines = parseTranscript(track.transcript);
   const index = track.siblings.findIndex((s) => s.id === track.id);
@@ -123,6 +153,132 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [hasAudio, toggle, skip]);
+
+  // Watch what the reader selects inside the text.
+  useEffect(() => {
+    function onSelection() {
+      const sel = window.getSelection();
+      const art = articleRef.current;
+      if (!sel || sel.isCollapsed || !art || !art.contains(sel.anchorNode) || !art.contains(sel.focusNode)) {
+        setPick(null);
+        return;
+      }
+      const text = sel.toString().replace(/\s+/g, " ").replace(TRIM, "");
+      if (!text || text.length > 80) {
+        setPick(null);
+        return;
+      }
+      const node = sel.anchorNode;
+      const el = node instanceof Element ? node : node?.parentElement;
+      const context = (el?.closest("p")?.textContent ?? "").replace(/\s+/g, " ").trim().slice(0, 500);
+      setWordError(null);
+      setPick({ text, context, at: anchorOf(sel.getRangeAt(0).getBoundingClientRect()) });
+    }
+    document.addEventListener("selectionchange", onSelection);
+    return () => document.removeEventListener("selectionchange", onSelection);
+  }, []);
+
+  // Close the word box with Escape or a click outside it.
+  useEffect(() => {
+    if (!openWord) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpenWord(null);
+    }
+    function onDown(e: MouseEvent) {
+      const el = e.target as HTMLElement | null;
+      if (!el?.closest("[data-word-box], [data-word]")) setOpenWord(null);
+    }
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("mousedown", onDown);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("mousedown", onDown);
+    };
+  }, [openWord]);
+
+  function savePick() {
+    if (!pick) return;
+    const { text, context, at } = pick;
+    startWord(async () => {
+      const result = await saveVocabularyWord({ word: text, context, trackId: track.id });
+      if ("error" in result) {
+        setWordError(result.error);
+        return;
+      }
+      setWords((list) => (list.some((w) => w.id === result.word.id) ? list : [result.word, ...list]));
+      window.getSelection()?.removeAllRanges();
+      setPick(null);
+      setOpenWord({ id: result.word.id, at });
+    });
+  }
+
+  function saveMeaning(id: string, meaning: string) {
+    setWordError(null);
+    startWord(async () => {
+      const result = await setVocabularyMeaning(id, meaning);
+      if (result?.error) {
+        setWordError(result.error);
+        return;
+      }
+      setWords((list) => list.map((w) => (w.id === id ? { ...w, meaning: meaning.trim() || null } : w)));
+      setOpenWord(null);
+    });
+  }
+
+  function removeWord(id: string) {
+    setWordError(null);
+    startWord(async () => {
+      const result = await removeVocabularyWord(id);
+      if (result?.error) {
+        setWordError(result.error);
+        return;
+      }
+      setWords((list) => list.filter((w) => w.id !== id));
+      setOpenWord(null);
+    });
+  }
+
+  // Marks every saved word inside a line of text.
+  const wordPattern = words.length
+    ? new RegExp(
+        `(?<![\\p{L}\\p{N}])(${[...words]
+          .sort((a, b) => b.word.length - a.word.length)
+          .map((w) => escapeRegExp(w.word))
+          .join("|")})(?![\\p{L}\\p{N}])`,
+        "giu"
+      )
+    : null;
+  function withWords(text: string) {
+    if (!wordPattern) return text;
+    return text.split(wordPattern).map((part, i) => {
+      if (i % 2 === 0) return part;
+      const saved = words.find((w) => w.word.toLowerCase() === part.toLowerCase());
+      if (!saved) return part;
+      const open = (el: HTMLElement) => {
+        setWordError(null);
+        setOpenWord({ id: saved.id, at: anchorOf(el.getBoundingClientRect()) });
+      };
+      return (
+        <mark
+          key={i}
+          data-word
+          role="button"
+          tabIndex={0}
+          aria-label={`${part}, saved word${saved.meaning ? `: ${saved.meaning}` : ""}`}
+          onClick={(e) => open(e.currentTarget)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              open(e.currentTarget);
+            }
+          }}
+          className="cursor-pointer rounded-[5px] bg-gold/40 px-0.5 text-inherit decoration-gold-ink decoration-dotted underline-offset-4 hover:bg-gold/60 focus-visible:outline-2"
+        >
+          {part}
+        </mark>
+      );
+    });
+  }
 
   function goToStep(i: number) {
     setStep(i);
@@ -223,6 +379,13 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
             </span>
           </p>
 
+          {!textHidden && (
+            <p className="-mt-3 text-[13px] text-muted-foreground">
+              Don&apos;t know a word? Select it in the text to save it to your vocabulary.
+              {words.length > 0 && ` Marked words are already saved.`}
+            </p>
+          )}
+
           {textHidden ? (
             <div className="grid justify-items-center gap-4 rounded-2xl border border-dashed border-border px-6 py-14 text-center">
               <span className="grid size-14 place-items-center rounded-2xl bg-ink text-gold-ink">
@@ -239,7 +402,7 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
               </Button>
             </div>
           ) : (
-            <article lang="de" className={cn("grid gap-4 text-foreground", TEXT_SIZES[textSize])}>
+            <article ref={articleRef} lang="de" className={cn("grid gap-4 text-foreground", TEXT_SIZES[textSize])}>
               {lines.map((line, i) => (
                 <p key={i} className={cn(line.voice && "flex gap-3")}>
                   {line.voice && (
@@ -254,7 +417,7 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
                   <span>
                     {line.voice && <span className="sr-only">{line.voice === "a" ? "Speaker 1: " : "Speaker 2: "}</span>}
                     {line.speaker && <span className="mr-2 font-semibold text-gold-ink">{line.speaker}:</span>}
-                    {line.text}
+                    {withWords(line.text)}
                   </span>
                 </p>
               ))}
@@ -262,6 +425,101 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
           )}
         </div>
       </main>
+
+      {/* Small bar above the selected text */}
+      {pick && !openWord && (
+        <div
+          data-word-box
+          role="toolbar"
+          aria-label="Selected text"
+          style={floatStyle(pick.at, 48)}
+          className="fixed z-40 flex max-w-[300px] items-center gap-2 rounded-full border border-border bg-ink p-1 pl-4 shadow-lg shadow-black/40"
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          {wordError ? (
+            <span className="py-2 pr-3 text-[13px] text-destructive" role="alert">
+              {wordError}
+            </span>
+          ) : (
+            <>
+              <span className="min-w-0 truncate text-sm font-semibold" lang="de">
+                {pick.text}
+              </span>
+              <Button size="sm" className="shrink-0" onClick={savePick} disabled={wordBusy}>
+                <Plus aria-hidden /> {wordBusy ? "Saving…" : "Save word"}
+              </Button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Box for a saved word: meaning + remove */}
+      {openWord && active && (
+        <form
+          data-word-box
+          key={active.id}
+          aria-label={`Saved word ${active.word}`}
+          style={floatStyle(openWord.at, 216, "below")}
+          className="fixed z-40 grid w-[280px] gap-3 rounded-2xl border border-border bg-ink p-4 shadow-lg shadow-black/40"
+          onSubmit={(e) => {
+            e.preventDefault();
+            saveMeaning(active.id, String(new FormData(e.currentTarget).get("meaning") ?? ""));
+          }}
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="flex items-center gap-1.5 text-[12px] font-semibold text-success">
+                <Check className="size-3.5" aria-hidden /> Saved to your vocabulary
+              </p>
+              <p className="truncate font-heading text-lg font-bold" lang="de">
+                {active.word}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setOpenWord(null)}
+              aria-label="Close"
+              className="-m-2 grid size-11 shrink-0 place-items-center rounded-full text-muted-foreground hover:text-foreground"
+            >
+              <X className="size-4" aria-hidden />
+            </button>
+          </div>
+          <div className="grid gap-1.5">
+            <label htmlFor="word-meaning" className="text-[13px] font-medium text-muted-foreground">
+              Meaning (optional)
+            </label>
+            <input
+              id="word-meaning"
+              name="meaning"
+              defaultValue={active.meaning ?? ""}
+              maxLength={200}
+              autoComplete="off"
+              placeholder="Type what it means"
+              className="h-11 w-full rounded-xl border border-input bg-card px-3 text-[15px] outline-none placeholder:text-muted-foreground/70 focus-visible:border-gold-ink"
+            />
+          </div>
+          {wordError && (
+            <p className="text-[13px] text-destructive" role="alert">
+              {wordError}
+            </p>
+          )}
+          <div className="flex items-center justify-between gap-2">
+            <Button type="submit" size="sm" disabled={wordBusy}>
+              {wordBusy ? "Saving…" : "Save"}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground"
+              disabled={wordBusy}
+              onClick={() => removeWord(active.id)}
+            >
+              <Trash2 aria-hidden /> Remove
+            </Button>
+          </div>
+        </form>
+      )}
 
       {/* Bottom bar: audio player, then texts of this set + Done + previous/next */}
       <footer className="shrink-0 border-t border-border bg-card">

@@ -11,6 +11,7 @@ import {
   TodaysWordsCard,
 } from "@/components/dashboard/cards";
 import { requireUser } from "@/lib/auth/dal";
+import { getSavedWords } from "@/lib/practice/data";
 import { studentStats } from "@/lib/sample-data";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -27,6 +28,7 @@ function greetingPKT(now: Date) {
 export default async function DashboardPage(props: PageProps<"/dashboard">) {
   const user = await requireUser(["student"]);
   const sp = await props.searchParams;
+  const savedWords = await getSavedWords(user.id, 5);
   const firstName = (user.fullName ?? "").trim().split(/\s+/)[0] || "there";
 
   const now = new Date();
@@ -74,7 +76,7 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
         <ContinueLearningCard />
         <SpeakingClubCard />
         <MockExamCard className="md:col-span-2 xl:col-span-1" />
-        <TodaysWordsCard className="md:col-span-2 xl:col-span-3" />
+        <TodaysWordsCard className="md:col-span-2 xl:col-span-3" saved={savedWords} />
       </div>
     </main>
   );

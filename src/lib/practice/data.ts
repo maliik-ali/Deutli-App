@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import { todayPKT, type TrackSummary } from "./plan";
+import { todayPKT, type SavedWord, type TrackSummary } from "./plan";
 
 export const AUDIO_BUCKET = "practice-audio";
 export { LEVELS } from "./levels";
@@ -72,6 +72,8 @@ export type PracticeTrack = {
   /** Short-lived link to the audio file, or null when no audio was uploaded. */
   audioUrl: string | null;
   doneToday: boolean;
+  /** The student's saved words (all of them), so known words are marked in every text. */
+  words: SavedWord[];
   set: { id: string; title: string; level: string };
   siblings: { id: string; title: string; doneToday: boolean }[];
 };
@@ -94,12 +96,13 @@ export async function getPracticeTrack(trackId: string, userId: string): Promise
   if (!set) return null;
 
   const today = todayPKT();
-  const [siblingsRes, logRes, audioRes] = await Promise.all([
+  const [siblingsRes, logRes, audioRes, words] = await Promise.all([
     supabase.from("practice_tracks").select("id, title, position").eq("set_id", track.set_id).order("position"),
     supabase.from("practice_log").select("track_id").eq("user_id", userId).eq("practised_on", today),
     track.audio_path
       ? supabase.storage.from(AUDIO_BUCKET).createSignedUrl(track.audio_path, 60 * 60 * 3)
       : Promise.resolve({ data: null }),
+    getSavedWords(userId, 500),
   ]);
   const doneIds = new Set(((logRes.data ?? []) as { track_id: string }[]).map((r) => r.track_id));
 
@@ -109,6 +112,7 @@ export async function getPracticeTrack(trackId: string, userId: string): Promise
     transcript: track.transcript,
     audioUrl: audioRes.data?.signedUrl ?? null,
     doneToday: doneIds.has(track.id),
+    words,
     set,
     siblings: ((siblingsRes.data ?? []) as { id: string; title: string }[]).map((s) => ({
       id: s.id,
@@ -116,6 +120,19 @@ export async function getPracticeTrack(trackId: string, userId: string): Promise
       doneToday: doneIds.has(s.id),
     })),
   };
+}
+
+/** The student's saved words, newest first. Empty if none (or the table is not set up yet). */
+export async function getSavedWords(userId: string, limit = 5): Promise<SavedWord[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("vocabulary_words")
+    .select("id, word, meaning")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) return [];
+  return (data ?? []) as SavedWord[];
 }
 
 export type AdminTrack = { id: string; title: string; position: number; transcript: string; audioPath: string | null };

@@ -18,6 +18,9 @@ Do these once. Takes about 15 minutes.
    Check: **Table Editor** shows `practice_sets`, `practice_tracks`, `practice_log`, and
    **Storage** shows a private bucket `practice-audio`.
 
+6. For **saved words** (select a word in a Daily Practice text to save it): New query → paste
+   `20261112000003_vocabulary_words.sql` → **Run**. Check: **Table Editor** shows `vocabulary_words`.
+
 Run them in this order, each only once. (If you run one twice you'll get
 "already exists" — that's harmless, it means it's already done.)
 
