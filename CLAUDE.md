@@ -23,6 +23,7 @@ Stored in `public.profiles.role`. Students sign up themselves. Teachers and acad
 
 ## Design
 Always use the `g2d-ui` skill (.claude/skills/g2d-ui) for any screen.
+Full-screen screens (Daily Practice reader, word practice): the close ✕ always sits at the right edge of the top bar.
 Brand source of truth: Deutli Figma file https://www.figma.com/design/4pD07O1cSsoPm5yTw6czDG/Deutli (dark navy UI, purple gradient, owl mascot). Figma wins over older notes.
 
 ## Git workflow (do this automatically)

@@ -297,12 +297,7 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
       {/* Top bar */}
       <header className="shrink-0 border-b border-border bg-card">
         <div className="flex h-16 items-center gap-2 px-2 sm:gap-4 sm:px-4">
-          <Button asChild variant="ghost" size="icon" className="shrink-0">
-            <Link href={BACK} aria-label="Close and go back to Daily Practice">
-              <X className="size-5" aria-hidden />
-            </Link>
-          </Button>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 pl-2">
             <p className="truncate text-[13px] text-muted-foreground">
               <span lang="de">{track.set.title}</span> · {track.set.level}
               {index >= 0 && ` · Text ${index + 1} of ${track.siblings.length}`}
@@ -336,6 +331,13 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
               </span>
             </Button>
           </div>
+          {/* Close (✕) always at the right edge, the same as the word practice screen. */}
+          <span className="h-6 w-px shrink-0 bg-border" aria-hidden />
+          <Button asChild variant="ghost" size="icon" className="shrink-0">
+            <Link href={BACK} aria-label="Close and go back to Daily Practice">
+              <X className="size-5" aria-hidden />
+            </Link>
+          </Button>
         </div>
         <div className="border-t border-border px-2 py-2 md:hidden">
           <StepSwitch step={step} onChange={goToStep} className="flex" />
