@@ -40,16 +40,36 @@ function clock(seconds: number) {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-/** Splits the text into lines and finds speaker names like "Jana: …". */
-function parseTranscript(text: string) {
-  return text
-    .split(/\r?\n/)
-    .map((raw) => raw.replace(/^\s*[●○•◦▪–-]\s+/, "").trim())
-    .filter(Boolean)
-    .map((line) => {
-      const m = line.match(/^(\p{Lu}[\p{L}\p{M} .'-]{0,28}):\s+(.+)$/u);
-      return m ? { speaker: m[1], text: m[2] } : { speaker: null, text: line };
-    });
+type Line = { speaker: string | null; voice: "a" | "b" | null; text: string };
+
+const VOICE_A = /^\s*[●•·∙▪]\s*/; // filled bullet = first speaker
+const VOICE_B = /^\s*(?:[○◦]\s*|o\s+)/; // hollow bullet (or a lone "o" from PDFs) = second speaker
+const HEADING = /^(aufgabe|dialog|kapitel|teil|track|\d+\.?$)/i;
+
+/**
+ * Splits the text into speaker turns. Understands "Jana: …" names and the
+ * ● / ○ bullets used in course-book transcripts, and joins lines that a PDF
+ * broke in the middle of a sentence.
+ */
+function parseTranscript(text: string): Line[] {
+  const lines: Line[] = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const trimmed = raw.trim();
+    if (!trimmed) continue;
+    const voice = VOICE_A.test(trimmed) ? "a" : VOICE_B.test(trimmed) ? "b" : null;
+    const body = trimmed.replace(voice === "a" ? VOICE_A : VOICE_B, "").replace(/^[–-]\s+/, "").trim();
+    if (!body) continue;
+
+    const named = body.match(/^(\p{Lu}[\p{L}\p{M} .'-]{0,28}):\s+(.+)$/u);
+    const prev = lines[lines.length - 1];
+    // A line without bullet or name, right after a bullet turn, is the rest of that turn.
+    if (!voice && !named && prev?.voice && !HEADING.test(body)) {
+      prev.text += ` ${body}`;
+      continue;
+    }
+    lines.push(named ? { speaker: named[1], voice, text: named[2] } : { speaker: null, voice, text: body });
+  }
+  return lines;
 }
 
 export function PracticeReader({ track }: { track: PracticeTrack }) {
@@ -221,9 +241,21 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
           ) : (
             <article lang="de" className={cn("grid gap-4 text-foreground", TEXT_SIZES[textSize])}>
               {lines.map((line, i) => (
-                <p key={i}>
-                  {line.speaker && <span className="mr-2 font-semibold text-gold-ink">{line.speaker}:</span>}
-                  {line.text}
+                <p key={i} className={cn(line.voice && "flex gap-3")}>
+                  {line.voice && (
+                    <span
+                      className={cn(
+                        "mt-[0.6em] size-2.5 shrink-0 rounded-full border-2 border-gold-ink",
+                        line.voice === "a" && "bg-gold-ink"
+                      )}
+                      aria-hidden
+                    />
+                  )}
+                  <span>
+                    {line.voice && <span className="sr-only">{line.voice === "a" ? "Speaker 1: " : "Speaker 2: "}</span>}
+                    {line.speaker && <span className="mr-2 font-semibold text-gold-ink">{line.speaker}:</span>}
+                    {line.text}
+                  </span>
                 </p>
               ))}
             </article>
