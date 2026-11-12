@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import { Logo } from "@/components/logo";
 import { MobileNav } from "@/components/dashboard/mobile-nav";
 import { NavLinks } from "@/components/dashboard/nav-links";
@@ -9,6 +11,8 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
   // Server-side check on every request: must be logged in. Students live here;
   // admins may also open it to use Daily Practice (the dashboard page itself stays student-only).
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
+  // New students answer a few questions first (asked once; they can skip them).
+  if (user.role === "student" && !user.onboardedAt) redirect("/onboarding");
   const name = user.fullName ?? "Student";
   const avatarUrl = await getAvatarUrl(user.avatarPath);
   const footer = <UserMenu name={name} email={user.email} avatarUrl={avatarUrl} />;

@@ -43,6 +43,7 @@ Brand source of truth: Deutli Figma file https://www.figma.com/design/4pD07O1cSs
 - [x] Login, signup, password reset, logout
 - [x] Role-based redirect + student dashboard (UI with sample data)
 - [x] Account page `/dashboard/account` (name, email shown, phone, password change with current password, meaning languages, time zone PKT) + sidebar user menu (Account, Log out). Profile photo: private bucket `avatars` (folder per user id, any logged-in user may view via signed links), `profiles.avatar_path`; the browser crops/shrinks to 256px JPEG before upload; `src/lib/account/`. Not yet: email change (needs a tested confirm-email flow), plan/payments (comes with Fees), delete account.
+- [x] Onboarding `/onboarding` after signup (students without `profiles.onboarded_at` are sent there from the dashboard; `?again=1` to redo): first language, second language (→ `profiles.languages`, + English), certificate goals, exam + exam date, biggest worry (focus skill), plan screen with "Start practising now" and email-tips opt-in. Options/plan texts in `src/lib/onboarding/options.ts`. Dashboard countdown uses `profiles.exam_date`.
 - [x] Daily Practice (listen → listen and read → speak along): student page `/dashboard/daily-practice`, full-screen reader `/practice/[trackId]` with audio player, admin upload `/admin/daily-practice`. Real data (tables `practice_sets`, `practice_tracks`, `practice_log`, private bucket `practice-audio`).
 
 ## Notes for the next session

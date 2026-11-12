@@ -18,6 +18,11 @@ export type CurrentUser = {
   languages: LanguageCode[];
   /** Path of the profile picture in the private "avatars" bucket, or null. */
   avatarPath: string | null;
+  /** When the signup questions were answered (or skipped); null = not yet. */
+  onboardedAt: string | null;
+  exam: string | null;
+  /** Exam day (YYYY-MM-DD) if the student gave one. */
+  examDate: string | null;
 };
 
 /**
@@ -37,7 +42,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role, languages, avatar_path")
+    .select("full_name, role, languages, avatar_path, onboarded_at, exam, exam_date")
     .eq("id", claims.sub)
     .maybeSingle();
 
@@ -49,6 +54,9 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     role: isRole(profile?.role) ? profile.role : "student",
     languages: cleanLanguages(profile?.languages),
     avatarPath: profile?.avatar_path ?? null,
+    onboardedAt: profile?.onboarded_at ?? null,
+    exam: profile?.exam ?? null,
+    examDate: profile?.exam_date ?? null,
   };
 });
 
