@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { Check, Languages, Loader2, Trash2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { getLanguage, LANGUAGES, MAX_LANGUAGES, textProps, type LanguageCode } from "@/lib/languages";
+import { LanguageChips } from "@/components/language-chips";
+import { getLanguage, MAX_LANGUAGES, textProps, type LanguageCode } from "@/lib/languages";
 import {
   removeVocabularyWord,
   setMyLanguages,
@@ -109,12 +110,6 @@ export function WordBox({
     });
   }
 
-  function toggleDraft(code: LanguageCode) {
-    setDraftLanguages((list) =>
-      list.includes(code) ? list.filter((c) => c !== code) : list.length < MAX_LANGUAGES ? [...list, code] : list,
-    );
-  }
-
   const showForm = word.dictionaryForm && word.dictionaryForm.toLowerCase() !== word.word.toLowerCase();
 
   return (
@@ -153,34 +148,12 @@ export function WordBox({
       </div>
 
       {picking ? (
-        <fieldset className="grid gap-2">
-          <legend className="mb-2 text-[13px] font-medium text-muted-foreground">
-            Show meanings in (up to {MAX_LANGUAGES})
-          </legend>
-          <div className="flex flex-wrap gap-1.5">
-            {LANGUAGES.map((l) => {
-              const on = draftLanguages.includes(l.code);
-              const full = !on && draftLanguages.length >= MAX_LANGUAGES;
-              return (
-                <button
-                  key={l.code}
-                  type="button"
-                  aria-pressed={on}
-                  disabled={full}
-                  onClick={() => toggleDraft(l.code)}
-                  className={cn(
-                    "inline-flex h-9 items-center gap-1 rounded-full border px-3 text-[13px] font-medium transition-colors disabled:opacity-40",
-                    on
-                      ? "border-gold-ink bg-gold/30 text-foreground"
-                      : "border-border text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {on && <Check className="size-3.5" aria-hidden />}
-                  {l.name}
-                </button>
-              );
-            })}
-          </div>
+        <div className="grid gap-2">
+          <LanguageChips
+            value={draftLanguages}
+            onChange={setDraftLanguages}
+            legend={`Show meanings in (up to ${MAX_LANGUAGES})`}
+          />
           <div className="mt-1 flex gap-2">
             <Button type="button" size="sm" onClick={saveLanguages} disabled={busy || draftLanguages.length === 0}>
               {busy ? "Saving…" : "Use these"}
@@ -197,7 +170,7 @@ export function WordBox({
               Cancel
             </Button>
           </div>
-        </fieldset>
+        </div>
       ) : (
         <>
           {languages.map((code) => {

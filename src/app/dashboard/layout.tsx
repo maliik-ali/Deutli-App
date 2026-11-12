@@ -1,7 +1,7 @@
 import { Logo } from "@/components/logo";
 import { MobileNav } from "@/components/dashboard/mobile-nav";
 import { NavLinks } from "@/components/dashboard/nav-links";
-import { UserFooter } from "@/components/dashboard/user-footer";
+import { UserMenu } from "@/components/dashboard/user-menu";
 import { requireUser } from "@/lib/auth/dal";
 
 export default async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
@@ -9,7 +9,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
   // admins may also open it to use Daily Practice (the dashboard page itself stays student-only).
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
   const name = user.fullName ?? "Student";
-  const footer = <UserFooter name={name} email={user.email} />;
+  const footer = <UserMenu name={name} email={user.email} />;
 
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[264px_minmax(0,1fr)]">

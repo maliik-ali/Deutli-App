@@ -18,22 +18,41 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Enter your password."),
 });
 
+export const fullNameRules = z
+  .string()
+  .trim()
+  .min(2, "Enter your full name.")
+  .max(120, "Your name is too long — use 120 characters or fewer.");
+
+export const phoneRules = z
+  .string()
+  .trim()
+  .max(20, "Phone number is too long.")
+  .refine((v) => v === "" || /^\+?[0-9][0-9\s-]{6,18}$/.test(v), {
+    message: "Use digits only, for example +92 300 1234567.",
+  });
+
 export const signupSchema = z.object({
-  fullName: z
-    .string()
-    .trim()
-    .min(2, "Enter your full name.")
-    .max(120, "Your name is too long — use 120 characters or fewer."),
+  fullName: fullNameRules,
   email,
-  phone: z
-    .string()
-    .trim()
-    .max(20, "Phone number is too long.")
-    .refine((v) => v === "" || /^\+?[0-9][0-9\s-]{6,18}$/.test(v), {
-      message: "Use digits only, for example +92 300 1234567.",
-    }),
+  phone: phoneRules,
   password: passwordRules,
 });
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Enter your current password."),
+    password: passwordRules,
+    confirmPassword: z.string().min(1, "Type your new password again."),
+  })
+  .refine((v) => v.password === v.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "The two passwords don't match.",
+  })
+  .refine((v) => v.password !== v.currentPassword, {
+    path: ["password"],
+    message: "Your new password must be different from your current one.",
+  });
 
 export const forgotPasswordSchema = z.object({ email });
 

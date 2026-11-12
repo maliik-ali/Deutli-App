@@ -17,7 +17,14 @@ export function MobileNav({ footer }: { footer: React.ReactNode }) {
           <Menu className="size-6" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="gap-6 p-4 pt-5">
+      <SheetContent
+        side="left"
+        className="gap-6 p-4 pt-5"
+        // Close after tapping any link (main nav or Account in the user menu).
+        onClickCapture={(e) => {
+          if ((e.target as HTMLElement).closest("a")) setOpen(false);
+        }}
+      >
         <SheetTitle className="sr-only">Menu</SheetTitle>
         <SheetDescription className="sr-only">Main navigation</SheetDescription>
         <Logo href="/dashboard" className="px-2" />
