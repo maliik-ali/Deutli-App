@@ -5,8 +5,9 @@ import { UserFooter } from "@/components/dashboard/user-footer";
 import { requireUser } from "@/lib/auth/dal";
 
 export default async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
-  // Server-side check on every request: must be logged in and a student.
-  const user = await requireUser(["student"]);
+  // Server-side check on every request: must be logged in. Students live here;
+  // admins may also open it to use Daily Practice (the dashboard page itself stays student-only).
+  const user = await requireUser(["student", "academy_admin", "super_admin"]);
   const name = user.fullName ?? "Student";
   const footer = <UserFooter name={name} email={user.email} />;
 

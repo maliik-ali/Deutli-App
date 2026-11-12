@@ -5,6 +5,7 @@
 
 export const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: "home" },
+  { href: "/dashboard/daily-practice", label: "Daily Practice", icon: "headphones" },
   { href: "/dashboard/course", label: "My B1 course", icon: "book" },
   { href: "/dashboard/homework", label: "Homework", icon: "pen", count: 2 },
   { href: "/dashboard/mock-exams", label: "Mock exams", icon: "timer" },

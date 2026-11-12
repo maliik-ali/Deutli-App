@@ -41,12 +41,15 @@ Brand source of truth: Deutli Figma file https://www.figma.com/design/4pD07O1cSs
 - [x] Project setup + design tokens
 - [x] Login, signup, password reset, logout
 - [x] Role-based redirect + student dashboard (UI with sample data)
+- [x] Daily Practice (listen → listen and read → speak along): student page `/dashboard/daily-practice`, full-screen reader `/practice/[trackId]` with audio player, admin upload `/admin/daily-practice`. Real data (tables `practice_sets`, `practice_tracks`, `practice_log`, private bucket `practice-audio`).
 
 ## Notes for the next session
 - Next.js 16: `src/proxy.ts` (was middleware). cacheComponents is off on purpose (auth reads cookies per request).
 - Supabase keys are read only on the server at runtime (`src/lib/supabase/env.ts`); auth runs in server actions (`src/app/(auth)/actions.ts`).
 - Always check user + role with `requireUser()` from `src/lib/auth/dal.ts` in protected pages.
 - Dashboard uses sample data from `src/lib/sample-data.ts`.
+- Daily Practice code: `src/lib/practice/` (data, server actions, plan logic), `src/components/practice/`, `src/components/admin/`. Audio goes from the admin's browser straight to Supabase Storage with a one-time signed upload link (files are too big for server actions); students get 3-hour signed links. Admins may open `/dashboard/daily-practice` and `/practice/*` too. Not yet tested with a real audio upload on the live site.
+- Daily Practice content must be original or licensed. Do not upload publisher transcripts/audio (e.g. Klett "Linie 1") for other users.
 - Setup steps for Supabase/Vercel: `docs/SETUP.md`.
 - Live app: https://app.deutli.com (custom domain on Vercel; g2d-app.vercel.app also works). www.deutli.com is the marketing website (repo maliik-ali/Deutli-Website).
 - Supabase project ref: epawkdeosmuvczpsyoru. Supabase Site URL and Vercel SITE_URL must both be https://app.deutli.com.

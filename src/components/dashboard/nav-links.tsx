@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Award,
   BookOpen,
+  Headphones,
   Home,
   Languages,
   MessageCircleQuestion,
@@ -20,6 +21,7 @@ import { cn } from "@/lib/utils";
 const ICONS: Record<NavIcon, LucideIcon> = {
   home: Home,
   book: BookOpen,
+  headphones: Headphones,
   pen: PenLine,
   timer: Timer,
   languages: Languages,

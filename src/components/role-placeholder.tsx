@@ -4,7 +4,17 @@ import { Logo } from "@/components/logo";
 import { SignOutButton } from "@/components/sign-out-button";
 import { Card } from "@/components/ui/card";
 
-export function RolePlaceholder({ title, name, body }: { title: string; name: string; body: string }) {
+export function RolePlaceholder({
+  title,
+  name,
+  body,
+  children,
+}: {
+  title: string;
+  name: string;
+  body: string;
+  children?: React.ReactNode;
+}) {
   return (
     <div className="min-h-dvh">
       <header className="flex items-center justify-between border-b border-border bg-card px-4 py-3 sm:px-8">
@@ -14,6 +24,7 @@ export function RolePlaceholder({ title, name, body }: { title: string; name: st
       <main className="mx-auto grid max-w-2xl gap-6 px-4 py-12 sm:px-8">
         <p className="text-sm font-medium text-muted-foreground">Hello {name}</p>
         <h1 className="text-3xl font-extrabold">{title}</h1>
+        {children}
         <Card>
           <span className="grid size-12 place-items-center rounded-xl bg-gold-soft text-gold-ink">
             <Construction className="size-6" aria-hidden />

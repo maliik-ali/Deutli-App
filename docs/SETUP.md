@@ -13,6 +13,11 @@ Do these once. Takes about 15 minutes.
 3. New query again → paste `20261102000002_rls_policies.sql` → **Run**.
 4. New query again → paste `20261102000003_handle_new_user.sql` → **Run**.
 
+5. For **Daily Practice** (texts + audio): New query → paste `20261112000001_daily_practice.sql` → **Run**.
+   Then the same with `20261112000002_daily_practice_sample.sql` (adds one sample set, optional).
+   Check: **Table Editor** shows `practice_sets`, `practice_tracks`, `practice_log`, and
+   **Storage** shows a private bucket `practice-audio`.
+
 Run them in this order, each only once. (If you run one twice you'll get
 "already exists" — that's harmless, it means it's already done.)
 
@@ -63,6 +68,9 @@ where id = (select id from auth.users where email = 'person@example.com');
 ```
 
 The person logs out and in again to land on their new page.
+
+Admins add Daily Practice texts and audio at `/admin/daily-practice`. They can also
+practise themselves: the "See the student page" button opens `/dashboard/daily-practice`.
 
 ## E. Run on your computer (optional)
 
