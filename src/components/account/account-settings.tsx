@@ -1,37 +1,77 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { useRef, useState, useTransition } from "react";
+import { Camera, CheckCircle2 } from "lucide-react";
 
+import { Avatar } from "@/components/avatar";
 import { FormField } from "@/components/auth/form-field";
 import { PasswordStrength } from "@/components/auth/password-strength";
 import { LanguageChips } from "@/components/language-chips";
 import { Button } from "@/components/ui/button";
-import { changePassword, updateFullName, updatePhone, type AccountResult } from "@/lib/account/actions";
+import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import {
+  changePassword,
+  removeAvatar,
+  updateFullName,
+  updatePhone,
+  uploadAvatar,
+  type AccountResult,
+} from "@/lib/account/actions";
 import { getLanguage, MAX_LANGUAGES, type LanguageCode } from "@/lib/languages";
 import { setMyLanguages } from "@/lib/practice/actions";
 
-type Row = "name" | "phone" | "password" | "languages";
+type Row = "photo" | "name" | "phone" | "password" | "languages";
 
 export type AccountInfo = {
   fullName: string;
   email: string;
   phone: string;
   languages: LanguageCode[];
+  avatarUrl: string | null;
 };
 
-export function initialsOf(name: string) {
+const PHOTO_SIZE = 256;
+
+/** Crops the picked image to a centred square and shrinks it to 256×256 JPEG (about 20–40 KB). */
+async function squarePhoto(file: File): Promise<Blob> {
+  const bitmap = await createImageBitmap(file);
+  const side = Math.min(bitmap.width, bitmap.height);
+  const canvas = document.createElement("canvas");
+  canvas.width = PHOTO_SIZE;
+  canvas.height = PHOTO_SIZE;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("no canvas");
+  ctx.drawImage(
+    bitmap,
+    (bitmap.width - side) / 2,
+    (bitmap.height - side) / 2,
+    side,
+    side,
+    0,
+    0,
+    PHOTO_SIZE,
+    PHOTO_SIZE,
+  );
+  bitmap.close();
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
+  if (!blob) throw new Error("no blob");
+  return blob;
+}
+
+/** A group of settings in a dashboard-style card. */
+function Section({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
   return (
-    name
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0]?.toUpperCase())
-      .join("") || "S"
+    <Card className="gap-1 pb-2">
+      <div className="grid gap-1">
+        <CardTitle className="text-lg">{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </div>
+      <ul className="divide-y divide-border">{children}</ul>
+    </Card>
   );
 }
 
-/** One line of the account list: label, value, and an Edit button that opens a small form below. */
+/** One line in a card: label, value, and an Edit button that opens a small form below. */
 function SettingRow({
   label,
   value,
@@ -48,16 +88,16 @@ function SettingRow({
   children?: React.ReactNode;
 }) {
   return (
-    <li className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 py-5 sm:grid-cols-[180px_minmax(0,1fr)_auto] sm:gap-x-6">
-      <h2 className="text-[15px] font-semibold">{label}</h2>
+    <li className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 py-4 sm:grid-cols-[180px_minmax(0,1fr)_auto] sm:gap-x-6">
+      <h3 className="text-[15px] font-semibold">{label}</h3>
       <div className="col-span-2 row-start-2 min-w-0 text-[15px] text-muted-foreground sm:col-span-1 sm:row-start-auto">
         {value}
       </div>
       {onEdit && !editing ? (
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
-          className="col-start-2 row-start-1 h-11 justify-self-end text-gold-ink sm:col-start-auto sm:row-start-auto sm:h-9"
+          className="col-start-2 row-start-1 h-11 justify-self-end sm:col-start-auto sm:row-start-auto sm:h-9"
           onClick={onEdit}
           aria-label={editLabel}
         >
@@ -66,7 +106,7 @@ function SettingRow({
       ) : (
         <span className="col-start-2 row-start-1 sm:col-start-auto sm:row-start-auto" aria-hidden />
       )}
-      {editing && <div className="col-span-2 pt-3 sm:col-span-3">{children}</div>}
+      {editing && <div className="col-span-2 pt-3 pb-2 sm:col-span-3">{children}</div>}
     </li>
   );
 }
@@ -94,6 +134,9 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
   const [languages, setLanguages] = useState(info.languages);
   const [draftLanguages, setDraftLanguages] = useState(info.languages);
   const [newPassword, setNewPassword] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState(info.avatarUrl);
+  const [photo, setPhoto] = useState<{ blob: Blob; preview: string } | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   function open(row: Row) {
     setEditing(row);
@@ -105,18 +148,54 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
   function close() {
     setEditing(null);
     setError(null);
+    if (photo) URL.revokeObjectURL(photo.preview);
+    setPhoto(null);
   }
-  function submit(run: () => Promise<AccountResult | { error: string } | { languages: LanguageCode[] }>, done: string) {
+  function submit(run: () => Promise<AccountResult | { error: string } | object>, done: string) {
     setError(null);
     startBusy(async () => {
       const result = await run();
       if ("error" in result) {
-        setError(result.error);
+        setError(result.error as string);
         return;
       }
       setEditing(null);
       setNotice(done);
     });
+  }
+
+  async function pickPhoto(file: File | undefined) {
+    if (!file) return;
+    setError(null);
+    setNotice(null);
+    if (!file.type.startsWith("image/")) {
+      setEditing("photo");
+      setError("Please choose a photo (JPG, PNG or WebP).");
+      return;
+    }
+    try {
+      const blob = await squarePhoto(file);
+      if (photo) URL.revokeObjectURL(photo.preview);
+      setPhoto({ blob, preview: URL.createObjectURL(blob) });
+      setEditing("photo");
+    } catch {
+      setEditing("photo");
+      setError("We couldn't open that photo. Try a JPG or PNG.");
+    }
+  }
+
+  function savePhoto() {
+    if (!photo) return;
+    const form = new FormData();
+    form.append("photo", photo.blob, "photo.jpg");
+    submit(async () => {
+      const r = await uploadAvatar(form);
+      if ("url" in r) {
+        setAvatarUrl(r.url || photo.preview);
+        setPhoto(null);
+      }
+      return r;
+    }, "Your photo is saved.");
   }
 
   const errorText = error && (
@@ -126,7 +205,7 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
   );
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-6">
       {notice && (
         <p
           className="flex items-center gap-2 rounded-xl bg-success-soft px-4 py-3 text-sm font-medium text-success"
@@ -135,20 +214,86 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
           <CheckCircle2 className="size-4 shrink-0" aria-hidden /> {notice}
         </p>
       )}
-      <ul className="divide-y divide-border border-y border-border">
+
+      <Section title="Profile" description="How you appear to your teachers and classmates.">
         <SettingRow
-          label="Profile"
+          label="Photo"
           value={
-            <span className="flex items-center gap-3">
-              <span
-                className="grid size-11 shrink-0 place-items-center rounded-full bg-gold-soft font-heading text-[15px] font-bold text-gold-ink"
-                aria-hidden
+            <span className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="group relative rounded-full focus-visible:outline-2"
+                aria-label={avatarUrl ? "Change photo" : "Add a photo"}
               >
-                {initialsOf(name)}
+                <Avatar name={name} url={photo?.preview ?? avatarUrl} className="size-16 text-xl" />
+                <span className="absolute -right-0.5 -bottom-0.5 grid size-7 place-items-center rounded-full border-2 border-card bg-gold text-white transition-transform group-hover:scale-110">
+                  <Camera className="size-3.5" aria-hidden />
+                </span>
+              </button>
+              <span className="text-[13px]">
+                {avatarUrl ? "Tap the photo to change it." : "Add a photo so your teacher can recognise you."}
               </span>
-              <span className="truncate font-medium text-foreground">{name || "No name yet"}</span>
             </span>
           }
+          editing={editing === "photo"}
+          onEdit={avatarUrl ? () => open("photo") : undefined}
+          editLabel="Edit photo"
+        >
+          <div className="grid gap-4">
+            {photo ? (
+              <p className="text-sm text-muted-foreground">This is how your new photo will look.</p>
+            ) : (
+              avatarUrl && <p className="text-sm text-muted-foreground">Change or remove your photo.</p>
+            )}
+            {errorText}
+            <div className="flex flex-wrap gap-2">
+              {photo ? (
+                <Button onClick={savePhoto} disabled={busy}>
+                  {busy ? "Saving…" : "Save photo"}
+                </Button>
+              ) : (
+                <Button onClick={() => fileRef.current?.click()} disabled={busy}>
+                  Choose a photo
+                </Button>
+              )}
+              {!photo && avatarUrl && (
+                <Button
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() =>
+                    submit(async () => {
+                      const r = await removeAvatar();
+                      if ("ok" in r) setAvatarUrl(null);
+                      return r;
+                    }, "Your photo is removed.")
+                  }
+                >
+                  Remove photo
+                </Button>
+              )}
+              <Button variant="ghost" onClick={close} disabled={busy}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </SettingRow>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/*"
+          className="sr-only"
+          tabIndex={-1}
+          aria-hidden
+          onChange={(e) => {
+            void pickPhoto(e.target.files?.[0]);
+            e.target.value = "";
+          }}
+        />
+
+        <SettingRow
+          label="Name"
+          value={<span className="text-foreground">{name || "No name yet"}</span>}
           editing={editing === "name"}
           onEdit={() => open("name")}
           editLabel="Edit name"
@@ -177,7 +322,9 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
             <FormButtons busy={busy} onCancel={close} />
           </form>
         </SettingRow>
+      </Section>
 
+      <Section title="Sign-in and contact" description="Your email, phone number and password.">
         <SettingRow
           label="Email"
           value={
@@ -272,7 +419,9 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
             <FormButtons busy={busy} onCancel={close} label="Change password" />
           </form>
         </SettingRow>
+      </Section>
 
+      <Section title="Learning" description="Languages for word meanings, and your time zone.">
         <SettingRow
           label="Meaning languages"
           value={
@@ -315,7 +464,7 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
             </span>
           }
         />
-      </ul>
+      </Section>
     </div>
   );
 }

@@ -6,21 +6,11 @@ import { usePathname } from "next/navigation";
 import { ChevronUp, LogOut, UserRound } from "lucide-react";
 
 import { signOut } from "@/app/(auth)/actions";
+import { Avatar } from "@/components/avatar";
 import { cn } from "@/lib/utils";
 
-function initialsOf(name: string) {
-  return (
-    name
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0]?.toUpperCase())
-      .join("") || "S"
-  );
-}
-
 /** Name card at the bottom of the sidebar. Opens a small menu: Account, Log out. */
-export function UserMenu({ name, email }: { name: string; email: string | null }) {
+export function UserMenu({ name, email, avatarUrl }: { name: string; email: string | null; avatarUrl: string | null }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const menuId = useId();
@@ -83,12 +73,7 @@ export function UserMenu({ name, email }: { name: string; email: string | null }
           (open || onAccount) && "bg-muted",
         )}
       >
-        <span
-          className="grid size-9 shrink-0 place-items-center rounded-full bg-ink font-heading text-[13px] font-bold text-ink-foreground"
-          aria-hidden
-        >
-          {initialsOf(name)}
-        </span>
+        <Avatar name={name} url={avatarUrl} />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-semibold">{name}</span>
           {email && <span className="block truncate text-[13px] text-subtle-foreground">{email}</span>}

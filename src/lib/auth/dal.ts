@@ -16,6 +16,8 @@ export type CurrentUser = {
   role: Role;
   /** Languages the user wants word meanings in (at least English). */
   languages: LanguageCode[];
+  /** Path of the profile picture in the private "avatars" bucket, or null. */
+  avatarPath: string | null;
 };
 
 /**
@@ -35,7 +37,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role, languages")
+    .select("full_name, role, languages, avatar_path")
     .eq("id", claims.sub)
     .maybeSingle();
 
@@ -46,6 +48,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     // No profile row (should not happen) => lowest permissions.
     role: isRole(profile?.role) ? profile.role : "student",
     languages: cleanLanguages(profile?.languages),
+    avatarPath: profile?.avatar_path ?? null,
   };
 });
 
