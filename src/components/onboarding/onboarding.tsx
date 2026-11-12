@@ -497,9 +497,12 @@ export function Onboarding({
         )}
 
         {step < 5 && (
-          <Button className="h-14 w-full text-base" disabled={!canContinue} onClick={() => go(step + 1)}>
-            Continue <ArrowRight aria-hidden />
-          </Button>
+          // On phones the button stays at the bottom of the screen, so long lists don't hide it.
+          <div className="sticky bottom-0 -mx-4 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+            <Button className="h-14 w-full text-base" disabled={!canContinue} onClick={() => go(step + 1)}>
+              Continue <ArrowRight aria-hidden />
+            </Button>
+          </div>
         )}
       </main>
     </div>
