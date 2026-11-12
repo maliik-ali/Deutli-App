@@ -59,7 +59,7 @@ export function HomeworkFeedbackCard({ className }: { className?: string }) {
   return (
     <Card className={className}>
       <CardHeader className="flex-col-reverse sm:flex-row">
-        <div className="grid gap-1">
+        <div className="grid min-w-0 flex-1 gap-1">
           <p className="text-[13px] font-medium text-subtle-foreground">Homework feedback</p>
           <CardTitle className="text-lg">{h.title}</CardTitle>
           <CardDescription>
