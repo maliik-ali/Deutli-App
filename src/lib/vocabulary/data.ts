@@ -36,7 +36,10 @@ export async function getVocabulary(userId: string): Promise<{ words: VocabWord[
   const rows = (data ?? []).map((r) => {
     const { practice_tracks: t, ...rest } = r as typeof r & { practice_tracks: unknown };
     const track = (Array.isArray(t) ? t[0] : t) as { id: string; title: string } | null;
-    return { ...(rest as unknown as Omit<VocabWord, "track">), track: track ?? null };
+    const word = rest as unknown as Omit<VocabWord, "track">;
+    // Words saved before a fix carry a hidden screen-reader label at the start ("Speaker 2: ").
+    const context = word.context?.replace(/^Speaker [12]:\s*/, "") || null;
+    return { ...word, context, track: track ?? null };
   });
   return { words: await fillFromDictionary(rows), today, failed: false };
 }

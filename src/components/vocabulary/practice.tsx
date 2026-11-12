@@ -162,19 +162,20 @@ export function VocabPractice({
   return (
     <div className="flex h-dvh flex-col bg-background">
       <header className="shrink-0 border-b border-border bg-card">
-        <div className="mx-auto flex h-16 w-full max-w-[640px] items-center gap-2 px-2 sm:px-4">
-          <Button asChild variant="ghost" size="icon" className="shrink-0">
-            <Link href={BACK} aria-label="Close and go back to Vocabulary">
-              <X className="size-5" aria-hidden />
-            </Link>
-          </Button>
+        {/* Full width: title in the middle, close (✕) at the right edge, like the Figma screens. */}
+        <div className="flex h-16 w-full items-center gap-2 px-2 sm:px-4">
+          <span className="size-11 shrink-0" aria-hidden />
           <div className="min-w-0 flex-1 text-center">
             <p className="truncate text-[13px] text-muted-foreground">Practise words · {setLabel}</p>
             <p className="text-sm font-semibold tabular-nums">
               {done ? "Finished" : steps.length ? `${index + 1} of ${steps.length}` : "No words"}
             </p>
           </div>
-          <span className="size-11 shrink-0" aria-hidden />
+          <Button asChild variant="ghost" size="icon" className="shrink-0">
+            <Link href={BACK} aria-label="Close and go back to Vocabulary">
+              <X className="size-5" aria-hidden />
+            </Link>
+          </Button>
         </div>
         <div
           className="h-1 bg-border"

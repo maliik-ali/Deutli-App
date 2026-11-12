@@ -60,7 +60,10 @@ function parseTranscript(text: string): Line[] {
     const trimmed = raw.trim();
     if (!trimmed) continue;
     const voice = VOICE_A.test(trimmed) ? "a" : VOICE_B.test(trimmed) ? "b" : null;
-    const body = trimmed.replace(voice === "a" ? VOICE_A : VOICE_B, "").replace(/^[–-]\s+/, "").trim();
+    const body = trimmed
+      .replace(voice === "a" ? VOICE_A : VOICE_B, "")
+      .replace(/^[–-]\s+/, "")
+      .trim();
     if (!body) continue;
 
     const named = body.match(/^(\p{Lu}[\p{L}\p{M} .'-]{0,28}):\s+(.+)$/u);
@@ -166,7 +169,10 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
       }
       const node = sel.anchorNode;
       const el = node instanceof Element ? node : node?.parentElement;
-      const context = (el?.closest("p")?.textContent ?? "").replace(/\s+/g, " ").trim().slice(0, 500);
+      // The sentence, without the speaker label ("Speaker 2:", "Tom:") that is not part of it.
+      const line = el?.closest("p")?.cloneNode(true) as HTMLElement | undefined;
+      line?.querySelectorAll("[data-no-context]").forEach((n) => n.remove());
+      const context = (line?.textContent ?? "").replace(/\s+/g, " ").trim().slice(0, 500);
       setWordError(null);
       setPick({ text, context, at: anchorOf(sel.getRangeAt(0).getBoundingClientRect()) });
     }
@@ -217,7 +223,7 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
           .sort((a, b) => b.word.length - a.word.length)
           .map((w) => escapeRegExp(w.word))
           .join("|")})(?![\\p{L}\\p{N}])`,
-        "giu"
+        "giu",
       )
     : null;
   function withWords(text: string) {
@@ -345,9 +351,7 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
           >
             <StepIcon className="mt-0.5 size-[18px] shrink-0 text-gold-ink" aria-hidden />
             <span>
-              {hasAudio
-                ? STEPS[step].hint
-                : "There is no audio for this text yet. Read it aloud at your own pace."}
+              {hasAudio ? STEPS[step].hint : "There is no audio for this text yet. Read it aloud at your own pace."}
             </span>
           </p>
 
@@ -381,14 +385,22 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
                     <span
                       className={cn(
                         "mt-[0.6em] size-2.5 shrink-0 rounded-full border-2 border-gold-ink",
-                        line.voice === "a" && "bg-gold-ink"
+                        line.voice === "a" && "bg-gold-ink",
                       )}
                       aria-hidden
                     />
                   )}
                   <span>
-                    {line.voice && <span className="sr-only">{line.voice === "a" ? "Speaker 1: " : "Speaker 2: "}</span>}
-                    {line.speaker && <span className="mr-2 font-semibold text-gold-ink">{line.speaker}:</span>}
+                    {line.voice && (
+                      <span className="sr-only" data-no-context>
+                        {line.voice === "a" ? "Speaker 1: " : "Speaker 2: "}
+                      </span>
+                    )}
+                    {line.speaker && (
+                      <span className="mr-2 font-semibold text-gold-ink" data-no-context>
+                        {line.speaker}:
+                      </span>
+                    )}
                     {withWords(line.text)}
                   </span>
                 </p>
@@ -544,7 +556,7 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
                           ? "bg-gold text-gold-foreground"
                           : ticked
                             ? "bg-success-soft text-success hover:opacity-85"
-                            : "bg-ink text-ink-foreground hover:bg-ink/70"
+                            : "bg-ink text-ink-foreground hover:bg-ink/70",
                       )}
                     >
                       {i + 1}
@@ -559,7 +571,10 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
             onClick={toggleDone}
             disabled={saving}
             aria-pressed={done}
-            className={cn("shrink-0", done && "border-success/40 text-success hover:bg-success-soft hover:text-success")}
+            className={cn(
+              "shrink-0",
+              done && "border-success/40 text-success hover:bg-success-soft hover:text-success",
+            )}
           >
             <Check aria-hidden />
             {done ? "Practised today" : "Done"}
@@ -606,13 +621,13 @@ function StepSwitch({
           aria-pressed={step === i}
           className={cn(
             "inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full px-2 text-[13px] font-semibold whitespace-nowrap transition-colors md:flex-none md:px-4",
-            step === i ? "bg-gold-soft text-foreground" : "text-muted-foreground hover:text-foreground"
+            step === i ? "bg-gold-soft text-foreground" : "text-muted-foreground hover:text-foreground",
           )}
         >
           <span
             className={cn(
               "grid size-5 place-items-center rounded-full text-[11px] font-bold",
-              step === i ? "bg-gold text-gold-foreground" : "bg-ink text-ink-foreground"
+              step === i ? "bg-gold text-gold-foreground" : "bg-ink text-ink-foreground",
             )}
             aria-hidden
           >
