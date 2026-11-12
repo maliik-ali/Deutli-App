@@ -82,3 +82,19 @@ cp .env.example .env.local   # then fill in the 3 values
 npm install
 npm run dev                  # open http://localhost:3000
 ```
+
+## Branded emails (signup confirmation, password reset)
+
+The HTML for these emails lives in `supabase/templates/`. Supabase sends them; you paste them in once.
+
+1. **Send from your own domain** (so mail isn't marked as spam, and to lift Supabase's low test limit):
+   create an account at an email service (e.g. Resend), add the domain `deutli.com`, and add the DNS
+   records it shows (SPF, DKIM, DMARC). Then in Supabase → Authentication → Emails → SMTP Settings,
+   turn on custom SMTP with the service's host, port, user and password.
+   Sender name: `Deutli`, sender email: `hello@deutli.com`.
+2. **Templates:** Supabase → Authentication → Emails → Templates.
+   - Confirm signup: subject `Confirm your Deutli account`, body = `supabase/templates/confirm-signup.html`
+   - Reset password: subject `Reset your Deutli password`, body = `supabase/templates/reset-password.html`
+3. The links use `{{ .SiteURL }}/auth/confirm?token_hash=…`, which works on any device
+   (Supabase's default link only works in the browser where the student signed up).
+   Site URL must be `https://app.deutli.com`.
