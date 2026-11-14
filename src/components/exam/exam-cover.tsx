@@ -56,7 +56,7 @@ export function ExamCover({ exam, className }: { exam: MockExam; className?: str
           <Stamp className="absolute bottom-[6cqw] left-[6cqw] size-[24cqw]" />
           <span
             aria-hidden
-            className="absolute top-[5cqw] right-[2.5cqw] text-[2.4cqw] font-semibold tracking-[0.2em] text-cover-paper-ink/45 uppercase [writing-mode:vertical-rl]"
+            className="absolute top-[5cqw] right-[2.5cqw] text-[2.4cqw] font-semibold tracking-[0.2em] whitespace-nowrap text-cover-paper-ink/45 uppercase [writing-mode:vertical-rl]"
           >
             Deutsch als Fremdsprache · deutli.com
           </span>
@@ -93,8 +93,8 @@ export function ExamCard({ exam, examName }: { exam: MockExam; examName: string 
     >
       <ExamCover exam={exam} className="mr-1.5 transition-transform duration-200 group-hover:-translate-y-1" />
       <div className="grid gap-1.5">
-        <p className="flex flex-wrap items-center gap-x-1.5 text-[12px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-          {examName} · B1 ·
+        <p className="flex flex-wrap items-center gap-x-1.5 text-[11px] font-semibold tracking-[0.1em] text-muted-foreground uppercase sm:text-[12px] sm:tracking-[0.12em]">
+          {examName} ·<span className="max-sm:hidden">B1 ·</span>
           {exam.free ? (
             <span className="text-success">Free</span>
           ) : (

@@ -31,12 +31,12 @@ export default async function ExamPage() {
               href={`/dashboard/exam/${s.slug}`}
               className="flex min-h-16 items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 transition-colors hover:border-gold-ink/60"
             >
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-gold-soft text-gold-ink">
+              <span className="hidden size-10 shrink-0 place-items-center rounded-xl bg-gold-soft text-gold-ink sm:grid">
                 <Icon className="size-5" aria-hidden />
               </span>
               <span className="grid min-w-0">
                 <span className="font-semibold">{s.english}</span>
-                <span className="truncate text-[13px] text-muted-foreground">
+                <span className="text-[13px] text-muted-foreground">
                   {s.german} · {s.minutes} min
                 </span>
               </span>
