@@ -6,6 +6,7 @@ import { NavLinks } from "@/components/dashboard/nav-links";
 import { UserMenu } from "@/components/dashboard/user-menu";
 import { getAvatarUrl } from "@/lib/account/avatar";
 import { requireUser } from "@/lib/auth/dal";
+import { myExamTitle } from "@/lib/exam/choice";
 
 export default async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
   // Server-side check on every request: must be logged in. Students live here;
@@ -15,6 +16,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
   if (user.role === "student" && !user.onboardedAt) redirect("/onboarding");
   const name = user.fullName ?? "Student";
   const avatarUrl = await getAvatarUrl(user.avatarPath);
+  const examTitle = myExamTitle(user.exam);
   const footer = <UserMenu name={name} email={user.email} avatarUrl={avatarUrl} />;
 
   return (
@@ -23,14 +25,14 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
         <div className="sticky top-0 flex h-dvh flex-col gap-8 px-4 py-6">
           <Logo href="/dashboard" className="px-2" />
           <div className="flex-1 overflow-y-auto">
-            <NavLinks />
+            <NavLinks examTitle={examTitle} />
           </div>
           {footer}
         </div>
       </aside>
 
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/95 px-2 backdrop-blur md:hidden">
-        <MobileNav footer={footer} />
+        <MobileNav footer={footer} examTitle={examTitle} />
         <Logo href="/dashboard" />
         <span className="size-11" aria-hidden />
       </header>

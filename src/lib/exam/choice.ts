@@ -30,3 +30,11 @@ export function examLabel(exam: string | null | undefined) {
   if (provider === "other") return "B1 exam";
   return `${p.name} ${level}`;
 }
+
+/** Menu / page title, e.g. "My B2 Exam", "My DTZ Exam", "My Exam". */
+export function myExamTitle(exam: string | null | undefined) {
+  const { provider, level } = parseExamId(exam);
+  if (provider === "dtz") return "My DTZ Exam";
+  if (provider === "other") return "My Exam";
+  return `My ${level} Exam`;
+}

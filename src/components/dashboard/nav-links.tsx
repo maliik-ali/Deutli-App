@@ -32,7 +32,8 @@ const ICONS: Record<NavIcon, LucideIcon> = {
   award: Award,
 };
 
-type Item = (typeof NAV_ITEMS)[number];
+type WithLabel<T> = T extends unknown ? Omit<T, "label"> & { label: string } : never;
+type Item = WithLabel<(typeof NAV_ITEMS)[number]>;
 type Child = { href: string; label: string };
 
 const linkClass = (active: boolean) =>
@@ -41,20 +42,22 @@ const linkClass = (active: boolean) =>
     active ? "bg-gold-soft font-semibold text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
   );
 
-export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+export function NavLinks({ onNavigate, examTitle }: { onNavigate?: () => void; examTitle?: string }) {
   const pathname = usePathname();
   return (
     <nav aria-label="Main">
       <ul className="grid gap-1">
-        {NAV_ITEMS.map((item) =>
+        {NAV_ITEMS.map((base) => {
+          const item: Item = base.href === "/dashboard/exam" && examTitle ? { ...base, label: examTitle } : base;
+          return (
           "children" in item ? (
             <NavGroup key={item.href} item={item} items={item.children} pathname={pathname} onNavigate={onNavigate} />
           ) : (
             <li key={item.href}>
               <NavLink item={item} active={pathname === item.href} onNavigate={onNavigate} />
             </li>
-          ),
-        )}
+          ));
+        })}
       </ul>
     </nav>
   );

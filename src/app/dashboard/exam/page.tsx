@@ -4,9 +4,10 @@ import Link from "next/link";
 import { ExamCard } from "@/components/exam/exam-cover";
 import { SKILL_ICONS } from "@/components/exam/skill-icons";
 import { requireUser } from "@/lib/auth/dal";
+import { myExamTitle } from "@/lib/exam/choice";
 import { MOCK_EXAMS, examShortName, getExamFormat } from "@/lib/exam/catalog";
 
-export const metadata: Metadata = { title: "My B1 Exam" };
+export const metadata: Metadata = { title: "My Exam" };
 
 export default async function ExamPage() {
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
@@ -16,7 +17,7 @@ export default async function ExamPage() {
   return (
     <main className="mx-auto grid max-w-[1240px] gap-8 px-4 py-6 sm:px-6 md:px-8 md:py-8">
       <header className="grid gap-2">
-        <h1 className="text-[28px] font-extrabold sm:text-[32px]">My B1 Exam</h1>
+        <h1 className="text-[28px] font-extrabold sm:text-[32px]">{myExamTitle(user.exam)}</h1>
         <p className="max-w-2xl text-muted-foreground">
           Full mock exams with all four parts, timed like the real day. Start with the free one, or train one skill
           at a time.
