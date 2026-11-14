@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronUp, LogOut, UserRound } from "lucide-react";
+import { ChevronUp, LogOut, SlidersHorizontal, UserRound } from "lucide-react";
 
 import { signOut } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/avatar";
@@ -16,6 +16,7 @@ export function UserMenu({ name, email, avatarUrl }: { name: string; email: stri
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const onAccount = pathname === "/dashboard/account";
+  const onSettings = pathname === "/dashboard/settings";
 
   // Close on Escape or a click outside.
   useEffect(() => {
@@ -56,6 +57,14 @@ export function UserMenu({ name, email, avatarUrl }: { name: string; email: stri
           >
             <UserRound className={cn("size-[18px]", onAccount && "text-gold-ink")} aria-hidden /> Account
           </Link>
+          <Link
+            href="/dashboard/settings"
+            onClick={() => setOpen(false)}
+            aria-current={onSettings ? "page" : undefined}
+            className={cn(itemClass, onSettings && "bg-gold-soft font-semibold text-foreground")}
+          >
+            <SlidersHorizontal className={cn("size-[18px]", onSettings && "text-gold-ink")} aria-hidden /> Advanced settings
+          </Link>
           <form action={signOut}>
             <button type="submit" className={itemClass}>
               <LogOut className="size-[18px]" aria-hidden /> Log out
@@ -70,7 +79,7 @@ export function UserMenu({ name, email, avatarUrl }: { name: string; email: stri
         aria-controls={open ? menuId : undefined}
         className={cn(
           "flex w-full items-center gap-3 rounded-2xl px-2 py-2 text-left transition-colors hover:bg-muted",
-          (open || onAccount) && "bg-muted",
+          (open || onAccount || onSettings) && "bg-muted",
         )}
       >
         <Avatar name={name} url={avatarUrl} />

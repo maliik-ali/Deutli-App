@@ -12,7 +12,7 @@ import {
 } from "@/components/dashboard/cards";
 import { requireUser } from "@/lib/auth/dal";
 import { getSavedWords } from "@/lib/practice/data";
-import { examById } from "@/lib/onboarding/options";
+import { examLabel } from "@/lib/exam/choice";
 import { studentStats } from "@/lib/sample-data";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -34,7 +34,7 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
 
   const now = new Date();
   // The student's own exam (from onboarding). No date given = no countdown.
-  const examName = examById(user.exam)?.id === "other" ? "B1 exam" : (examById(user.exam)?.name ?? "B1 exam");
+  const examName = examLabel(user.exam);
   const examDate = user.examDate ? new Date(`${user.examDate}T09:00:00+05:00`) : null;
   const daysLeft = examDate ? Math.max(0, Math.ceil((examDate.getTime() - now.getTime()) / 86_400_000)) : null;
   const examDay = examDate

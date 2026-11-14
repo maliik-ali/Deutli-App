@@ -244,10 +244,10 @@ export const SKILL_SLUGS: SkillSlug[] = ["reading", "listening", "writing", "spe
 
 /** Short label for the cover eyebrow, from the student's chosen exam. */
 export function examShortName(exam: string | null) {
-  switch (exam) {
-    case "telc_b1":
+  switch (exam?.split("_")[0]) {
+    case "telc":
       return "telc";
-    case "oesd_b1":
+    case "oesd":
       return "ÖSD";
     case "dtz":
       return "DTZ";
