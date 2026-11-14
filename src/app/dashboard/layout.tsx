@@ -6,7 +6,7 @@ import { NavLinks } from "@/components/dashboard/nav-links";
 import { UserMenu } from "@/components/dashboard/user-menu";
 import { getAvatarUrl } from "@/lib/account/avatar";
 import { requireUser } from "@/lib/auth/dal";
-import { myExamTitle } from "@/lib/exam/choice";
+// import { myExamTitle } from "@/lib/exam/choice"; // MVP: switched off, B1 only
 
 export default async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
   // Server-side check on every request: must be logged in. Students live here;
@@ -16,7 +16,8 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
   if (user.role === "student" && !user.onboardedAt) redirect("/onboarding");
   const name = user.fullName ?? "Student";
   const avatarUrl = await getAvatarUrl(user.avatarPath);
-  const examTitle = myExamTitle(user.exam);
+  // MVP: the menu always says "My B1 Exam". Later: const examTitle = myExamTitle(user.exam); (follows the chosen exam level)
+  const examTitle = undefined;
   const footer = <UserMenu name={name} email={user.email} avatarUrl={avatarUrl} />;
 
   return (
