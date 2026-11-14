@@ -31,6 +31,15 @@ Brand source of truth: Deutli Figma file https://www.figma.com/design/4pD07O1cSs
 - Small commits, one feature or fix each. Never push broken builds.
 - Never push secrets. Check `git status` before committing.
 
+## Progress dashboard (do this automatically, without being asked)
+Malik tracks the build in the dashboard "Deutli Build Progress": https://claude.ai/artifact/Ni2FFAVK82AdfZ8KDtHbLs
+At the end of every session that finished or added work, update it:
+1. Download the two data files (Artifact tool, `action: "read"`, `path` = the file's `/_blob/<id>` from `datasets/roadmap` and `datasets/changes` in its store).
+2. `roadmap.json` = `{rows: [{area, item, status: "Done" | "To do" | "Waiting on you", done_on: "YYYY-MM-DD" | null, pilot_feature: bool}]}`. Mark finished items "Done" with the commit date, add new items (features built, new to-dos, setup steps only Malik can do). Keep item names short and plain.
+3. `changes.json` = `{rows: [{date, changes, lines_added, lines_removed}], meta}`, rebuilt from `git log origin/main --date=short --shortstat` (commits and lines per day).
+4. Upload each file as a new asset (`asset: true`), `update` the dataset's `source.url`, `updated` and `edit` (with `if_version`), then delete the old asset. Don't change the page unless asked.
+5. Tell Malik in one line what moved (e.g. "+3 finished, 2 new to-dos").
+
 ## Pilot features (8 weeks)
 1. AI checks homework and writing, teacher confirms or overrides, student sees both
 2. Timed B1 mock exam, all 4 skills (start with 1 mock)
