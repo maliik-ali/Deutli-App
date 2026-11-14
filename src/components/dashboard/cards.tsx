@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 
 export function ReadinessCard({ className }: { className?: string }) {
   const focus = readiness.skills.filter((s) => s.focus).map((s) => s.name);
+  const focusSlug = readiness.skills.find((s) => s.focus)?.english.toLowerCase() ?? "reading";
   return (
     <Card className={className}>
       <CardHeader>
@@ -47,7 +48,7 @@ export function ReadinessCard({ className }: { className?: string }) {
       </CardContent>
       <CardFooter>
         <Button asChild className="w-full sm:w-auto">
-          <Link href="/dashboard/course">Practise {focus[0]}</Link>
+          <Link href={`/dashboard/exam/${focusSlug}`}>Practise {focus[0]}</Link>
         </Button>
       </CardFooter>
     </Card>
@@ -152,7 +153,7 @@ export function ContinueLearningCard({ className }: { className?: string }) {
       </CardContent>
       <CardFooter>
         <Button asChild>
-          <Link href="/dashboard/course">Continue</Link>
+          <Link href="/dashboard/exam">Continue</Link>
         </Button>
       </CardFooter>
     </Card>

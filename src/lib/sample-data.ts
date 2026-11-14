@@ -6,7 +6,17 @@
 export const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: "home" },
   { href: "/dashboard/daily-practice", label: "Daily Practice", icon: "headphones" },
-  { href: "/dashboard/course", label: "My B1 course", icon: "book" },
+  {
+    href: "/dashboard/exam",
+    label: "My B1 Exam",
+    icon: "book",
+    children: [
+      { href: "/dashboard/exam/reading", label: "Reading" },
+      { href: "/dashboard/exam/listening", label: "Listening" },
+      { href: "/dashboard/exam/writing", label: "Writing" },
+      { href: "/dashboard/exam/speaking", label: "Speaking" },
+    ],
+  },
   { href: "/dashboard/homework", label: "Homework", icon: "pen", count: 2 },
   { href: "/dashboard/mock-exams", label: "Mock exams", icon: "timer" },
   { href: "/dashboard/vocabulary", label: "Vocabulary", icon: "languages" },

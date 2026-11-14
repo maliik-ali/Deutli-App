@@ -17,6 +17,13 @@
   --brand-cyan: #00c2ff; /* Brand/Secondary */
   --brand-magenta: #cb3cff; /* Brand/Territory */
   --brand-gradient: linear-gradient(135deg, #7f25fb 30%, #cb3cff 91%);
+  /* Mock exam cover tones */
+  --cover-navy: #1b2c78;
+  --cover-violet: #3a1d8a;
+  --cover-teal: #0b3d55;
+  --cover-indigo: #2a3399;
+  --cover-paper: #eef0ff; /* light lower half of a cover */
+  --cover-paper-ink: #0b1739;
   --success: #39ffac;
   --success-soft: #0e3b33;
 
@@ -56,6 +63,12 @@
   --color-gold-soft: var(--gold-soft);
   --color-brand-cyan: var(--brand-cyan);
   --color-brand-magenta: var(--brand-magenta);
+  --color-cover-navy: var(--cover-navy);
+  --color-cover-violet: var(--cover-violet);
+  --color-cover-teal: var(--cover-teal);
+  --color-cover-indigo: var(--cover-indigo);
+  --color-cover-paper: var(--cover-paper);
+  --color-cover-paper-ink: var(--cover-paper-ink);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
 

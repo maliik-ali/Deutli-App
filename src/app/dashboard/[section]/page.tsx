@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { NAV_ITEMS } from "@/lib/sample-data";
 
 export default async function SectionPage(props: PageProps<"/dashboard/[section]">) {
   const { section } = await props.params;
+  if (section === "course") redirect("/dashboard/exam"); // old menu link
   const item = NAV_ITEMS.find((i) => i.href === `/dashboard/${section}`);
   if (!item) notFound();
 
