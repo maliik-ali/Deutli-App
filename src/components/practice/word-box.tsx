@@ -1,7 +1,8 @@
 "use client";
 
+import { AnimatedShinyText } from "@/components/magicui/animated-shiny-text";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Check, Languages, Loader2, Trash2, X } from "lucide-react";
+import { Check, Languages, Sparkles, Trash2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { LanguageChips } from "@/components/language-chips";
@@ -207,13 +208,23 @@ export function WordBox({
           <p className="flex items-center gap-2 text-[12px] text-muted-foreground">
             {translating ? (
               <>
-                <Loader2 className="size-3.5 animate-spin" aria-hidden /> Translating automatically…
+                <Sparkles className="size-3.5 shrink-0 text-gold-ink" aria-hidden />
+                <AnimatedShinyText className="text-[12px]">AI is translating…</AnimatedShinyText>
               </>
             ) : (
               <>
                 <Languages className="size-3.5 shrink-0" aria-hidden />
                 <span>
-                  {missing.length ? "Type the meaning yourself." : "Translated automatically. You can correct it."}
+                  {missing.length ? (
+                    "Type the meaning yourself."
+                  ) : (
+                    <>
+                      <span className="mr-1.5 inline-flex items-center gap-1 rounded-full bg-gold-soft px-2 py-0.5 text-[11px] font-semibold text-gold-ink">
+                        <Sparkles className="size-3" aria-hidden /> AI
+                      </span>
+                      Translated automatically. You can correct it.
+                    </>
+                  )}
                 </span>
                 <button
                   type="button"
