@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowUpRight, Lock } from "lucide-react";
 
 import type { CoverTone, MockExam } from "@/lib/exam/catalog";
+import { COVER_PHOTOS } from "@/lib/exam/covers";
 import { cn } from "@/lib/utils";
 
 const TONES: Record<CoverTone, string> = {
@@ -12,12 +13,21 @@ const TONES: Record<CoverTone, string> = {
   indigo: "bg-cover-indigo",
 };
 
+/** The colour of each tone, used to tint the bottom of a city photo so the big "B1" stays readable. */
+const TONE_VARS: Record<CoverTone, string> = {
+  navy: "var(--cover-navy)",
+  violet: "var(--cover-violet)",
+  teal: "var(--cover-teal)",
+  indigo: "var(--cover-indigo)",
+};
+
 /**
  * A mock exam shown as a book cover: coloured top with the owl and a big "B1",
  * light lower half with the title and a round stamp. Sizes use container units
  * (cqw) so the cover looks the same at any card width.
  */
 export function ExamCover({ exam, className }: { exam: MockExam; className?: string }) {
+  const photo = COVER_PHOTOS[exam.id];
   return (
     <div className={cn("relative", className)}>
       {/* page edges behind the cover */}
@@ -28,22 +38,36 @@ export function ExamCover({ exam, className }: { exam: MockExam; className?: str
             aria-hidden
             className="absolute inset-0 bg-[radial-gradient(circle_at_30%_35%,rgb(255_255_255/0.16),transparent_60%)]"
           />
-          <span className="absolute top-[6cqw] left-[6.5cqw] font-heading text-[6.4cqw] font-extrabold tracking-tight text-white">
+          <span className="absolute z-10 top-[6cqw] left-[6.5cqw] font-heading text-[6.4cqw] font-extrabold tracking-tight text-white">
             deutli<span className="text-brand-cyan">.</span>
           </span>
           {exam.free && (
-            <span className="absolute top-[5.5cqw] right-[6cqw] rounded-full bg-success-soft px-[3cqw] py-[0.8cqw] text-[4.2cqw] font-bold tracking-wider text-success">
+            <span className="absolute z-10 top-[5.5cqw] right-[6cqw] rounded-full bg-success-soft px-[3cqw] py-[0.8cqw] text-[4.2cqw] font-bold tracking-wider text-success">
               FREE
             </span>
           )}
-          <Image
-            src="/deutli-owl.png"
-            alt=""
-            width={282}
-            height={300}
-            className="absolute bottom-[-4cqw] left-[8cqw] h-[78%] w-auto drop-shadow-[0_8px_16px_rgb(0_0_0/0.35)]"
-          />
-          <span className="absolute right-[5cqw] bottom-[-3.5cqw] font-heading text-[34cqw] leading-none font-black tracking-[-0.06em] text-white">
+          {photo ? (
+            <>
+              <Image src={photo.src} alt="" fill sizes="(min-width: 1280px) 280px, 45vw" className={cn("object-cover", photo.position)} />
+              {/* the tone gradient stays on top of the photo: dark at the top for the logo, tone colour at the bottom for the "B1" */}
+              <span
+                aria-hidden
+                className="absolute inset-0"
+                style={{
+                  background: `linear-gradient(to bottom, rgb(8 16 40 / 0.55), transparent 38%), linear-gradient(to top, ${TONE_VARS[exam.tone]}, transparent 62%)`,
+                }}
+              />
+            </>
+          ) : (
+            <Image
+              src="/deutli-owl.png"
+              alt=""
+              width={282}
+              height={300}
+              className="absolute bottom-[-4cqw] left-[8cqw] h-[78%] w-auto drop-shadow-[0_8px_16px_rgb(0_0_0/0.35)]"
+            />
+          )}
+          <span className="absolute z-10 right-[5cqw] bottom-[-3.5cqw] font-heading text-[34cqw] leading-none font-black tracking-[-0.06em] text-white">
             B1
           </span>
         </div>
