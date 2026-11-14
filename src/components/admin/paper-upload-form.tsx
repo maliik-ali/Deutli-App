@@ -45,6 +45,7 @@ export function PaperUploadForm() {
   const [parts, setParts] = useState<PaperPart[]>(TELC_B1_PARTS);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [done, setDone] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
   function setPage(i: number, key: "fromPage" | "toPage", value: string) {
@@ -66,8 +67,10 @@ export function PaperUploadForm() {
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const f = new FormData(e.currentTarget);
+    const formEl = e.currentTarget;
+    const f = new FormData(formEl);
     setError(null);
+    setDone(null);
     if (!doc) return setError("Choose the paper PDF first.");
     for (const p of parts) {
       if (p.fromPage < 1 || p.toPage < p.fromPage || p.toPage > doc.numPages)
@@ -113,13 +116,25 @@ export function PaperUploadForm() {
       });
       setStatus(null);
       if ("error" in res) setError(res.error);
-      else router.refresh();
+      else {
+        setDone(`"${String(f.get("title"))}" is uploaded and saved as a draft. Click Publish in the list above so students can see it.`);
+        formEl.reset();
+        setDoc(null);
+        setParts(TELC_B1_PARTS);
+        router.refresh();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     });
   }
 
   return (
     <form onSubmit={onSubmit} className="grid gap-6" noValidate>
       <FormError message={error} />
+      {done && (
+        <p role="status" className="rounded-xl border border-success/40 bg-success/10 px-4 py-3 text-[15px] font-medium">
+          {done}
+        </p>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
