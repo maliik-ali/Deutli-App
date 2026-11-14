@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ChevronLeft, ChevronRight, Eye, EyeOff, Loader2, Minus, Pause, Play, Plus, Send } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Eye, EyeOff, Loader2, Minus, Pause, Play, Plus, RotateCcw, RotateCw, Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { saveAttempt, submitAttempt } from "@/lib/papers/actions";
@@ -185,12 +185,10 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
                 </option>
               ))}
             </select>
-            <button type="button" disabled={partIndex === parts.length - 1} onClick={() => setPartIndex((i) => i + 1)} aria-label="Next part" className="grid size-10 place-items-center rounded-full bg-ink text-ink-foreground disabled:opacity-40">
+            <button type="button" disabled={partIndex === parts.length - 1} onClick={() => setPartIndex((i) => i + 1)} aria-label="Next part" className="grid size-10 place-items-center rounded-full bg-brand-gradient text-white disabled:opacity-40">
               <ChevronRight className="size-5" aria-hidden />
             </button>
           </div>
-
-          {part.section === "hoeren" && <AudioBar url={audioUrl} />}
 
           <div ref={paperRef} className="relative min-h-0 flex-1 overflow-y-auto bg-muted/40 px-3 py-6 sm:px-6">
             <div className="mx-auto grid gap-6" style={{ width: `min(100%, ${Math.round(820 * zoom)}px)` }}>
@@ -213,6 +211,8 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
               </button>
             </div>
           </div>
+
+          {part.section === "hoeren" && <AudioBar url={audioUrl} />}
         </section>
 
         {/* Answer sheet */}
@@ -255,7 +255,7 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
                             className={cn(
                               "grid place-items-center border font-semibold transition-colors",
                               part.kind === "tf" ? "h-12 rounded-full text-xl" : "size-12 rounded-full text-[15px]",
-                              on ? "border-gold-ink bg-gold-ink text-ink" : "border-border bg-background text-muted-foreground hover:border-gold-ink/60 hover:text-foreground",
+                              on ? "border-gold-ink bg-gold-soft text-foreground" : "border-border bg-background text-muted-foreground hover:border-gold-ink/60 hover:text-foreground",
                             )}
                           >
                             {part.kind === "tf" ? (o === "+" ? "+" : "−") : o.toUpperCase()}
@@ -302,23 +302,96 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
   );
 }
 
+const SPEEDS = [1, 0.75, 1.25];
+
+function clock(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds < 0) seconds = 0;
+  return `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
+}
+
+/** Same audio player as Daily Practice: back 5 s, play, forward 5 s, position bar, speed. */
 function AudioBar({ url }: { url: string | null }) {
   const ref = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [speedIndex, setSpeedIndex] = useState(0);
+  const [failed, setFailed] = useState(false);
 
-  if (!url) return <p className="shrink-0 border-b border-border px-5 py-3 text-sm text-muted-foreground">The audio for this paper has not been added yet.</p>;
+  if (!url)
+    return <p className="shrink-0 border-t border-border bg-card px-5 py-4 text-sm text-muted-foreground">The audio for this paper has not been added yet.</p>;
+
+  const toggle = () => {
+    const a = ref.current;
+    if (!a) return;
+    if (a.paused) a.play().catch(() => setFailed(true));
+    else a.pause();
+  };
+  const skip = (by: number) => {
+    const a = ref.current;
+    if (a) a.currentTime = Math.min(Math.max(0, a.currentTime + by), a.duration || 0);
+  };
+  const cycleSpeed = () => {
+    const next = (speedIndex + 1) % SPEEDS.length;
+    setSpeedIndex(next);
+    if (ref.current) ref.current.playbackRate = SPEEDS[next];
+  };
+
   return (
-    <div className="flex shrink-0 items-center gap-3 border-b border-border bg-card px-3 py-3 sm:px-5">
-      <audio ref={ref} src={url} preload="metadata" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)} onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)} />
-      <button type="button" aria-label={playing ? "Pause" : "Play"} onClick={() => (playing ? ref.current?.pause() : ref.current?.play())} className="grid size-10 shrink-0 place-items-center rounded-full bg-gold-ink text-ink">
-        {playing ? <Pause className="size-5" aria-hidden /> : <Play className="size-5" aria-hidden />}
-      </button>
-      <input type="range" aria-label="Audio position" min={0} max={duration || 1} step={1} value={time} onChange={(e) => ref.current && (ref.current.currentTime = Number(e.target.value))} className="h-1 min-w-0 flex-1 accent-[var(--gold-ink)]" />
-      <span className="shrink-0 font-mono text-[13px] text-muted-foreground">
-        {mmss(time)} / {mmss(duration)}
-      </span>
+    <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-t border-border bg-card px-3 py-3 sm:px-6">
+      <audio
+        ref={ref}
+        src={url}
+        preload="metadata"
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
+        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+        onDurationChange={(e) => setDuration(e.currentTarget.duration)}
+        onEnded={() => setPlaying(false)}
+        onError={() => setFailed(true)}
+      />
+      <div className="flex items-center gap-1">
+        <Button variant="ghost" size="icon" onClick={() => skip(-5)} aria-label="Back 5 seconds">
+          <RotateCcw className="size-5" aria-hidden />
+        </Button>
+        <Button size="icon" className="size-12" onClick={toggle} aria-label={playing ? "Pause" : "Play"}>
+          {playing ? <Pause className="size-5 fill-current" aria-hidden /> : <Play className="size-5 translate-x-px fill-current" aria-hidden />}
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => skip(5)} aria-label="Forward 5 seconds">
+          <RotateCw className="size-5" aria-hidden />
+        </Button>
+      </div>
+      <div className="order-last flex min-w-0 basis-full items-center gap-3 sm:order-none sm:basis-0 sm:flex-1">
+        <span className="w-10 shrink-0 text-right text-[13px] tabular-nums text-muted-foreground">{clock(time)}</span>
+        <input
+          type="range"
+          min={0}
+          max={duration || 0}
+          step={0.1}
+          value={Math.min(time, duration || 0)}
+          onChange={(e) => {
+            const t = Number(e.target.value);
+            setTime(t);
+            if (ref.current) ref.current.currentTime = t;
+          }}
+          disabled={!duration}
+          aria-label="Audio position"
+          aria-valuetext={`${clock(time)} of ${clock(duration)}`}
+          className="h-11 min-w-0 flex-1 cursor-pointer accent-gold disabled:cursor-default"
+        />
+        <span className="w-10 shrink-0 text-[13px] tabular-nums text-muted-foreground">{clock(duration)}</span>
+      </div>
+      <div className="ml-auto sm:ml-0">
+        <Button variant="outline" size="sm" className="h-11 w-16 tabular-nums" onClick={cycleSpeed} aria-label={`Speed ${SPEEDS[speedIndex]} times. Change speed`}>
+          {SPEEDS[speedIndex]}×
+        </Button>
+      </div>
+      {failed && (
+        <p className="basis-full text-[13px] text-destructive" role="alert">
+          The audio couldn&apos;t play. Reload the page and try again.
+        </p>
+      )}
     </div>
   );
 }
