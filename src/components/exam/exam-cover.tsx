@@ -58,7 +58,7 @@ export function ExamCover({ exam, className }: { exam: MockExam; className?: str
             aria-hidden
             className="absolute top-[5cqw] right-[2.5cqw] text-[2.4cqw] font-semibold tracking-[0.2em] whitespace-nowrap text-cover-paper-ink/45 uppercase [writing-mode:vertical-rl]"
           >
-            Deutsch als Fremdsprache · deutli.com
+            Deutsch als Fremdsprache
           </span>
         </div>
       </div>
