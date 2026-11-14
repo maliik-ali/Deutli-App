@@ -11,6 +11,7 @@ import {
   TodaysWordsCard,
 } from "@/components/dashboard/cards";
 import { requireUser } from "@/lib/auth/dal";
+import { getReadiness } from "@/lib/papers/readiness";
 import { getSavedWords } from "@/lib/practice/data";
 import { examLabel } from "@/lib/exam/choice";
 import { studentStats } from "@/lib/sample-data";
@@ -29,7 +30,7 @@ function greetingPKT(now: Date) {
 export default async function DashboardPage(props: PageProps<"/dashboard">) {
   const user = await requireUser(["student"]);
   const sp = await props.searchParams;
-  const savedWords = await getSavedWords(user.id, 5);
+  const [savedWords, readiness] = await Promise.all([getSavedWords(user.id, 5), getReadiness(user.id)]);
   const firstName = (user.fullName ?? "").trim().split(/\s+/)[0] || "there";
 
   const now = new Date();
@@ -80,7 +81,7 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
       </header>
 
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        <ReadinessCard />
+        <ReadinessCard data={readiness} />
         <HomeworkFeedbackCard className="xl:col-span-2" />
         <ContinueLearningCard />
         <SpeakingClubCard />

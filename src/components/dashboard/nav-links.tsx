@@ -5,14 +5,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Award,
-  BookOpen,
   ChevronDown,
-  Headphones,
   Home,
   Languages,
   MessageCircleQuestion,
   Mic,
   PenLine,
+  Speech,
   Timer,
   type LucideIcon,
 } from "lucide-react";
@@ -22,8 +21,7 @@ import { cn } from "@/lib/utils";
 
 const ICONS: Record<NavIcon, LucideIcon> = {
   home: Home,
-  book: BookOpen,
-  headphones: Headphones,
+  speech: Speech,
   pen: PenLine,
   timer: Timer,
   languages: Languages,

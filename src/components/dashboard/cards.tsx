@@ -5,50 +5,69 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { continueLearning, homeworkFeedback, mockExam, readiness, speakingClub, todaysWords } from "@/lib/sample-data";
+import { continueLearning, homeworkFeedback, mockExam, speakingClub, todaysWords } from "@/lib/sample-data";
+import type { Readiness } from "@/lib/papers/readiness";
 import { getLanguage, textProps, type LanguageCode } from "@/lib/languages";
 import type { SavedWord } from "@/lib/practice/plan";
 import { cn } from "@/lib/utils";
 
-export function ReadinessCard({ className }: { className?: string }) {
-  const focus = readiness.skills.filter((s) => s.focus).map((s) => s.name);
-  const focusSlug = readiness.skills.find((s) => s.focus)?.english.toLowerCase() ?? "reading";
+const SKILL_PAGE: Record<string, string> = {
+  lesen: "reading",
+  sprachbausteine: "reading",
+  hoeren: "listening",
+  schreiben: "writing",
+  sprechen: "speaking",
+};
+
+/** B1 readiness from the student's own finished mock exams. */
+export function ReadinessCard({ className, data }: { className?: string; data: Readiness }) {
+  const focus = data.skills.find((s) => s.key === data.focusKey);
   return (
     <Card className={className}>
       <CardHeader>
         <div className="grid gap-1">
           <CardTitle>B1 readiness</CardTitle>
-          <CardDescription>AI estimate · last 30 days</CardDescription>
+          <CardDescription>
+            {data.exams > 0 ? `From your ${data.exams} mock exam${data.exams === 1 ? "" : "s"}` : "Based on your mock exams"}
+          </CardDescription>
         </div>
-        <Badge variant="outline">Estimate</Badge>
+        <Badge variant="outline">{data.exams > 0 ? "From your results" : "No results yet"}</Badge>
       </CardHeader>
       <CardContent className="grid gap-6">
-        <p className="flex items-baseline gap-2">
-          <span className="font-heading text-[56px] leading-none font-extrabold tracking-tight">
-            {readiness.overall}%
-          </span>
-          <span className="text-sm text-muted-foreground">ready · pass mark 60%</span>
-        </p>
+        {data.overall === null ? (
+          <p className="text-[15px] text-muted-foreground">
+            Solve a mock exam and your readiness shows up here, skill by skill.
+          </p>
+        ) : (
+          <p className="flex items-baseline gap-2">
+            <span className="font-heading text-[56px] leading-none font-extrabold tracking-tight">{data.overall}%</span>
+            <span className="text-sm text-muted-foreground">ready · pass mark 60%</span>
+          </p>
+        )}
         <ul className="grid gap-4">
-          {readiness.skills.map((s) => (
-            <li key={s.name} className="grid gap-2">
+          {data.skills.map((s) => (
+            <li key={s.key} className="grid gap-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="font-medium">
                   {s.name} <span className="font-normal text-subtle-foreground">· {s.english}</span>
                 </span>
                 <span className="flex items-center gap-2 font-semibold">
-                  {s.focus && <Badge variant="gold">Focus</Badge>}
-                  {s.value}%
+                  {s.key === data.focusKey && <Badge variant="gold">Focus</Badge>}
+                  {s.value === null ? <span className="font-normal text-subtle-foreground">Not marked yet</span> : `${s.value}%`}
                 </span>
               </div>
-              <Progress value={s.value} tone={s.focus ? "gold" : "ink"} aria-label={`${s.name} ${s.value}%`} />
+              <Progress value={s.value ?? 0} tone={s.key === data.focusKey ? "gold" : "ink"} aria-label={s.value === null ? `${s.name} not marked yet` : `${s.name} ${s.value}%`} />
             </li>
           ))}
         </ul>
       </CardContent>
       <CardFooter>
         <Button asChild className="w-full sm:w-auto">
-          <Link href={`/dashboard/exam/${focusSlug}`}>Practise {focus[0]}</Link>
+          {focus ? (
+            <Link href={`/dashboard/exam/${SKILL_PAGE[focus.key]}`}>Practise {focus.name}</Link>
+          ) : (
+            <Link href="/dashboard/exam">{data.exams > 0 ? "Take another mock exam" : "Start a mock exam"}</Link>
+          )}
         </Button>
       </CardFooter>
     </Card>
