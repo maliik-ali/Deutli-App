@@ -8,21 +8,23 @@ import { SKILL_ICONS } from "@/components/exam/skill-icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth/dal";
-import { MOCK_EXAMS, examShortName, getExamFormat, getMockExam } from "@/lib/exam/catalog";
-
-export function generateStaticParams() {
-  return MOCK_EXAMS.map((e) => ({ examId: e.id }));
-}
+import { examShortName, getExamFormat } from "@/lib/exam/catalog";
+import { getLastResult, getPaperBySlug } from "@/lib/papers/data";
+import { listMocks } from "@/lib/papers/mocks";
 
 export async function generateMetadata(props: PageProps<"/dashboard/exam/mock/[examId]">): Promise<Metadata> {
-  const exam = getMockExam((await props.params).examId);
+  const { examId } = await props.params;
+  const exam = (await listMocks()).mocks.find((m) => m.id === examId);
   return { title: exam ? `${exam.city} Modellprüfung` : "Mock exam" };
 }
 
 export default async function MockExamPage(props: PageProps<"/dashboard/exam/mock/[examId]">) {
-  const exam = getMockExam((await props.params).examId);
+  const examId = (await props.params).examId;
+  const exam = (await listMocks()).mocks.find((m) => m.id === examId);
   if (!exam) notFound();
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
+  const paper = await getPaperBySlug(examId);
+  const last = paper ? await getLastResult(user.id, paper.id) : null;
   const skills = getExamFormat(user.exam).skills;
   const total = skills.reduce((sum, s) => sum + s.minutes, 0);
 
@@ -72,8 +74,21 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
             })}
           </ul>
 
+          {last?.result && (
+            <p className="rounded-2xl border border-border bg-card px-5 py-4 text-[15px]">
+              Your last try: <strong>{last.result.total}</strong> of {last.result.max} points (writing not counted).{" "}
+              <Link href={`/dashboard/exam/mock/${examId}/result?a=${last.id}`} className="font-semibold text-gold-ink hover:underline">
+                See your answers
+              </Link>
+            </p>
+          )}
+
           <div className="grid gap-2 sm:flex sm:items-center sm:gap-4">
-            {exam.free ? (
+            {paper && (paper.is_free || user.role !== "student") ? (
+              <Button asChild className="w-full sm:w-auto">
+                <Link href={`/exam/take/${examId}`}>Start mock exam</Link>
+              </Button>
+            ) : exam.free ? (
               <Button disabled className="w-full sm:w-auto">
                 Start mock exam
               </Button>
@@ -83,9 +98,11 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
               </Button>
             )}
             <p className="text-[14px] text-muted-foreground">
-              {exam.free
-                ? "The timed mock exam opens soon. We'll let you know."
-                : "Premium mock exams come with the paid plan."}
+              {paper && exam.free
+                ? "Solve the real paper on screen. Your answers are saved as you go."
+                : exam.free
+                  ? "The timed mock exam opens soon. We'll let you know."
+                  : "Premium mock exams come with the paid plan."}
             </p>
           </div>
         </div>

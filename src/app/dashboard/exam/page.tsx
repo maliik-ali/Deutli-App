@@ -5,7 +5,8 @@ import { ExamCard } from "@/components/exam/exam-cover";
 import { SKILL_ICONS } from "@/components/exam/skill-icons";
 import { requireUser } from "@/lib/auth/dal";
 // import { myExamTitle } from "@/lib/exam/choice"; // MVP: switched off, B1 only
-import { MOCK_EXAMS, examShortName, getExamFormat } from "@/lib/exam/catalog";
+import { examShortName, getExamFormat } from "@/lib/exam/catalog";
+import { listMocks } from "@/lib/papers/mocks";
 
 export const metadata: Metadata = { title: "My B1 Exam" };
 
@@ -13,6 +14,7 @@ export default async function ExamPage() {
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
   const examName = examShortName(user.exam);
   const format = getExamFormat(user.exam);
+  const { mocks } = await listMocks();
 
   return (
     <main className="mx-auto grid max-w-[1240px] gap-8 px-4 py-6 sm:px-6 md:px-8 md:py-8">
@@ -52,10 +54,10 @@ export default async function ExamPage() {
           <h2 id="mocks" className="text-xl font-bold">
             Mock exams
           </h2>
-          <p className="text-[14px] text-muted-foreground">{MOCK_EXAMS.length} exams</p>
+          <p className="text-[14px] text-muted-foreground">{mocks.length} exams</p>
         </div>
         <ul className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 md:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
-          {MOCK_EXAMS.map((exam) => (
+          {mocks.map((exam) => (
             <li key={exam.id}>
               <ExamCard exam={exam} examName={examName} />
             </li>
