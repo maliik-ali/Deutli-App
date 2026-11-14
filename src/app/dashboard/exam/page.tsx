@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { BlurFade } from "@/components/magicui/blur-fade";
+import { MotionProvider } from "@/components/magicui/motion-provider";
 import { ExamCard } from "@/components/exam/exam-cover";
 import { SKILL_ICONS } from "@/components/exam/skill-icons";
 import { requireUser } from "@/lib/auth/dal";
@@ -17,6 +19,7 @@ export default async function ExamPage() {
   const { mocks } = await listMocks();
 
   return (
+    <MotionProvider>
     <main className="mx-auto grid max-w-[1240px] gap-8 px-4 py-6 sm:px-6 md:px-8 md:py-8">
       <header className="grid gap-2">
         <h1 className="text-[28px] font-extrabold sm:text-[32px]">My B1 Exam{/* later: {myExamTitle(user.exam)} */}</h1>
@@ -57,13 +60,16 @@ export default async function ExamPage() {
           <p className="text-[14px] text-muted-foreground">{mocks.length} exams</p>
         </div>
         <ul className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 md:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
-          {mocks.map((exam) => (
+          {mocks.map((exam, i) => (
             <li key={exam.id}>
-              <ExamCard exam={exam} examName={examName} />
+              <BlurFade delay={Math.min(i, 8) * 0.05}>
+                <ExamCard exam={exam} examName={examName} />
+              </BlurFade>
             </li>
           ))}
         </ul>
       </section>
     </main>
+    </MotionProvider>
   );
 }
