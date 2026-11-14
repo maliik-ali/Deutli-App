@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { CalendarDays, Coins, Flame } from "lucide-react";
 
 import { FormNotice } from "@/components/auth/form-error";
+import { BlurFade } from "@/components/magicui/blur-fade";
+import { MotionProvider } from "@/components/magicui/motion-provider";
+import { NumberTicker } from "@/components/magicui/number-ticker";
 import {
   ContinueLearningCard,
   HomeworkFeedbackCard,
@@ -48,6 +51,7 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
     : null;
 
   return (
+    <MotionProvider>
     <main className="mx-auto grid max-w-[1240px] gap-6 px-4 py-6 sm:px-6 md:px-8 md:py-8">
       {sp.password === "updated" && <FormNotice message="Your password has been changed." />}
 
@@ -60,7 +64,9 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
             <CalendarDays className="size-4 shrink-0" aria-hidden />
             {daysLeft !== null ? (
               <span>
-                Your exam is in <span className="font-semibold text-foreground">{daysLeft} days</span> · {examName},{" "}
+                Your exam is in <span className="font-semibold text-foreground">
+                  <NumberTicker value={daysLeft} /> days
+                </span> · {examName},{" "}
                 {examDay}
               </span>
             ) : (
@@ -81,13 +87,26 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
       </header>
 
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        <ReadinessCard data={readiness} />
-        <HomeworkFeedbackCard className="xl:col-span-2" />
-        <ContinueLearningCard />
-        <SpeakingClubCard />
-        <MockExamCard className="md:col-span-2 xl:col-span-1" />
-        <TodaysWordsCard className="md:col-span-2 xl:col-span-3" saved={savedWords} languages={user.languages} />
+        <BlurFade delay={0.05} className="[&>*]:h-full">
+          <ReadinessCard data={readiness} />
+        </BlurFade>
+        <BlurFade delay={0.12} className="xl:col-span-2 [&>*]:h-full">
+          <HomeworkFeedbackCard />
+        </BlurFade>
+        <BlurFade delay={0.19} className="[&>*]:h-full">
+          <ContinueLearningCard />
+        </BlurFade>
+        <BlurFade delay={0.26} className="[&>*]:h-full">
+          <SpeakingClubCard />
+        </BlurFade>
+        <BlurFade delay={0.33} className="md:col-span-2 xl:col-span-1 [&>*]:h-full">
+          <MockExamCard />
+        </BlurFade>
+        <BlurFade delay={0.4} className="md:col-span-2 xl:col-span-3 [&>*]:h-full">
+          <TodaysWordsCard saved={savedWords} languages={user.languages} />
+        </BlurFade>
       </div>
     </main>
+    </MotionProvider>
   );
 }

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, CalendarClock, CheckCircle2, Clock, Mic, Sparkles, Timer, Users } from "lucide-react";
 
+import { BorderBeam } from "@/components/magicui/border-beam";
+import { NumberTicker } from "@/components/magicui/number-ticker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +25,11 @@ const SKILL_PAGE: Record<string, string> = {
 export function ReadinessCard({ className, data }: { className?: string; data: Readiness }) {
   const focus = data.skills.find((s) => s.key === data.focusKey);
   return (
-    <Card className={className}>
+    <Card className={cn("relative", className)}>
+      {/* one slow purple light around the featured card (hidden for people who prefer less motion) */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 rounded-[inherit] motion-reduce:hidden">
+        <BorderBeam size={140} duration={9} colorFrom="#7161ff" colorTo="#cb3cff" borderWidth={1.5} />
+      </div>
       <CardHeader>
         <div className="grid gap-1">
           <CardTitle>B1 readiness</CardTitle>
@@ -40,7 +46,9 @@ export function ReadinessCard({ className, data }: { className?: string; data: R
           </p>
         ) : (
           <p className="flex items-baseline gap-2">
-            <span className="font-heading text-[56px] leading-none font-extrabold tracking-tight">{data.overall}%</span>
+            <span className="font-heading text-[56px] leading-none font-extrabold tracking-tight">
+              <NumberTicker value={data.overall} />%
+            </span>
             <span className="text-sm text-muted-foreground">ready · pass mark 60%</span>
           </p>
         )}
