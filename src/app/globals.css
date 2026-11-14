@@ -22,6 +22,9 @@
   --cover-violet: #3a1d8a;
   --cover-teal: #0b3d55;
   --cover-indigo: #2a3399;
+  --cover-plum: #5a1f6e;
+  --cover-forest: #0d4a3a;
+  --cover-ocean: #0a4f8a;
   --cover-paper: #eef0ff; /* light lower half of a cover */
   --cover-paper-ink: #0b1739;
   --success: #39ffac;
@@ -67,6 +70,9 @@
   --color-cover-violet: var(--cover-violet);
   --color-cover-teal: var(--cover-teal);
   --color-cover-indigo: var(--cover-indigo);
+  --color-cover-plum: var(--cover-plum);
+  --color-cover-forest: var(--cover-forest);
+  --color-cover-ocean: var(--cover-ocean);
   --color-cover-paper: var(--cover-paper);
   --color-cover-paper-ink: var(--cover-paper-ink);
   --color-success: var(--success);

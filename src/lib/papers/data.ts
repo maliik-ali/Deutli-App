@@ -10,33 +10,43 @@ export type PaperRow = {
   slug: string;
   title: string;
   topics: string;
-  tone: "navy" | "violet" | "teal" | "indigo";
+  tone: import("@/lib/exam/catalog").CoverTone;
   is_free: boolean;
   is_published: boolean;
   structure: PaperStructure;
   audio_path: string | null;
+  /** Optional cover photo in the mock-papers bucket (needs migration 20261114000014). */
+  cover_path?: string | null;
   created_at: string;
 };
 
-const COLUMNS = "id, slug, title, topics, tone, is_free, is_published, structure, audio_path, created_at";
+const BASE_COLUMNS = "id, slug, title, topics, tone, is_free, is_published, structure, audio_path, created_at";
+// If the cover migration has not been run yet, fall back to the old columns so nothing breaks.
+const COLUMNS = `${BASE_COLUMNS}, cover_path`;
 
 /** Papers students may see (RLS hides unpublished ones from students). */
 export async function getPapers(): Promise<PaperRow[]> {
   const supabase = await createClient();
-  const { data } = await supabase.from("mock_papers").select(COLUMNS).order("created_at", { ascending: true });
-  return (data ?? []) as PaperRow[];
+  const first = await supabase.from("mock_papers").select(COLUMNS).order("created_at", { ascending: true });
+  if (!first.error) return (first.data ?? []) as unknown as PaperRow[];
+  const { data } = await supabase.from("mock_papers").select(BASE_COLUMNS).order("created_at", { ascending: true });
+  return (data ?? []) as unknown as PaperRow[];
 }
 
 export async function getPaperBySlug(slug: string): Promise<PaperRow | null> {
   const supabase = await createClient();
-  const { data } = await supabase.from("mock_papers").select(COLUMNS).eq("slug", slug).maybeSingle();
-  return (data as PaperRow | null) ?? null;
+  const first = await supabase.from("mock_papers").select(COLUMNS).eq("slug", slug).maybeSingle();
+  if (!first.error) return (first.data as unknown as PaperRow | null) ?? null;
+  const { data } = await supabase.from("mock_papers").select(BASE_COLUMNS).eq("slug", slug).maybeSingle();
+  return (data as unknown as PaperRow | null) ?? null;
 }
 
 export async function getPaperById(id: string): Promise<PaperRow | null> {
   const supabase = await createClient();
-  const { data } = await supabase.from("mock_papers").select(COLUMNS).eq("id", id).maybeSingle();
-  return (data as PaperRow | null) ?? null;
+  const first = await supabase.from("mock_papers").select(COLUMNS).eq("id", id).maybeSingle();
+  if (!first.error) return (first.data as unknown as PaperRow | null) ?? null;
+  const { data } = await supabase.from("mock_papers").select(BASE_COLUMNS).eq("id", id).maybeSingle();
+  return (data as unknown as PaperRow | null) ?? null;
 }
 
 /** All PDF page numbers used by the paper, mapped to 3-hour signed image links. */

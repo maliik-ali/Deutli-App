@@ -6,6 +6,7 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth/dal";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { COVER_TONES } from "@/lib/exam/catalog";
 import { PAPER_BUCKET } from "./data";
 import { grade, parseAnswerKey, partQuestions, type PaperStructure } from "./template";
 
@@ -71,7 +72,7 @@ const createSchema = z.object({
   slug: z.string().regex(/^[a-z0-9-]{2,40}$/, "Use a short address with small letters, numbers and dashes, e.g. hamburg."),
   title: z.string().trim().min(1, "Give the paper a title.").max(120),
   topics: z.string().trim().max(300),
-  tone: z.enum(["navy", "violet", "teal", "indigo"]),
+  tone: z.enum(COVER_TONES),
   isFree: z.boolean(),
   structure: z.object({ parts: z.array(partSchema).min(1).max(20) }),
   audioPath: z.string().max(300).nullable(),
@@ -111,6 +112,46 @@ export async function createPaper(input: unknown): Promise<{ error: string } | {
   }
   refresh();
   return { id: d.id };
+}
+
+/** One-time upload link for a cover photo. */
+export async function createCoverUploadUrl(paperId: unknown): Promise<{ error: string } | { path: string; url: string }> {
+  await requireUser(ADMINS);
+  const id = uuid.safeParse(paperId);
+  if (!id.success) return { error: GENERIC };
+  const supabase = await createClient();
+  const path = `${id.data}/cover-${crypto.randomUUID().slice(0, 8)}.jpg`;
+  const { data, error } = await supabase.storage.from(PAPER_BUCKET).createSignedUploadUrl(path);
+  if (error || !data) return { error: "We couldn't prepare the upload. Please try again." };
+  return { path: data.path, url: data.signedUrl };
+}
+
+/** Set (or remove, with null) the cover photo of a paper. */
+export async function setPaperCover(id: unknown, path: unknown): Promise<Result> {
+  await requireUser(ADMINS);
+  const pid = uuid.safeParse(id);
+  const p = z.string().max(300).nullable().safeParse(path);
+  if (!pid.success || !p.success || (p.data && !p.data.startsWith(`${pid.data}/`))) return { error: GENERIC };
+  const supabase = await createClient();
+  const { data: old } = await supabase.from("mock_papers").select("cover_path").eq("id", pid.data).maybeSingle();
+  const { error } = await supabase.from("mock_papers").update({ cover_path: p.data }).eq("id", pid.data);
+  if (error) return { error: "Run the latest database update first (migration 20261114000014), then try again." };
+  const oldPath = (old as { cover_path?: string | null } | null)?.cover_path;
+  if (oldPath && oldPath !== p.data) await supabase.storage.from(PAPER_BUCKET).remove([oldPath]);
+  refresh();
+  return { ok: true };
+}
+
+export async function setPaperTone(id: unknown, tone: unknown): Promise<Result> {
+  await requireUser(ADMINS);
+  const pid = uuid.safeParse(id);
+  const t = z.enum(COVER_TONES).safeParse(tone);
+  if (!pid.success || !t.success) return { error: GENERIC };
+  const supabase = await createClient();
+  const { error } = await supabase.from("mock_papers").update({ tone: t.data }).eq("id", pid.data);
+  if (error) return { error: "Run the latest database update first (migration 20261114000014), then try again." };
+  refresh();
+  return { ok: true };
 }
 
 export async function setPaperPublished(id: unknown, published: unknown): Promise<Result> {

@@ -1,16 +1,22 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
+import { ExamCover } from "@/components/exam/exam-cover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { deletePaper, setPaperPublished } from "@/lib/papers/actions";
+import { COVER_TONES, type CoverTone } from "@/lib/exam/catalog";
+import { createCoverUploadUrl, deletePaper, setPaperCover, setPaperPublished, setPaperTone } from "@/lib/papers/actions";
+import { imageToJpeg } from "@/lib/papers/render";
 
-export function PaperRow({ id, title, slug, published, hasAudio }: { id: string; title: string; slug: string; published: boolean; hasAudio: boolean }) {
+type Props = { id: string; title: string; slug: string; published: boolean; hasAudio: boolean; tone: CoverTone; free: boolean; coverUrl: string | null };
+
+export function PaperRow({ id, title, slug, published, hasAudio, tone, free, coverUrl }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const fileRef = useRef<HTMLInputElement>(null);
 
   function run(fn: () => Promise<{ error: string } | { ok: true }>) {
     setError(null);
@@ -21,36 +27,86 @@ export function PaperRow({ id, title, slug, published, hasAudio }: { id: string;
     });
   }
 
+  function uploadCover(file: File | undefined) {
+    if (!file) return;
+    run(async () => {
+      let blob: Blob;
+      try {
+        blob = await imageToJpeg(file);
+      } catch {
+        return { error: "We couldn't read this picture. Choose a JPG, PNG or WebP image." };
+      }
+      const link = await createCoverUploadUrl(id);
+      if ("error" in link) return link;
+      const body = new FormData();
+      body.append("cacheControl", "3600");
+      body.append("", blob);
+      const res = await fetch(link.url, { method: "PUT", body, headers: { "x-upsert": "true" } }).catch(() => null);
+      if (!res?.ok) return { error: "The upload failed. Check your internet connection and try again." };
+      return setPaperCover(id, link.path);
+    });
+  }
+
   return (
-    <li className="grid gap-2 rounded-xl border border-border bg-card px-4 py-3">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="grid min-w-0 flex-1">
-          <span className="font-semibold">{title}</span>
-          <span className="text-[13px] text-muted-foreground">
-            /{slug} · {hasAudio ? "with audio" : "no audio"}
-          </span>
+    <li className="grid gap-4 rounded-xl border border-border bg-card px-4 py-3 sm:grid-cols-[110px_minmax(0,1fr)]">
+      <ExamCover exam={{ id: slug, city: title, topics: "", tone, free, image: coverUrl ?? undefined }} className="mx-auto w-[96px] sm:w-full" />
+      <div className="grid content-start gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="grid min-w-0 flex-1">
+            <span className="font-semibold">{title}</span>
+            <span className="text-[13px] text-muted-foreground">
+              /{slug} · {hasAudio ? "with audio" : "no audio"}
+            </span>
+          </div>
+          <Badge variant={published ? "gold" : "outline"}>{published ? "Published" : "Draft"}</Badge>
+          <Button type="button" variant="outline" size="sm" disabled={pending} onClick={() => run(() => setPaperPublished(id, !published))}>
+            {published ? "Unpublish" : "Publish"}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={pending}
+            onClick={() => {
+              if (window.confirm(`Delete "${title}" with its pages, audio, answer key and all student results? This cannot be undone.`)) run(() => deletePaper(id));
+            }}
+          >
+            Delete
+          </Button>
         </div>
-        <Badge variant={published ? "gold" : "outline"}>{published ? "Published" : "Draft"}</Badge>
-        <Button type="button" variant="outline" size="sm" disabled={pending} onClick={() => run(() => setPaperPublished(id, !published))}>
-          {published ? "Unpublish" : "Publish"}
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          disabled={pending}
-          onClick={() => {
-            if (window.confirm(`Delete "${title}" with its pages, audio, answer key and all student results? This cannot be undone.`)) run(() => deletePaper(id));
-          }}
-        >
-          Delete
-        </Button>
+
+        <div className="flex flex-wrap items-center gap-3 border-t border-border pt-3">
+          <label className="flex items-center gap-2 text-sm font-medium">
+            Cover colour
+            <select
+              value={tone}
+              disabled={pending}
+              onChange={(e) => run(() => setPaperTone(id, e.target.value))}
+              className="h-10 rounded-xl border border-input bg-background px-3 text-sm"
+            >
+              {COVER_TONES.map((t) => (
+                <option key={t}>{t}</option>
+              ))}
+            </select>
+          </label>
+          <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => { uploadCover(e.target.files?.[0]); e.target.value = ""; }} />
+          <Button type="button" variant="outline" size="sm" disabled={pending} onClick={() => fileRef.current?.click()}>
+            {coverUrl ? "Change cover photo" : "Add cover photo"}
+          </Button>
+          {coverUrl && (
+            <Button type="button" variant="ghost" size="sm" disabled={pending} onClick={() => run(() => setPaperCover(id, null))}>
+              Remove photo
+            </Button>
+          )}
+          {pending && <span className="text-sm text-muted-foreground">Saving…</span>}
+        </div>
+        <p className="text-[13px] text-muted-foreground">Without a photo the cover shows the Deutli owl on the colour.</p>
+        {error && (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
       </div>
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
     </li>
   );
 }

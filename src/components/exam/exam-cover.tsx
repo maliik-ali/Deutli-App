@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ArrowUpRight, Lock } from "lucide-react";
 
 import type { CoverTone, MockExam } from "@/lib/exam/catalog";
-import { COVER_PHOTOS } from "@/lib/exam/covers";
 import { cn } from "@/lib/utils";
 
 const TONES: Record<CoverTone, string> = {
@@ -11,6 +10,9 @@ const TONES: Record<CoverTone, string> = {
   violet: "bg-cover-violet",
   teal: "bg-cover-teal",
   indigo: "bg-cover-indigo",
+  plum: "bg-cover-plum",
+  forest: "bg-cover-forest",
+  ocean: "bg-cover-ocean",
 };
 
 /** The colour of each tone, used to tint the bottom of a city photo so the big "B1" stays readable. */
@@ -19,6 +21,9 @@ const TONE_VARS: Record<CoverTone, string> = {
   violet: "var(--cover-violet)",
   teal: "var(--cover-teal)",
   indigo: "var(--cover-indigo)",
+  plum: "var(--cover-plum)",
+  forest: "var(--cover-forest)",
+  ocean: "var(--cover-ocean)",
 };
 
 /**
@@ -27,7 +32,7 @@ const TONE_VARS: Record<CoverTone, string> = {
  * (cqw) so the cover looks the same at any card width.
  */
 export function ExamCover({ exam, className }: { exam: MockExam; className?: string }) {
-  const photo = COVER_PHOTOS[exam.id];
+  const photo = exam.image;
   return (
     <div className={cn("relative", className)}>
       {/* page edges behind the cover */}
@@ -48,7 +53,8 @@ export function ExamCover({ exam, className }: { exam: MockExam; className?: str
           )}
           {photo ? (
             <>
-              <Image src={photo.src} alt="" fill sizes="(min-width: 1280px) 280px, 45vw" className={cn("object-cover", photo.position)} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={photo} alt="" className="absolute inset-0 size-full object-cover" />
               {/* the tone gradient stays on top of the photo: dark at the top for the logo, tone colour at the bottom for the "B1" */}
               <span
                 aria-hidden

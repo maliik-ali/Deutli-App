@@ -7,13 +7,21 @@ import { PaperUploadForm } from "@/components/admin/paper-upload-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
-import { getPapers } from "@/lib/papers/data";
+import { PAPER_BUCKET, getPapers } from "@/lib/papers/data";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Mock exam papers" };
 
 export default async function AdminMockPapersPage() {
   await requireUser(["academy_admin", "super_admin"]);
   const papers = await getPapers();
+  const covers = new Map<string, string>();
+  const withCover = papers.filter((p) => p.cover_path);
+  if (withCover.length) {
+    const supabase = await createClient();
+    const { data } = await supabase.storage.from(PAPER_BUCKET).createSignedUrls(withCover.map((p) => p.cover_path as string), 60 * 60);
+    data?.forEach((row, i) => row.signedUrl && covers.set(withCover[i].id, row.signedUrl));
+  }
 
   return (
     <AdminShell
@@ -36,7 +44,7 @@ export default async function AdminMockPapersPage() {
         ) : (
           <ul className="grid gap-2">
             {papers.map((p) => (
-              <PaperRow key={p.id} id={p.id} title={p.title} slug={p.slug} published={p.is_published} hasAudio={!!p.audio_path} />
+              <PaperRow key={p.id} id={p.id} title={p.title} slug={p.slug} published={p.is_published} hasAudio={!!p.audio_path} tone={p.tone} free={p.is_free} coverUrl={covers.get(p.id) ?? null} />
             ))}
           </ul>
         )}

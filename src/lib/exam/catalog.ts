@@ -3,13 +3,16 @@
  * Topics and city names are our own; the exam formats below describe the real Goethe and telc B1 exams.
  */
 
-export type CoverTone = "navy" | "violet" | "teal" | "indigo";
+export const COVER_TONES = ["navy", "violet", "teal", "indigo", "plum", "forest", "ocean"] as const;
+export type CoverTone = (typeof COVER_TONES)[number];
 
 export type MockExam = {
   id: string;
   city: string;
   topics: string;
   tone: CoverTone;
+  /** Optional cover photo (uploaded by an admin). Without it the cover shows the owl. */
+  image?: string;
   free: boolean;
 };
 

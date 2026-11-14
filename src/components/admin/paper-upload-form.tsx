@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createPaper, createPaperUploadUrls } from "@/lib/papers/actions";
 import { openPdf, pageToJpeg, renderPage } from "@/lib/papers/render";
+import { COVER_TONES } from "@/lib/exam/catalog";
 import { SECTIONS, TELC_B1_PARTS, type PaperPart } from "@/lib/papers/template";
 import { cn } from "@/lib/utils";
 
@@ -154,7 +155,7 @@ export function PaperUploadForm() {
         <div className="grid gap-2">
           <Label htmlFor="p-tone">Cover colour</Label>
           <select id="p-tone" name="tone" defaultValue="navy" className={cn(FIELD, "h-11")}>
-            {["navy", "violet", "teal", "indigo"].map((t) => (
+            {COVER_TONES.map((t) => (
               <option key={t}>{t}</option>
             ))}
           </select>

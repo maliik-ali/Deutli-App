@@ -32,3 +32,17 @@ export async function pageToJpeg(doc: PDFDocumentProxy, pageNumber: number): Pro
   if (!blob) throw new Error("no blob");
   return blob;
 }
+
+/** Shrinks any picture to a JPEG of at most `maxWidth` px wide (for cover photos). */
+export async function imageToJpeg(file: File, maxWidth = 900): Promise<Blob> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, maxWidth / bitmap.width);
+  const c = document.createElement("canvas");
+  c.width = Math.round(bitmap.width * scale);
+  c.height = Math.round(bitmap.height * scale);
+  c.getContext("2d")?.drawImage(bitmap, 0, 0, c.width, c.height);
+  bitmap.close();
+  const blob = await new Promise<Blob | null>((resolve) => c.toBlob(resolve, "image/jpeg", 0.82));
+  if (!blob) throw new Error("no blob");
+  return blob;
+}
