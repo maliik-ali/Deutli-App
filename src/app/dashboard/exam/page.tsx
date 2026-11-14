@@ -4,13 +4,14 @@ import Link from "next/link";
 import { ExamCard } from "@/components/exam/exam-cover";
 import { SKILL_ICONS } from "@/components/exam/skill-icons";
 import { requireUser } from "@/lib/auth/dal";
-import { EXAM_SKILLS, MOCK_EXAMS, examShortName } from "@/lib/exam/catalog";
+import { MOCK_EXAMS, examShortName, getExamFormat } from "@/lib/exam/catalog";
 
 export const metadata: Metadata = { title: "My B1 Exam" };
 
 export default async function ExamPage() {
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
   const examName = examShortName(user.exam);
+  const format = getExamFormat(user.exam);
 
   return (
     <main className="mx-auto grid max-w-[1240px] gap-8 px-4 py-6 sm:px-6 md:px-8 md:py-8">
@@ -23,7 +24,7 @@ export default async function ExamPage() {
       </header>
 
       <nav aria-label="Train one skill" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {EXAM_SKILLS.map((s) => {
+        {format.skills.map((s) => {
           const Icon = SKILL_ICONS[s.slug];
           return (
             <Link
@@ -37,7 +38,7 @@ export default async function ExamPage() {
               <span className="grid min-w-0">
                 <span className="font-semibold">{s.english}</span>
                 <span className="text-[13px] text-muted-foreground">
-                  {s.german} · {s.minutes} min
+                  {s.minutes} min · {s.maxPoints} points
                 </span>
               </span>
             </Link>

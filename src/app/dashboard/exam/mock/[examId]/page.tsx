@@ -8,7 +8,7 @@ import { SKILL_ICONS } from "@/components/exam/skill-icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth/dal";
-import { EXAM_SKILLS, MOCK_EXAMS, examShortName, getMockExam } from "@/lib/exam/catalog";
+import { MOCK_EXAMS, examShortName, getExamFormat, getMockExam } from "@/lib/exam/catalog";
 
 export function generateStaticParams() {
   return MOCK_EXAMS.map((e) => ({ examId: e.id }));
@@ -23,7 +23,8 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
   const exam = getMockExam((await props.params).examId);
   if (!exam) notFound();
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
-  const total = EXAM_SKILLS.reduce((sum, s) => sum + s.minutes, 0);
+  const skills = getExamFormat(user.exam).skills;
+  const total = skills.reduce((sum, s) => sum + s.minutes, 0);
 
   return (
     <main className="mx-auto grid max-w-[1240px] gap-6 px-4 py-6 sm:px-6 md:px-8 md:py-8">
@@ -51,7 +52,7 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
           </div>
 
           <ul className="grid gap-3 sm:grid-cols-2">
-            {EXAM_SKILLS.map((s) => {
+            {skills.map((s) => {
               const Icon = SKILL_ICONS[s.slug];
               return (
                 <li key={s.slug} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
@@ -63,7 +64,7 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
                       {s.english} <span className="font-normal text-muted-foreground">· {s.german}</span>
                     </span>
                     <span className="text-[13px] text-muted-foreground">
-                      {s.parts.length} parts · {s.minutes} min
+                      {s.parts.length === 1 ? "1 task" : `${s.parts.length} parts`} · {s.minutes} min
                     </span>
                   </span>
                 </li>
