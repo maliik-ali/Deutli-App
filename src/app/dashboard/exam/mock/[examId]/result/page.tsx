@@ -5,8 +5,10 @@ import { ChevronLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
+import { WritingFeedbackCard } from "@/components/exam/writing-feedback";
 import { requireUser } from "@/lib/auth/dal";
 import { getAttempt, getPaperById } from "@/lib/papers/data";
+import { getWritingFeedback } from "@/lib/writing/data";
 import { SECTIONS, WRITTEN_MAX, WRITTEN_PASS, partQuestions } from "@/lib/papers/template";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +23,7 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
   const paper = await getPaperById(attempt.paper_id);
   if (!paper || paper.slug !== examId) notFound();
   const r = attempt.result;
+  const feedback = await getWritingFeedback(attempt.id);
   const parts = paper.structure.parts;
   void user;
 
@@ -37,7 +40,7 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
           <strong className="text-3xl">{r.total}</strong> <span className="text-muted-foreground">of {r.max} points (reading, grammar and listening)</span>
         </p>
         <p className="text-[14px] text-muted-foreground">
-          Your email ({r.writingWords} words) is not marked here yet. The telc written exam has {WRITTEN_MAX} points in total, including 45 for writing. You pass with {WRITTEN_PASS}.
+          Your email ({r.writingWords} words) is marked separately below: the AI gives an estimate and your teacher confirms. The telc written exam has {WRITTEN_MAX} points in total, including 45 for writing. You pass with {WRITTEN_PASS}.
         </p>
       </header>
 
@@ -59,6 +62,8 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
           })}
         </ul>
       </Card>
+
+      <WritingFeedbackCard attemptId={attempt.id} text={attempt.writing} words={r.writingWords} initial={feedback} />
 
       <Card className="grid gap-4 p-6">
         <CardTitle>Your answers</CardTitle>
