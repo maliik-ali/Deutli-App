@@ -106,7 +106,7 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
 
   return (
     <div className="flex min-h-dvh flex-col lg:h-dvh lg:overflow-hidden">
-      <header className="grid h-16 shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-border bg-card px-3 sm:px-5">
+      <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-card px-3 sm:px-5">
         <div className="flex min-w-0 items-center gap-3">
           <Link href={`/dashboard/exam/mock/${slug}`} aria-label="Leave the exam" className="grid size-10 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground">
             <ArrowLeft className="size-5" aria-hidden />
@@ -115,17 +115,8 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
             {title} <span className="ml-1 text-[12px] font-semibold tracking-[0.12em] text-subtle-foreground uppercase">telc · B1</span>
           </p>
         </div>
-        <div className="flex items-center gap-1 rounded-full border border-border bg-background py-1 pr-1 pl-3.5">
-          <Timer className="size-4 text-muted-foreground" aria-hidden />
-          <span className="min-w-[4.5rem] text-center font-mono text-[15px] font-semibold tabular-nums" role="timer" aria-label={showTimer ? `${section.title}: ${mmss(sectionLeft)} left` : "Timer hidden"}>
-            {showTimer ? <span className={sectionLeft <= 0 ? "text-destructive" : undefined}>{mmss(sectionLeft)}</span> : <span className="text-muted-foreground">Hidden</span>}
-          </span>
-          <button type="button" onClick={() => setShowTimer((v) => !v)} aria-pressed={!showTimer} aria-label={showTimer ? "Hide timer" : "Show timer"} className="grid size-9 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-            {showTimer ? <Eye className="size-4" aria-hidden /> : <EyeOff className="size-4" aria-hidden />}
-          </button>
-        </div>
         <div className="flex items-center justify-end gap-3">
-          <span className="hidden text-[13px] text-muted-foreground xl:block" role="status">
+          <span className="hidden text-[13px] text-muted-foreground sm:block" role="status">
             {saveState === "saving" ? "Saving…" : saveState === "error" ? "Not saved — check your internet" : "All answers saved"}
           </span>
           <Button type="button" onClick={() => setConfirming(true)}>
@@ -180,12 +171,22 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
             <button type="button" disabled={partIndex === 0} onClick={() => setPartIndex((i) => i - 1)} aria-label="Previous part" className="grid size-10 place-items-center rounded-full border border-border bg-card disabled:opacity-40">
               <ChevronLeft className="size-5" aria-hidden />
             </button>
-            <div className="grid min-w-0 flex-1">
+            <div className="grid min-w-0 flex-1 basis-0">
               <span className="text-[12px] font-semibold tracking-[0.14em] text-subtle-foreground uppercase">{section.title}</span>
               <span className="font-bold">
                 {part.title} <span className="font-medium text-muted-foreground">· {partIndex + 1}/{parts.length}</span>
               </span>
             </div>
+          <div className="flex shrink-0 items-center gap-1 rounded-full border border-border bg-card py-1 pr-1 pl-3.5">
+            <Timer className="size-4 text-muted-foreground" aria-hidden />
+            <span className="min-w-[4.5rem] text-center font-mono text-[15px] font-semibold tabular-nums" role="timer" aria-label={showTimer ? `${section.title}: ${mmss(sectionLeft)} left` : "Timer hidden"}>
+              {showTimer ? <span className={sectionLeft <= 0 ? "text-destructive" : undefined}>{mmss(sectionLeft)}</span> : <span className="text-muted-foreground">Hidden</span>}
+            </span>
+            <button type="button" onClick={() => setShowTimer((v) => !v)} aria-pressed={!showTimer} aria-label={showTimer ? "Hide timer" : "Show timer"} className="grid size-9 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+              {showTimer ? <Eye className="size-4" aria-hidden /> : <EyeOff className="size-4" aria-hidden />}
+            </button>
+          </div>
+            <div className="flex min-w-0 flex-1 basis-0 items-center justify-end gap-3">
             <select aria-label="Go to part" value={partIndex} onChange={(e) => setPartIndex(Number(e.target.value))} className="h-10 max-w-40 rounded-full border border-border bg-card px-3 text-sm lg:hidden">
               {parts.map((p, i) => (
                 <option key={p.id} value={i}>
@@ -196,6 +197,7 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
             <button type="button" disabled={partIndex === parts.length - 1} onClick={() => setPartIndex((i) => i + 1)} aria-label="Next part" className="grid size-10 place-items-center rounded-full bg-brand-gradient text-white disabled:opacity-40">
               <ChevronRight className="size-5" aria-hidden />
             </button>
+            </div>
           </div>
 
           <div ref={paperRef} className="relative min-h-0 flex-1 overflow-y-auto bg-muted/40 px-3 py-6 sm:px-6">
