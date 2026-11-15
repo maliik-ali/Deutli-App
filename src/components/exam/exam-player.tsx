@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ChevronLeft, ChevronRight, Eye, EyeOff, Loader2, Minus, Pause, Play, Plus, RotateCcw, RotateCw, Send } from "lucide-react";
 
+import { WritingBox } from "@/components/exam/writing-box";
 import { Button } from "@/components/ui/button";
 import { saveAttempt, submitAttempt } from "@/lib/papers/actions";
 import { SECTIONS, countWords, partQuestions, type PaperPart, type PaperStructure } from "@/lib/papers/template";
@@ -233,9 +234,8 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-2">
             {part.kind === "write" ? (
-              <div className="grid gap-2 py-3">
-                <textarea value={writing} onChange={(e) => setWriting(e.target.value.slice(0, 6000))} rows={14} aria-label="Your email" placeholder="Write your email here…" className="min-h-72 w-full resize-y rounded-xl border border-input bg-background p-4 text-[16px] leading-relaxed outline-none focus-visible:border-ink" />
-                <p className={cn("text-right text-sm", countWords(writing) >= WRITING_AIM ? "text-success" : "text-muted-foreground")}>{countWords(writing)} words</p>
+              <div className="py-3">
+                <WritingBox value={writing} onChange={setWriting} aim={WRITING_AIM} />
               </div>
             ) : (
               <ol>

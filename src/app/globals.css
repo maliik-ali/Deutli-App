@@ -72,6 +72,14 @@
     }
   }
 
+  /* Shine border (Magic UI idea): a slow light that travels around the writing box */
+  --animate-shine-spin: shine-spin 8s linear infinite;
+  @keyframes shine-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   --color-ink: var(--ink);
   --color-ink-foreground: var(--ink-foreground);
   --color-gold: var(--gold);
