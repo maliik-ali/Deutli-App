@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, BookOpenText, Check, Ear, Flame, Headphones, Mic, VolumeX } from "lucide-react";
 
+import { HowItWorksCard } from "@/components/practice/how-it-works";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -141,27 +142,7 @@ export function PracticeOverview({
               </ol>
             </Card>
 
-            <Card className="border-ink bg-ink text-ink-foreground">
-              <div className="grid gap-1">
-                <p className="text-[13px] font-medium text-gold-ink">How it works</p>
-                <CardTitle className="text-lg text-ink-foreground">Three rounds with every text</CardTitle>
-              </div>
-              <ol className="grid gap-4">
-                {STEPS.map((s, i) => (
-                  <li key={s.title} className="flex gap-3">
-                    <span className="grid size-9 shrink-0 place-items-center rounded-full bg-background/40 text-gold-ink">
-                      <s.icon className="size-[18px]" aria-hidden />
-                    </span>
-                    <div className="grid gap-0.5">
-                      <p className="text-[15px] font-semibold">
-                        {i + 1}. {s.title}
-                      </p>
-                      <p className="text-sm text-ink-foreground/75">{s.body}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </Card>
+            <HowItWorksCard steps={STEPS.map((s) => ({ title: s.title, body: s.body }))} />
           </div>
 
           <section className="grid gap-4" aria-labelledby="all-texts">
