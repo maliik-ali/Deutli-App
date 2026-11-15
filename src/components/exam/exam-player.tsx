@@ -168,14 +168,16 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
         {/* The paper */}
         <section className="flex min-h-0 min-w-0 flex-col" aria-label="Exam paper">
           <div className="flex shrink-0 items-center gap-3 border-b border-border px-3 py-3 sm:px-5">
+            <div className="flex min-w-0 flex-1 basis-0 items-center gap-3">
             <button type="button" disabled={partIndex === 0} onClick={() => setPartIndex((i) => i - 1)} aria-label="Previous part" className="grid size-10 place-items-center rounded-full border border-border bg-card disabled:opacity-40">
               <ChevronLeft className="size-5" aria-hidden />
             </button>
-            <div className="grid min-w-0 flex-1 basis-0">
+            <div className="grid min-w-0 flex-1">
               <span className="text-[12px] font-semibold tracking-[0.14em] text-subtle-foreground uppercase">{section.title}</span>
               <span className="font-bold">
                 {part.title} <span className="font-medium text-muted-foreground">· {partIndex + 1}/{parts.length}</span>
               </span>
+            </div>
             </div>
           <div className="flex shrink-0 items-center gap-1 rounded-full border border-border bg-card py-1 pr-1 pl-3.5">
             <Timer className="size-4 text-muted-foreground" aria-hidden />
