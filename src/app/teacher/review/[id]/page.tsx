@@ -34,7 +34,7 @@ export default async function ReviewPage(props: PageProps<"/teacher/review/[id]"
 
   return (
     <main className="mx-auto grid max-w-3xl gap-5 px-4 py-8 sm:px-8">
-      <Link href="/teacher" className="inline-flex w-fit items-center gap-1 py-2 pr-3 text-[14px] font-medium text-muted-foreground hover:text-foreground">
+      <Link href="/teacher/reviews" className="inline-flex w-fit items-center gap-1 py-2 pr-3 text-[14px] font-medium text-muted-foreground hover:text-foreground">
         <ChevronLeft className="size-4" aria-hidden /> Back
       </Link>
       <div>
