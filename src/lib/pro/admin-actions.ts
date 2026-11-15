@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { requireUser } from "@/lib/auth/dal";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { fulfilOrder } from "./fulfil";
 
 const ADMINS = ["academy_admin", "super_admin"] as const;
 const GENERIC = "That didn't work. Please wait a moment and try again.";
@@ -75,26 +76,13 @@ export async function deleteAccount(id: unknown): Promise<Result> {
   return { ok: true };
 }
 
-const addMonths = (iso: string, months: number) => {
-  const d = new Date(`${iso}T00:00:00Z`);
-  d.setUTCMonth(d.getUTCMonth() + months);
-  return d.toISOString().slice(0, 10);
-};
-
-/** Payment checked and OK: the order is paid and Pro is extended (from today, or from the end of the current Pro). */
+/** Payment checked and OK: the order is paid and Pro is extended. */
 export async function approveOrder(id: unknown): Promise<Result> {
   const admin = await db();
   const i = uuid.safeParse(id);
   if (!i.success || !admin) return { error: GENERIC };
-  const { data: o } = await admin.from("orders").select("id, user_id, months, status").eq("id", i.data).maybeSingle();
-  if (!o || !["pending", "awaiting_review"].includes(o.status)) return { error: "This order was already handled." };
-  const { data: prof } = await admin.from("profiles").select("pro_until").eq("id", o.user_id).maybeSingle();
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Karachi" }).format(new Date());
-  const start = prof?.pro_until && prof.pro_until > today ? prof.pro_until : today;
-  const { error: e1 } = await admin.from("profiles").update({ pro_until: addMonths(start, o.months) }).eq("id", o.user_id);
-  if (e1) return { error: GENERIC };
-  const { error: e2 } = await admin.from("orders").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", o.id);
-  if (e2) return { error: GENERIC };
+  const r = await fulfilOrder(admin, i.data);
+  if ("error" in r) return r;
   refresh();
   return { ok: true };
 }

@@ -8,6 +8,7 @@ import { requireUser } from "@/lib/auth/dal";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { cardReady } from "./data";
+import { getStripe, stripeCurrency } from "./stripe";
 
 /** "I want Pro": saved so the academy can contact the student. Asking twice is fine. */
 export async function requestPro(note: unknown): Promise<{ error: string } | { ok: true }> {
@@ -75,4 +76,35 @@ export async function cancelOrder(orderId: unknown): Promise<{ error: string } |
   await admin.from("orders").update({ status: "cancelled" }).eq("id", id.data).eq("user_id", user.id).eq("status", "pending");
   revalidatePath("/dashboard/upgrade");
   return { ok: true };
+}
+
+/** Opens Stripe's secure payment page for a card order. Returns the address to go to. */
+export async function startCardPayment(orderId: unknown): Promise<{ error: string } | { url: string }> {
+  const user = await requireUser(LEARNERS);
+  const id = z.string().uuid().safeParse(orderId);
+  const stripe = getStripe();
+  const admin = createAdminClient();
+  if (!id.success || !admin) return { error: GENERIC };
+  if (!stripe) return { error: "Card payments are not open yet. Please pay with a bank or wallet." };
+
+  const { data: o } = await admin.from("orders").select("id, plan_name, months, amount_pkr, method, status, reference").eq("id", id.data).eq("user_id", user.id).maybeSingle();
+  if (!o || o.method !== "card" || o.status !== "pending") return { error: GENERIC };
+
+  const site = (process.env.SITE_URL ?? "").replace(/\/$/, "") || "http://localhost:3000";
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      client_reference_id: o.id,
+      customer_email: user.email ?? undefined,
+      metadata: { order_id: o.id, reference: o.reference },
+      line_items: [{ quantity: 1, price_data: { currency: stripeCurrency(), unit_amount: o.amount_pkr * 100, product_data: { name: `Deutli Pro · ${o.plan_name}` } } }],
+      success_url: `${site}/dashboard/upgrade/order/${o.id}?card=done`,
+      cancel_url: `${site}/dashboard/upgrade/order/${o.id}?card=cancelled`,
+    });
+    if (!session.url) return { error: GENERIC };
+    await admin.from("orders").update({ stripe_session_id: session.id }).eq("id", o.id);
+    return { url: session.url };
+  } catch {
+    return { error: "We couldn't open the card payment page. Please try again in a moment." };
+  }
 }

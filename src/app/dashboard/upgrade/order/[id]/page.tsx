@@ -3,18 +3,20 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CheckCircle2, ChevronLeft, Clock, XCircle } from "lucide-react";
 
+import { CardPayButton } from "@/components/dashboard/card-pay-button";
 import { CopyButton } from "@/components/dashboard/copy-button";
 import { ProofForm } from "@/components/dashboard/proof-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
-import { getActiveAccounts, getMyOrder, pkr } from "@/lib/pro/data";
+import { cardReady, getActiveAccounts, getMyOrder, pkr } from "@/lib/pro/data";
 
 export const metadata: Metadata = { title: "Your order" };
 
 export default async function OrderPage(props: PageProps<"/dashboard/upgrade/order/[id]">) {
   await requireUser(["student", "academy_admin", "super_admin"]);
   const { id } = await props.params;
+  const sp = await props.searchParams;
   const order = await getMyOrder(id);
   if (!order) notFound();
   const accounts = order.method === "bank_wallet" ? await getActiveAccounts() : [];
@@ -117,13 +119,38 @@ export default async function OrderPage(props: PageProps<"/dashboard/upgrade/ord
 
       {order.method === "card" && order.status === "pending" && (
         <Card>
-          <p className="font-bold">Card payment is being connected</p>
-          <p className="text-[15px] text-muted-foreground">We will let you know when you can pay by card. You can pay by bank or wallet now instead.</p>
-          <div>
-            <Button asChild variant="outline">
-              <Link href="/dashboard/upgrade">Back to plans</Link>
-            </Button>
-          </div>
+          {sp.card === "done" ? (
+            <>
+              <p className="flex items-center gap-2 text-lg font-bold">
+                <Clock className="size-5 text-gold-ink" aria-hidden /> Payment received, confirming…
+              </p>
+              <p className="text-[15px] text-muted-foreground">This takes a few seconds. Refresh this page. If Pro is still not on after a few minutes, contact us with your reference {order.reference}.</p>
+              <div>
+                <Button asChild variant="outline">
+                  <Link href={`/dashboard/upgrade/order/${order.id}`}>Refresh</Link>
+                </Button>
+              </div>
+            </>
+          ) : cardReady() ? (
+            <>
+              <div className="grid gap-1">
+                <CardTitle>Pay {pkr(order.amount_pkr)} by card</CardTitle>
+                <CardDescription>You will go to Stripe&apos;s secure page. Your card details never touch Deutli. Your bank may ask you to verify the payment.</CardDescription>
+              </div>
+              {sp.card === "cancelled" && <p className="text-[14px] text-muted-foreground">Payment was cancelled. You can try again.</p>}
+              <CardPayButton orderId={order.id} label="Pay by card" />
+            </>
+          ) : (
+            <>
+              <p className="font-bold">Card payment is being connected</p>
+              <p className="text-[15px] text-muted-foreground">We will let you know when you can pay by card. You can pay by bank or wallet now instead.</p>
+              <div>
+                <Button asChild variant="outline">
+                  <Link href="/dashboard/upgrade">Back to plans</Link>
+                </Button>
+              </div>
+            </>
+          )}
         </Card>
       )}
     </main>

@@ -22,8 +22,8 @@ export type Order = {
 
 export const ORDER_COLUMNS = "id, user_id, plan_name, months, amount_pkr, method, status, reference, txn_id, payer_note, admin_note, created_at, paid_at";
 export const pkr = (n: number) => `Rs. ${n.toLocaleString("en-PK")}`;
-/** Card payments need a gateway account. Until one is connected (env CARD_GATEWAY), the card option is shown as "soon". */
-export const cardReady = () => Boolean(process.env.CARD_GATEWAY);
+/** Card payments need a gateway account. Until Stripe is connected (env STRIPE_SECRET_KEY), the card option is shown as "soon". */
+export const cardReady = () => Boolean(process.env.STRIPE_SECRET_KEY);
 
 export async function getActivePlans(): Promise<Plan[]> {
   const supabase = await createClient();

@@ -119,3 +119,13 @@ Redirect URL to paste into Google and Apple (this is Supabase's, not ours): `htt
 **Both:** Supabase → Authentication → URL Configuration: Site URL `https://app.deutli.com` and add `https://app.deutli.com/**` under Redirect URLs.
 
 New students who sign up this way go through onboarding like everyone else. Their role is always "student".
+
+## G. Card payments with Stripe
+
+1. Stripe Dashboard → Developers → API keys → copy the **Secret key** (starts with `sk_`). Use the test key (`sk_test_`) first.
+2. Stripe Dashboard → Developers → Webhooks → Add endpoint. URL: `https://app.deutli.com/api/stripe/webhook`. Event: `checkout.session.completed` (also add `checkout.session.async_payment_succeeded`). Copy the **Signing secret** (starts with `whsec_`).
+3. Vercel → Project → Settings → Environment Variables: add `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`. Optional: `STRIPE_CURRENCY` (default `pkr`; your Stripe account must accept it, otherwise use `usd` and set plan prices in dollars). Redeploy.
+4. Test: make a plan in Admin → Payments, buy it with Stripe's test card `4242 4242 4242 4242`, any future date, any CVC. Pro should switch on by itself within seconds.
+5. When it works, replace the test keys with live keys (`sk_live_`) and a live webhook.
+
+Easypaisa, JazzCash and bank transfer need nothing here: add your accounts in Admin → Payments.
