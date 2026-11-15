@@ -62,7 +62,7 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
       count: p.count,
       rows: partQuestions(p).map((n) => {
         const q = r.review[String(n)];
-        return { n, part: `${SECTIONS.find((s) => s.id === p.section)?.title} · ${p.title}`, given: q?.given ?? null, right: q?.right ?? "", ok: !!q?.ok };
+        return { n, part: `${SECTIONS.find((s) => s.id === p.section)?.title} · ${p.title}`, given: q?.given ?? null, right: q?.right ?? "", ok: !!q?.ok, listening: p.section === "hoeren" };
       }),
     }));
 
@@ -103,7 +103,7 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
         certificate={<CertificateCard attemptId={attempt.id} scores={scores} />}
       />
 
-      <AnswersTable parts={dots} />
+      <AnswersTable attemptId={attempt.id} parts={dots} />
 
       <DifficultySurvey attemptId={attempt.id} initial={fb?.difficulty ?? null} />
 

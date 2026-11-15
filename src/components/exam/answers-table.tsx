@@ -1,17 +1,90 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { Sparkles } from "lucide-react";
 
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { explainAnswer, type Explanation } from "@/lib/papers/explain";
 import { cn } from "@/lib/utils";
 
-export type AnswerRow = { n: number; part: string; given: string | null; right: string; ok: boolean };
+export type AnswerRow = { n: number; part: string; given: string | null; right: string; ok: boolean; listening?: boolean };
 export type PartDots = { id: string; title: string; got: number; count: number; rows: AnswerRow[] };
 
 const show = (v: string | null) => (v === "+" ? "+" : v === "-" ? "−" : v ? v.toUpperCase() : "–");
 
 /** Round dots per part for an overview, then a table of the questions (mistakes first). */
-export function AnswersTable({ parts }: { parts: PartDots[] }) {
+function Why({ attemptId, row }: { attemptId: string; row: AnswerRow }) {
+  const [open, setOpen] = useState(false);
+  const [data, setData] = useState<Explanation | null>(null);
+  const [lang, setLang] = useState<"en" | "ur">("en");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, start] = useTransition();
+
+  if (row.listening) return <span className="text-[12px] text-muted-foreground">Listening: soon</span>;
+  function toggle() {
+    const next = !open;
+    setOpen(next);
+    if (next && !data && !busy) {
+      setError(null);
+      start(async () => {
+        const r = await explainAnswer(attemptId, row.n);
+        if ("error" in r) setError(r.error);
+        else setData(r.explanation);
+      });
+    }
+  }
+  return (
+    <>
+      <button type="button" onClick={toggle} aria-expanded={open} className="inline-flex h-9 w-fit items-center gap-1.5 rounded-full border border-border px-3 text-[13px] font-semibold text-gold-ink hover:bg-muted">
+        <Sparkles className="size-3.5" aria-hidden /> Why?
+      </button>
+      {open && (
+        <div className="col-span-full grid gap-2 rounded-xl bg-muted/60 p-4 text-[14px]" aria-live="polite">
+          {busy && (
+            <div className="grid gap-2" aria-busy="true">
+              <span className="flex items-center gap-2 text-gold-ink">
+                <Sparkles className="size-4" aria-hidden /> AI is explaining…
+              </span>
+              <span className="h-3 w-full animate-pulse rounded bg-muted" />
+              <span className="h-3 w-4/5 animate-pulse rounded bg-muted" />
+            </div>
+          )}
+          {error && (
+            <p role="alert" className="text-destructive">
+              {error}
+            </p>
+          )}
+          {data && (
+            <>
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-gold-soft px-2 py-0.5 text-[11px] font-semibold text-gold-ink">
+                  <Sparkles className="size-3" aria-hidden /> AI explanation
+                </span>
+                <span role="tablist" aria-label="Language" className="flex gap-1 rounded-full bg-card p-0.5">
+                  {(["en", "ur"] as const).map((l) => (
+                    <button key={l} type="button" role="tab" aria-selected={lang === l} onClick={() => setLang(l)} className={cn("h-8 rounded-full px-3 text-[12px] font-semibold", lang === l ? "bg-gold text-gold-foreground" : "text-muted-foreground")}>
+                      {l === "en" ? "English" : "اردو"}
+                    </button>
+                  ))}
+                </span>
+              </div>
+              {lang === "ur" && !data.ur ? (
+                <p className="text-muted-foreground">No Urdu version yet.</p>
+              ) : (
+                <p className={cn("leading-relaxed whitespace-pre-wrap", lang === "ur" && "urdu text-[16px]")} dir={lang === "ur" ? "rtl" : undefined}>
+                  {data[lang]}
+                </p>
+              )}
+              <p className="text-[12px] text-muted-foreground">The AI can make mistakes. Check with your teacher if you are not sure.</p>
+            </>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
+export function AnswersTable({ attemptId, parts }: { attemptId: string; parts: PartDots[] }) {
   const all = parts.flatMap((p) => p.rows);
   const wrong = all.filter((r) => !r.ok && r.given);
   const skipped = all.filter((r) => !r.given);
@@ -62,15 +135,16 @@ export function AnswersTable({ parts }: { parts: PartDots[] }) {
         <p className="rounded-xl bg-success/10 px-4 py-6 text-center text-[15px] text-success">No mistakes. Every answer was right!</p>
       ) : (
         <div>
-          <div className="hidden grid-cols-[4rem_1.4fr_1fr_1fr] gap-4 border-b border-border pb-2 text-[13px] font-medium text-subtle-foreground md:grid">
+          <div className="hidden grid-cols-[4rem_1.4fr_1fr_1fr_7rem] gap-4 border-b border-border pb-2 text-[13px] font-medium text-subtle-foreground md:grid">
             <span>No.</span>
             <span>Part</span>
             <span>Your answer</span>
             <span>Right answer</span>
+            <span>Explanation</span>
           </div>
           <ul className="divide-y divide-border">
             {rows.map((r) => (
-              <li key={r.n} className="grid grid-cols-[3rem_1fr_auto] items-center gap-x-3 gap-y-1 py-3 text-[15px] md:grid-cols-[4rem_1.4fr_1fr_1fr] md:gap-4">
+              <li key={r.n} className="grid grid-cols-[3rem_1fr_auto] items-center gap-x-3 gap-y-2 py-3 text-[15px] md:grid-cols-[4rem_1.4fr_1fr_1fr_7rem] md:gap-4">
                 <span className="font-bold">{String(r.n).padStart(2, "0")}</span>
                 <span className="text-muted-foreground">{r.part}</span>
                 <span className={cn("font-semibold md:order-none", r.ok ? "text-success" : r.given ? "text-destructive" : "text-muted-foreground")}>
@@ -81,6 +155,7 @@ export function AnswersTable({ parts }: { parts: PartDots[] }) {
                   <span className="md:hidden text-[12px] font-normal text-subtle-foreground">Right: </span>
                   {show(r.right)}
                 </span>
+                <Why attemptId={attemptId} row={r} />
               </li>
             ))}
           </ul>
