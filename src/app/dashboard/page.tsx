@@ -1,23 +1,20 @@
 import type { Metadata } from "next";
-import { CalendarDays, Coins, Flame } from "lucide-react";
+import Link from "next/link";
+import { CalendarDays, Flame, Sparkles } from "lucide-react";
 
 import { FormNotice } from "@/components/auth/form-error";
 import { BlurFade } from "@/components/magicui/blur-fade";
 import { MotionProvider } from "@/components/magicui/motion-provider";
 import { NumberTicker } from "@/components/magicui/number-ticker";
-import {
-  ContinueLearningCard,
-  HomeworkFeedbackCard,
-  MockExamCard,
-  ReadinessCard,
-  SpeakingClubCard,
-  TodaysWordsCard,
-} from "@/components/dashboard/cards";
+import { MockExamCard, ReadinessCard, TodaysWordsCard, WritingFeedbackCard, type LatestWriting } from "@/components/dashboard/cards";
 import { requireUser } from "@/lib/auth/dal";
 import { getReadiness } from "@/lib/papers/readiness";
-import { getSavedWords } from "@/lib/practice/data";
+import { getFinishedAttempts, getLastResult, getPaperById, getPapers } from "@/lib/papers/data";
+import { getPracticeSets, getSavedWords } from "@/lib/practice/data";
+import { practiceStreak, todayPKT } from "@/lib/practice/plan";
 import { examLabel } from "@/lib/exam/choice";
-import { studentStats } from "@/lib/sample-data";
+import { getWritingFeedback } from "@/lib/writing/data";
+import { getReviewForStudent } from "@/lib/writing/teacher";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -33,7 +30,27 @@ function greetingPKT(now: Date) {
 export default async function DashboardPage(props: PageProps<"/dashboard">) {
   const user = await requireUser(["student"]);
   const sp = await props.searchParams;
-  const [savedWords, readiness] = await Promise.all([getSavedWords(user.id, 5), getReadiness(user.id)]);
+  const [savedWords, readiness, practice, papers, finished] = await Promise.all([
+    getSavedWords(user.id, 5),
+    getReadiness(user.id),
+    getPracticeSets(user.id),
+    getPapers(),
+    getFinishedAttempts(user.id, 1),
+  ]);
+  const streak = practiceStreak(practice.sets.flatMap((x) => x.tracks), todayPKT());
+
+  // Next mock exam: the first free paper (or the first one), with the last score if taken.
+  const paper = papers.find((p) => p.is_free) ?? papers[0] ?? null;
+  const lastTry = paper ? await getLastResult(user.id, paper.id) : null;
+  const mock = paper ? { slug: paper.slug, title: paper.title, last: lastTry?.result ? { id: lastTry.id, total: lastTry.result.total, max: lastTry.result.max } : null } : null;
+
+  // Writing feedback of the latest finished exam: the teacher's score if marked, else the AI estimate.
+  let latest: LatestWriting = null;
+  const att = finished[0];
+  if (att?.result) {
+    const [ap, fb, rv] = await Promise.all([getPaperById(att.paper_id), getWritingFeedback(att.id), getReviewForStudent(att.id, user.id)]);
+    if (ap) latest = { slug: ap.slug, title: ap.title, attemptId: att.id, words: att.result.writingWords, aiTotal: fb?.total ?? null, teacherTotal: rv?.status === "done" ? rv.total : null, summary: fb?.summary ?? null };
+  }
   const firstName = (user.fullName ?? "").trim().split(/\s+/)[0] || "there";
 
   const now = new Date();
@@ -75,14 +92,14 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
           </p>
         </div>
         <div className="flex gap-2">
-          <span className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-semibold">
+          <Link href="/dashboard/daily-practice" className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-semibold hover:bg-muted">
             <Flame className="size-4 text-gold-ink" aria-hidden />
-            {studentStats.streakDays}-day streak
-          </span>
-          <span className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-semibold">
-            <Coins className="size-4 text-gold-ink" aria-hidden />
-            {studentStats.coins} coins
-          </span>
+            {streak}-day practice streak
+          </Link>
+          <Link href="/dashboard/upgrade" className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-semibold hover:bg-muted">
+            <Sparkles className="size-4 text-gold-ink" aria-hidden />
+            Go Pro
+          </Link>
         </div>
       </header>
 
@@ -91,18 +108,12 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
           <ReadinessCard data={readiness} />
         </BlurFade>
         <BlurFade delay={0.12} className="xl:col-span-2 [&>*]:h-full">
-          <HomeworkFeedbackCard />
+          <WritingFeedbackCard latest={latest} />
         </BlurFade>
         <BlurFade delay={0.19} className="[&>*]:h-full">
-          <ContinueLearningCard />
+          <MockExamCard mock={mock} />
         </BlurFade>
-        <BlurFade delay={0.26} className="[&>*]:h-full">
-          <SpeakingClubCard />
-        </BlurFade>
-        <BlurFade delay={0.33} className="md:col-span-2 xl:col-span-1 [&>*]:h-full">
-          <MockExamCard />
-        </BlurFade>
-        <BlurFade delay={0.4} className="md:col-span-2 xl:col-span-3 [&>*]:h-full">
+        <BlurFade delay={0.26} className="md:col-span-2 [&>*]:h-full">
           <TodaysWordsCard saved={savedWords} languages={user.languages} />
         </BlurFade>
       </div>

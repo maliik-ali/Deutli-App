@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import Link from "next/link";
-import { ArrowRight, BookA, FileText, Headphones, UserCheck } from "lucide-react";
+import { ArrowRight, BookA, FileText, Headphones, Sparkles, UserCheck } from "lucide-react";
 
 import { RolePlaceholder } from "@/components/role-placeholder";
 import { requireUser } from "@/lib/auth/dal";
@@ -73,6 +73,19 @@ export default async function AdminPage() {
           <span className="text-sm text-muted-foreground">
             Make someone a teacher and give students their teacher. Teachers check their students&apos; writing.
           </span>
+        </span>
+        <ArrowRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+      </Link>
+      <Link
+        href="/admin/pro-requests"
+        className="flex items-center gap-4 rounded-2xl border border-border bg-card p-6 transition-colors hover:bg-muted"
+      >
+        <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-gold-soft text-gold-ink">
+          <Sparkles className="size-6" aria-hidden />
+        </span>
+        <span className="grid flex-1 gap-0.5">
+          <span className="text-base font-bold">Pro requests</span>
+          <span className="text-sm text-muted-foreground">Students who asked for Deutli Pro. Contact them with the price.</span>
         </span>
         <ArrowRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
       </Link>

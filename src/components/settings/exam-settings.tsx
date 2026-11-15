@@ -49,7 +49,7 @@ export function ExamSettings({ exam }: { exam: string | null }) {
           Exam
           <Select value={provider} onValueChange={(v) => changeProvider(v as ExamProviderId)}>
             <SelectTrigger aria-label="Exam">
-              <SelectValue />
+              <SelectValue>{getProvider(provider)?.name}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               {EXAM_PROVIDERS.map((p) => (
@@ -71,7 +71,7 @@ export function ExamSettings({ exam }: { exam: string | null }) {
               }}
             >
               <SelectTrigger aria-label="Level">
-                <SelectValue />
+                <SelectValue>{level}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {levels.map((l) => (
@@ -98,6 +98,7 @@ export function ExamSettings({ exam }: { exam: string | null }) {
         <Button type="button" onClick={save} disabled={busy || (unchanged && !saved)}>
           {busy ? "Saving…" : "Save"}
         </Button>
+        {!saved && unchanged && <span className="text-[14px] text-muted-foreground">Change the exam or level to save.</span>}
         {saved && (
           <span className="flex items-center gap-1.5 text-[14px] text-muted-foreground" role="status">
             <CheckCircle2 className="size-4" aria-hidden /> Saved

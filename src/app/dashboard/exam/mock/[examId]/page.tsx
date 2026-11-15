@@ -93,8 +93,10 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
                 Start mock exam
               </Button>
             ) : (
-              <Button disabled variant="outline" className="w-full sm:w-auto">
-                <Lock aria-hidden /> Premium
+              <Button asChild variant="outline" className="w-full sm:w-auto">
+                <Link href="/dashboard/upgrade">
+                  <Lock aria-hidden /> Unlock with Pro
+                </Link>
               </Button>
             )}
             <p className="text-[14px] text-muted-foreground">
@@ -102,7 +104,7 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
                 ? "Solve the real paper on screen. Your answers are saved as you go."
                 : exam.free
                   ? "The timed mock exam opens soon. We'll let you know."
-                  : "Premium mock exams come with the paid plan."}
+                  : "Premium mock exams come with Deutli Pro. Tell us you are interested and we will contact you."}
             </p>
           </div>
         </div>

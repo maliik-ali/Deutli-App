@@ -72,12 +72,7 @@ function NavLink({ item, active, onNavigate }: { item: Item; active: boolean; on
     >
       <Icon className={cn("size-[18px]", active && "text-gold-ink")} aria-hidden />
       <span className="flex-1">{item.label}</span>
-      {"count" in item && (
-        <span className="grid h-5 min-w-5 place-items-center rounded-full bg-ink px-1.5 text-[11px] font-semibold text-ink-foreground">
-          {item.count}
-          <span className="sr-only"> new</span>
-        </span>
-      )}
+      {"soon" in item && <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">Soon</span>}
     </Link>
   );
 }

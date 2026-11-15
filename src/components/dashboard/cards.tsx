@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, CalendarClock, CheckCircle2, Clock, Mic, Sparkles, Timer, Users } from "lucide-react";
+import { CheckCircle2, Timer } from "lucide-react";
 
 import { BorderBeam } from "@/components/magicui/border-beam";
 import { NumberTicker } from "@/components/magicui/number-ticker";
@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { continueLearning, homeworkFeedback, mockExam, speakingClub, todaysWords } from "@/lib/sample-data";
 import type { Readiness } from "@/lib/papers/readiness";
 import { getLanguage, textProps, type LanguageCode } from "@/lib/languages";
 import type { SavedWord } from "@/lib/practice/plan";
@@ -82,174 +81,85 @@ export function ReadinessCard({ className, data }: { className?: string; data: R
   );
 }
 
-export function HomeworkFeedbackCard({ className }: { className?: string }) {
-  const h = homeworkFeedback;
+
+export type LatestWriting = { slug: string; title: string; attemptId: string; words: number; aiTotal: number | null; teacherTotal: number | null; summary: string | null } | null;
+
+/** The student's latest writing result: the teacher's score if there is one, else the AI estimate. */
+export function WritingFeedbackCard({ className, latest }: { className?: string; latest: LatestWriting }) {
+  const link = latest ? `/dashboard/exam/mock/${latest.slug}/result?a=${latest.attemptId}` : "/dashboard/exam";
+  const score = latest?.teacherTotal ?? latest?.aiTotal ?? null;
   return (
     <Card className={className}>
-      <CardHeader className="flex-col-reverse sm:flex-row">
-        <div className="grid min-w-0 flex-1 gap-1">
-          <p className="text-[13px] font-medium text-subtle-foreground">Homework feedback</p>
-          <CardTitle className="text-lg">{h.title}</CardTitle>
-          <CardDescription>
-            {h.task} · {h.submitted}
-          </CardDescription>
+      <CardHeader>
+        <div className="grid gap-1">
+          <p className="text-[13px] font-medium text-subtle-foreground">Writing feedback</p>
+          <CardTitle className="text-lg">{latest ? `Your email · ${latest.title}` : "Get feedback on your writing"}</CardTitle>
+          {latest && <CardDescription>Schriftlicher Ausdruck · {latest.words} words</CardDescription>}
         </div>
-        <Badge variant="success">
-          <CheckCircle2 aria-hidden /> Teacher reviewed
-        </Badge>
+        {latest && latest.teacherTotal != null && (
+          <Badge variant="success">
+            <CheckCircle2 aria-hidden /> Teacher reviewed
+          </Badge>
+        )}
       </CardHeader>
-
-      <CardContent className="grid gap-5">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl border border-border p-4">
-            <p className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
-              <Sparkles className="size-3.5" aria-hidden /> AI estimate
+      <CardContent className="grid gap-4">
+        {latest && score != null ? (
+          <>
+            <p className="flex items-baseline gap-2">
+              <span className="font-heading text-[44px] leading-none font-extrabold">{score}</span>
+              <span className="text-muted-foreground">of 45 · {latest.teacherTotal != null ? "your teacher's score" : "AI estimate"}</span>
             </p>
-            <p className="mt-1 font-heading text-2xl font-extrabold">
-              {h.aiScore}
-              <span className="text-base font-semibold text-subtle-foreground">/{h.maxScore}</span>
-            </p>
-          </div>
-          <div className="rounded-xl border border-ink bg-ink p-4 text-ink-foreground">
-            <p className="flex items-center gap-1.5 text-[13px] text-ink-foreground/75">
-              <CheckCircle2 className="size-3.5" aria-hidden /> Teacher score
-            </p>
-            <p className="mt-1 font-heading text-2xl font-extrabold">
-              {h.teacherScore}
-              <span className="text-base font-semibold text-ink-foreground/70">/{h.maxScore}</span>
-            </p>
-          </div>
-        </div>
-
-        <figure className="grid gap-2 rounded-xl bg-background p-4">
-          <blockquote className="text-[15px] leading-relaxed">“{h.comment}”</blockquote>
-          <figcaption className="text-[13px] text-muted-foreground">— {h.teacher}, your teacher</figcaption>
-        </figure>
-
-        <div className="grid gap-2">
-          <p className="text-[13px] font-medium text-muted-foreground">Corrections</p>
-          <ul className="grid gap-2">
-            {h.corrections.map((c) => (
-              <li key={c.wrong} className="flex flex-wrap items-center gap-2 text-sm" lang="de">
-                <span className="rounded-md bg-destructive-soft px-2 py-0.5 text-destructive line-through">
-                  {c.wrong}
-                </span>
-                <span className="inline-flex items-center gap-2">
-                  <ArrowRight className="size-3.5 text-subtle-foreground" aria-label="corrected to" />
-                  <span className="rounded-md bg-success-soft px-2 py-0.5 font-medium text-success">{c.right}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
+            {latest.summary && <p className="line-clamp-3 text-[15px] text-muted-foreground">{latest.summary}</p>}
+          </>
+        ) : latest ? (
+          <p className="text-[15px] text-muted-foreground">Your email is saved. Open your result to check it with the AI or ask a teacher.</p>
+        ) : (
+          <p className="text-[15px] text-muted-foreground">Solve a mock exam and write the email. You will see an AI estimate with your mistakes marked, and you can ask a teacher to check it too.</p>
+        )}
       </CardContent>
-
       <CardFooter>
         <Button asChild variant="outline">
-          <Link href="/dashboard/homework">View full feedback</Link>
+          <Link href={link}>{latest ? "View full feedback" : "Go to mock exams"}</Link>
         </Button>
       </CardFooter>
     </Card>
   );
 }
 
-export function ContinueLearningCard({ className }: { className?: string }) {
-  const c = continueLearning;
-  return (
-    <Card className={cn("border-ink bg-ink text-ink-foreground", className)}>
-      <CardHeader>
-        <div className="grid gap-1">
-          <p className="text-[13px] font-medium text-gold">Continue learning · {c.chapter}</p>
-          <CardTitle className="text-lg text-ink-foreground">{c.title}</CardTitle>
-          <p className="text-sm text-ink-foreground/70">{c.lesson}</p>
-        </div>
-      </CardHeader>
-      <CardContent className="grid gap-2">
-        <div className="flex justify-between text-[13px] text-ink-foreground/75">
-          <span>{c.progress}% done</span>
-          <span className="flex items-center gap-1">
-            <Clock className="size-3.5" aria-hidden /> {c.minutesLeft} min left
-          </span>
-        </div>
-        <Progress
-          value={c.progress}
-          tone="gold"
-          className="bg-ink-foreground/15"
-          aria-label={`Lesson ${c.progress}% done`}
-        />
-      </CardContent>
-      <CardFooter>
-        <Button asChild>
-          <Link href="/dashboard/exam">Continue</Link>
-        </Button>
-      </CardFooter>
-    </Card>
-  );
-}
+export type MockSummary = { slug: string; title: string; last: { id: string; total: number; max: number } | null } | null;
 
-export function SpeakingClubCard({ className }: { className?: string }) {
-  const s = speakingClub;
-  return (
-    <Card className={className}>
-      <CardHeader>
-        <div className="grid gap-1">
-          <p className="text-[13px] font-medium text-subtle-foreground">Speaking club</p>
-          <CardTitle className="text-lg" lang="de">
-            {s.topic}
-          </CardTitle>
-        </div>
-        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-gold-soft text-gold-ink">
-          <Mic className="size-5" aria-hidden />
-        </span>
-      </CardHeader>
-      <CardContent className="grid gap-2 text-sm text-muted-foreground">
-        <p className="flex items-center gap-2">
-          <CalendarClock className="size-4" aria-hidden /> {s.when}
-        </p>
-        <p className="flex items-center gap-2">
-          <Users className="size-4" aria-hidden /> With {s.host} · {s.spotsLeft} of {s.spotsTotal} spots left
-        </p>
-      </CardContent>
-      <CardFooter>
-        <Button asChild>
-          <Link href="/dashboard/speaking-club">Join</Link>
-        </Button>
-      </CardFooter>
-    </Card>
-  );
-}
-
-export function MockExamCard({ className }: { className?: string }) {
-  const m = mockExam;
+/** Next mock exam: the first free paper, with the student's last score if they already took it. */
+export function MockExamCard({ className, mock }: { className?: string; mock: MockSummary }) {
   return (
     <Card className={className}>
       <CardHeader>
         <div className="grid gap-1">
           <p className="text-[13px] font-medium text-subtle-foreground">Mock exam</p>
-          <CardTitle className="text-lg">{m.title}</CardTitle>
+          <CardTitle className="text-lg">{mock ? `telc B1 · ${mock.title}` : "Mock exams"}</CardTitle>
         </div>
         <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-muted text-foreground">
           <Timer className="size-5" aria-hidden />
         </span>
       </CardHeader>
       <CardContent className="grid gap-2 text-sm text-muted-foreground">
-        <p>{m.details}</p>
+        <p>Reading, grammar and listening · 3 h 10 min with writing</p>
         <p>
-          {m.lastAttempt
-            ? `Last score: ${m.lastAttempt.score}%`
-            : "Not taken yet. Find a quiet place and set aside the full time."}
+          {mock?.last
+            ? `Last score: ${mock.last.total} of ${mock.last.max} points.`
+            : mock
+              ? "Not taken yet. Find a quiet place and set aside the full time."
+              : "Mock exams will appear here."}
         </p>
       </CardContent>
       <CardFooter>
-        <Button asChild variant="outline">
-          <Link href="/dashboard/mock-exams">Start</Link>
+        <Button asChild variant={mock?.last ? "outline" : "default"}>
+          <Link href={mock ? `/dashboard/exam/mock/${mock.slug}` : "/dashboard/exam"}>{mock?.last ? "Take it again" : "Start"}</Link>
         </Button>
       </CardFooter>
     </Card>
   );
 }
 
-/** One meaning in the words table, in the right script, direction and font. */
 function Meaning({ code, text, first }: { code: LanguageCode; text: string | null | undefined; first: boolean }) {
   const props = textProps(code);
   if (!text) {
@@ -281,84 +191,52 @@ function Meaning({ code, text, first }: { code: LanguageCode; text: string | nul
   );
 }
 
-export function TodaysWordsCard({
-  className,
-  saved = [],
-  languages = ["en"],
-}: {
-  className?: string;
-  saved?: SavedWord[];
-  languages?: LanguageCode[];
-}) {
-  // German column + one column per language the student chose.
-  const cols = {
-    gridTemplateColumns: `1.3fr repeat(${languages.length}, minmax(0, 1fr))`,
-  };
-  const sampleMeaning = (w: (typeof todaysWords)[number], code: string) =>
-    code === "en" ? w.english : code === "ur" ? w.urdu : null;
 
+/** The student's own saved words (from Improve Accent and the mock exam papers). */
+export function TodaysWordsCard({ className, saved = [], languages = ["en"] }: { className?: string; saved?: SavedWord[]; languages?: LanguageCode[] }) {
+  const cols = { gridTemplateColumns: `1.3fr repeat(${languages.length}, minmax(0, 1fr))` };
   return (
     <Card className={className}>
       <CardHeader>
         <div className="grid gap-1">
-          <CardTitle>Today&apos;s words</CardTitle>
-          <CardDescription>
-            {saved.length > 0 && `${saved.length} saved by you in Daily Practice · `}
-            Kapitel 7 · Wohnen — {todaysWords.length} new words
-          </CardDescription>
+          <CardTitle>Your saved words</CardTitle>
+          <CardDescription>{saved.length > 0 ? "The newest words you saved while reading." : "Select a word in a text to save it with its meaning."}</CardDescription>
         </div>
         <Button asChild variant="outline" size="sm" className="h-11 sm:h-9">
-          <Link href="/dashboard/vocabulary">Practise</Link>
+          <Link href="/dashboard/vocabulary">{saved.length > 0 ? "Practise" : "Open vocabulary"}</Link>
         </Button>
       </CardHeader>
       <CardContent>
-        <div
-          style={cols}
-          className="hidden gap-4 border-b border-border pb-2 text-[13px] font-medium text-subtle-foreground md:grid"
-        >
-          <span>German</span>
-          {languages.map((code) => (
-            <span key={code} className={cn(textProps(code).dir === "rtl" && "text-right")}>
-              {getLanguage(code)?.name ?? code}
-            </span>
-          ))}
-        </div>
-        <ul className="divide-y divide-border">
-          {saved.map((w) => (
-            <li
-              key={w.id}
-              className="grid gap-1 py-3 md:items-center md:gap-4 md:[grid-template-columns:var(--cols)]"
-              style={{ "--cols": cols.gridTemplateColumns } as React.CSSProperties}
-            >
-              <span lang="de" className="flex flex-wrap items-center gap-2 text-[15px] font-semibold">
-                {w.word}
-                <Badge variant="gold">Saved</Badge>
-              </span>
-              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 md:contents">
-                {languages.map((code, i) => (
-                  <Meaning key={code} code={code} text={w.translations[code]} first={i === 0} />
-                ))}
-              </div>
-            </li>
-          ))}
-          {todaysWords.map((w) => (
-            <li
-              key={w.noun}
-              className="grid gap-1 py-3 md:items-center md:gap-4 md:[grid-template-columns:var(--cols)]"
-              style={{ "--cols": cols.gridTemplateColumns } as React.CSSProperties}
-            >
-              <span lang="de" className="text-[15px]">
-                <span className="text-muted-foreground">{w.article}</span>{" "}
-                <span className="font-semibold">{w.noun}</span>
-              </span>
-              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 md:contents">
-                {languages.map((code, i) => (
-                  <Meaning key={code} code={code} text={sampleMeaning(w, code)} first={i === 0} />
-                ))}
-              </div>
-            </li>
-          ))}
-        </ul>
+        {saved.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-[15px] text-muted-foreground">
+            No saved words yet. Try Improve Accent or a mock exam paper: select a German word and tap Save or Translate.
+          </p>
+        ) : (
+          <>
+            <div style={cols} className="hidden gap-4 border-b border-border pb-2 text-[13px] font-medium text-subtle-foreground md:grid">
+              <span>German</span>
+              {languages.map((code) => (
+                <span key={code} className={cn(textProps(code).dir === "rtl" && "text-right")}>
+                  {getLanguage(code)?.name ?? code}
+                </span>
+              ))}
+            </div>
+            <ul className="divide-y divide-border">
+              {saved.map((w) => (
+                <li key={w.id} className="grid gap-1 py-3 md:items-center md:gap-4 md:[grid-template-columns:var(--cols)]" style={{ "--cols": cols.gridTemplateColumns } as React.CSSProperties}>
+                  <span lang="de" className="text-[15px] font-semibold">
+                    {w.word}
+                  </span>
+                  <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 md:contents">
+                    {languages.map((code, i) => (
+                      <Meaning key={code} code={code} text={w.translations[code]} first={i === 0} />
+                    ))}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </CardContent>
     </Card>
   );

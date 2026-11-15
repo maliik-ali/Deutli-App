@@ -17,10 +17,10 @@ export const NAV_ITEMS = [
       { href: "/dashboard/exam/speaking", label: "Speaking" },
     ],
   },
-  { href: "/dashboard/homework", label: "Homework", icon: "pen", count: 2 },
+  { href: "/dashboard/homework", label: "Homework", icon: "pen", soon: true },
   { href: "/dashboard/vocabulary", label: "Vocabulary", icon: "languages" },
-  { href: "/dashboard/speaking-club", label: "Speaking club", icon: "mic" },
-  { href: "/dashboard/ask-a-teacher", label: "Ask a teacher", icon: "message", count: 1 },
+  { href: "/dashboard/speaking-club", label: "Speaking club", icon: "mic", soon: true },
+  { href: "/dashboard/ask-a-teacher", label: "Ask a teacher", icon: "message", soon: true },
   { href: "/dashboard/certificates", label: "Certificates", icon: "award" },
 ] as const;
 
