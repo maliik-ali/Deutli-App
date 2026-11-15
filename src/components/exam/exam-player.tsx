@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ChevronLeft, ChevronRight, Eye, EyeOff, Loader2, Minus, Pause, Play, Plus, RotateCcw, RotateCw, Send } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Eye, EyeOff, Loader2, Minus, Pause, Play, Plus, RotateCcw, RotateCw, Send, Timer } from "lucide-react";
 
 import { WritingBox } from "@/components/exam/writing-box";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,8 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
   const [answers, setAnswers] = useState<Record<string, string>>(initialAnswers);
   const [writing, setWriting] = useState(initialWriting);
   const [zoom, setZoom] = useState(1);
-  const [timersOn, setTimersOn] = useState(true);
+  // Hiding the timer only hides the numbers; the clock keeps running.
+  const [showTimer, setShowTimer] = useState(true);
   const [spent, setSpent] = useState<Record<string, number>>({});
   const [saveState, setSaveState] = useState<"saved" | "saving" | "error">("saved");
   const [confirming, setConfirming] = useState(false);
@@ -47,14 +48,14 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
 
   const part = parts[partIndex];
   const section = SECTIONS.find((s) => s.id === part.section)!;
+  const sectionLeft = section.minutes * 60 - (spent[part.section] ?? 0);
   const sectionsInPaper = SECTIONS.filter((s) => parts.some((p) => p.section === s.id));
 
   // Section timers count down while you are inside that section.
   useEffect(() => {
-    if (!timersOn) return;
     const id = window.setInterval(() => setSpent((s) => ({ ...s, [part.section]: (s[part.section] ?? 0) + 1 })), 1000);
     return () => window.clearInterval(id);
-  }, [timersOn, part.section]);
+  }, [part.section]);
 
   // Save a moment after every change.
   useEffect(() => {
@@ -105,7 +106,7 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
 
   return (
     <div className="flex min-h-dvh flex-col lg:h-dvh lg:overflow-hidden">
-      <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-card px-3 sm:px-5">
+      <header className="grid h-16 shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-border bg-card px-3 sm:px-5">
         <div className="flex min-w-0 items-center gap-3">
           <Link href={`/dashboard/exam/mock/${slug}`} aria-label="Leave the exam" className="grid size-10 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground">
             <ArrowLeft className="size-5" aria-hidden />
@@ -114,8 +115,17 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
             {title} <span className="ml-1 text-[12px] font-semibold tracking-[0.12em] text-subtle-foreground uppercase">telc · B1</span>
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="hidden text-[13px] text-muted-foreground sm:block" role="status">
+        <div className="flex items-center gap-1 rounded-full border border-border bg-background py-1 pr-1 pl-3.5">
+          <Timer className="size-4 text-muted-foreground" aria-hidden />
+          <span className="min-w-[4.5rem] text-center font-mono text-[15px] font-semibold tabular-nums" role="timer" aria-label={showTimer ? `${section.title}: ${mmss(sectionLeft)} left` : "Timer hidden"}>
+            {showTimer ? <span className={sectionLeft <= 0 ? "text-destructive" : undefined}>{mmss(sectionLeft)}</span> : <span className="text-muted-foreground">Hidden</span>}
+          </span>
+          <button type="button" onClick={() => setShowTimer((v) => !v)} aria-pressed={!showTimer} aria-label={showTimer ? "Hide timer" : "Show timer"} className="grid size-9 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+            {showTimer ? <Eye className="size-4" aria-hidden /> : <EyeOff className="size-4" aria-hidden />}
+          </button>
+        </div>
+        <div className="flex items-center justify-end gap-3">
+          <span className="hidden text-[13px] text-muted-foreground xl:block" role="status">
             {saveState === "saving" ? "Saving…" : saveState === "error" ? "Not saved — check your internet" : "All answers saved"}
           </span>
           <Button type="button" onClick={() => setConfirming(true)}>
@@ -135,7 +145,7 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
                 <div key={s.id} className="mb-5">
                   <div className={cn("flex items-baseline justify-between px-2 pb-1 text-[13px] font-bold tracking-[0.08em] uppercase", s.id === part.section ? "text-foreground" : "text-muted-foreground")}>
                     <span>{s.title}</span>
-                    {timersOn && <span className={cn("font-mono text-[12px]", left <= 0 ? "text-destructive" : "text-subtle-foreground")}>{mmss(left)}</span>}
+                    {showTimer && <span className={cn("font-mono text-[12px]", left <= 0 ? "text-destructive" : "text-subtle-foreground")}>{mmss(left)}</span>}
                   </div>
                   {parts.map((p, i) =>
                     p.section !== s.id ? null : (
@@ -161,9 +171,6 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
               <span className="text-lg font-semibold text-muted-foreground"> / 60</span>
             </p>
             <p className="text-[12px] font-semibold tracking-[0.14em] text-subtle-foreground uppercase">Answered</p>
-            <button type="button" onClick={() => setTimersOn((v) => !v)} className="mt-3 flex items-center gap-2 text-[12px] font-semibold tracking-[0.12em] text-muted-foreground uppercase hover:text-foreground">
-              {timersOn ? <Eye className="size-4" aria-hidden /> : <EyeOff className="size-4" aria-hidden />} Timers {timersOn ? "on" : "off"}
-            </button>
           </div>
         </nav>
 
