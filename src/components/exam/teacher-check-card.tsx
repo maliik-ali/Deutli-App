@@ -43,7 +43,7 @@ export function TeacherCheckCard({ attemptId, words, hasTeacher, teacherName, re
 
   if (words < 20) {
     return hasTeacher ? (
-      <Card className="grid gap-2 p-6">
+      <Card className="h-full">
         <CardTitle>Writing</CardTitle>
         <p className="text-[14px] text-muted-foreground">Your email has {words} words. Write at least 20 words next time so your teacher can check it.</p>
       </Card>
@@ -52,7 +52,7 @@ export function TeacherCheckCard({ attemptId, words, hasTeacher, teacherName, re
 
   if (review?.status === "done") {
     return (
-      <Card className="grid gap-3 p-6">
+      <Card className="h-full">
         <p className="flex items-center gap-2 text-[12px] font-semibold tracking-[0.12em] text-subtle-foreground uppercase">
           <UserCheck className="size-4" aria-hidden /> Teacher&apos;s decision
         </p>
@@ -80,7 +80,7 @@ export function TeacherCheckCard({ attemptId, words, hasTeacher, teacherName, re
   if (review || hasTeacher) {
     const offer = review?.source === "offer";
     return (
-      <Card className="grid gap-2 border-dashed p-6">
+      <Card className="h-full border-dashed">
         <p className="flex items-center gap-2 text-[12px] font-semibold tracking-[0.12em] text-subtle-foreground uppercase">
           <Clock className="size-4" aria-hidden /> Teacher&apos;s decision
         </p>
@@ -94,7 +94,7 @@ export function TeacherCheckCard({ attemptId, words, hasTeacher, teacherName, re
   }
 
   return (
-    <Card className="grid gap-4 p-6">
+    <Card className="h-full">
       <div className="grid gap-1">
         <CardTitle>Want a real teacher to check it?</CardTitle>
         <p className="text-[14px] text-muted-foreground">A teacher reads your email and gives you a score and feedback. Their score is the final one.</p>

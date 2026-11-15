@@ -21,7 +21,7 @@ export default async function StudentsPage() {
   });
 
   return (
-    <main className="mx-auto grid max-w-3xl gap-6 px-4 py-8 sm:px-8">
+    <main className="mx-auto grid max-w-[1240px] gap-6 px-4 py-6 sm:px-6 md:px-8 md:py-8">
       <div>
         <h1 className="text-3xl font-extrabold">My students</h1>
         <p className="text-muted-foreground">

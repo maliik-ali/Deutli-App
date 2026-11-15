@@ -18,7 +18,7 @@ const R = 70;
 const C = 2 * Math.PI * R;
 
 /** The big score card: a ring that fills, the number counting up, and a short message. */
-export function ScoreHero({ total, max, passLine, caption, skipped = false, left = 0 }: { total: number; max: number; passLine: number; caption: string; skipped?: boolean; left?: number }) {
+export function ScoreHero({ total, max, passLine, caption, skipped = false, left = 0, skills = [] }: { total: number; max: number; passLine: number; caption: string; skipped?: boolean; left?: number; skills?: { label: string; got: number; max: number }[] }) {
   const pct = max ? total / max : 0;
   const tier = tierFor(pct, skipped, left);
   const passAngle = (passLine / max) * 360;
@@ -52,6 +52,23 @@ export function ScoreHero({ total, max, passLine, caption, skipped = false, left
           <h1 className="text-[30px] leading-tight font-extrabold sm:text-[36px]">{tier.title}</h1>
           <p className="text-muted-foreground">{tier.line}</p>
           <p className="text-[13px] text-subtle-foreground">{caption}</p>
+          {skills.length > 0 && (
+            <ul className="mt-2 grid gap-2.5 text-left sm:grid-cols-3 sm:gap-4">
+              {skills.map((k) => (
+                <li key={k.label} className="grid gap-1.5">
+                  <div className="flex items-baseline justify-between gap-2 text-[13px]">
+                    <span className="text-muted-foreground">{k.label}</span>
+                    <span className="font-semibold tabular-nums">
+                      {k.got}/{k.max}
+                    </span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-muted" role="presentation">
+                    <div className="h-full rounded-full bg-brand-gradient" style={{ width: `${k.max ? Math.round((k.got / k.max) * 100) : 0}%` }} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
       <BorderBeam size={120} duration={9} colorFrom="#7f25fb" colorTo="#cb3cff" />

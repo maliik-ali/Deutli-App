@@ -30,7 +30,7 @@ export default async function TeacherPage() {
   const avg = scored.length ? Math.round(scored.reduce((s, r) => s + (r.total ?? 0), 0) / scored.length) : null;
 
   return (
-    <main className="mx-auto grid max-w-4xl gap-6 px-4 py-8 sm:px-8">
+    <main className="mx-auto grid max-w-[1240px] gap-6 px-4 py-6 sm:px-6 md:px-8 md:py-8">
       <div>
         <p className="text-sm font-medium text-muted-foreground">Hello {user.fullName ?? "there"}</p>
         <h1 className="text-3xl font-extrabold">Teacher dashboard</h1>

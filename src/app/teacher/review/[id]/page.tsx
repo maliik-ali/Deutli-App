@@ -33,7 +33,7 @@ export default async function ReviewPage(props: PageProps<"/teacher/review/[id]"
   const aiTotal = ai ? ((ai.criteria ?? []) as { score: number }[]).reduce((s, c) => s + c.score, 0) : null;
 
   return (
-    <main className="mx-auto grid max-w-3xl gap-5 px-4 py-8 sm:px-8">
+    <main className="mx-auto grid max-w-[1240px] gap-6 px-4 py-6 sm:px-6 md:px-8 md:py-8">
       <Link href="/teacher/reviews" className="inline-flex w-fit items-center gap-1 py-2 pr-3 text-[14px] font-medium text-muted-foreground hover:text-foreground">
         <ChevronLeft className="size-4" aria-hidden /> Back
       </Link>

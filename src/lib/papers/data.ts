@@ -134,3 +134,10 @@ export async function getPageText(paperId: string): Promise<Record<number, impor
   const raw = ((data as { page_text?: Record<string, import("./render").TextItem[]> } | null)?.page_text ?? {}) as Record<string, import("./render").TextItem[]>;
   return Object.fromEntries(Object.entries(raw).map(([k, v]) => [Number(k), v]));
 }
+
+/** The student's finished attempts, newest first (for the certificates page). */
+export async function getFinishedAttempts(userId: string, limit = 8): Promise<AttemptRow[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("mock_attempts").select(ATTEMPT_COLUMNS).eq("user_id", userId).not("submitted_at", "is", null).order("submitted_at", { ascending: false }).limit(limit);
+  return (data ?? []) as AttemptRow[];
+}

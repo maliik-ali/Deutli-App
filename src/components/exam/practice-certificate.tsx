@@ -41,7 +41,7 @@ function Row({ label, got, max, sub }: { label: string; got: number | null; max:
  * A sample of what a telc B1 certificate looks like, filled with the student's practice scores.
  * It is clearly marked as a practice sample: no telc logo, QR code, stamp or signature.
  */
-export function PracticeCertificate({ s }: { s: CertScores }) {
+export function PracticeCertificate({ s, bare = false }: { s: CertScores; bare?: boolean }) {
   const written = s.lesen.got + s.sprach.got + s.hoeren.got + (s.writing ?? 0);
   const complete = s.writing != null;
   return (
@@ -105,7 +105,7 @@ export function PracticeCertificate({ s }: { s: CertScores }) {
           <p className="text-center text-[10.5px] text-neutral-400">A Deutli practice sample, not an official telc certificate.</p>
         </div>
       </div>
-      <figcaption className="text-center text-[13px] text-muted-foreground">This is how your result looks on a real certificate. Keep going and yours will carry your name too.</figcaption>
+      {!bare && <figcaption className="text-center text-[13px] text-muted-foreground">This is how your result looks on a real certificate. Keep going and yours will carry your name too.</figcaption>}
     </figure>
   );
 }
