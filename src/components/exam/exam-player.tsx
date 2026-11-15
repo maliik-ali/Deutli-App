@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ChevronLeft, ChevronRight, Eye, EyeOff, Loader2, Minus, Pause, Play, Plus, RotateCcw, RotateCw, Send, Timer } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Eraser, Eye, EyeOff, Highlighter, Hand, Loader2, Minus, Pause, Play, Plus, RotateCcw, RotateCw, Send, StickyNote, Timer } from "lucide-react";
 
+import { PaperPage, type PaperTool } from "@/components/exam/paper-page";
+import { useAnnotations } from "@/components/exam/use-annotations";
 import { WritingBox } from "@/components/exam/writing-box";
 import { Button } from "@/components/ui/button";
 import { saveAttempt, submitAttempt } from "@/lib/papers/actions";
@@ -36,6 +38,8 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
   const [answers, setAnswers] = useState<Record<string, string>>(initialAnswers);
   const [writing, setWriting] = useState(initialWriting);
   const [zoom, setZoom] = useState(1);
+  const [tool, setTool] = useState<PaperTool>("move");
+  const [marks, setMarks] = useAnnotations(`deutli-paper-marks-${attemptId}`);
   // Hiding the timer only hides the numbers; the clock keeps running.
   const [showTimer, setShowTimer] = useState(true);
   const [spent, setSpent] = useState<Record<string, number>>({});
@@ -207,15 +211,22 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
             <div className="mx-auto grid gap-6" style={{ width: `min(100%, ${Math.round(820 * zoom)}px)` }}>
               {pages.map((n) =>
                 pageUrls[n] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img key={n} src={pageUrls[n]} alt={`Page ${n} of the exam paper`} loading="lazy" draggable={false} className="w-full rounded-sm bg-white shadow-xl shadow-black/40 select-none" />
+                  <PaperPage key={n} src={pageUrls[n]} alt={`Page ${n} of the exam paper`} page={n} tool={tool} items={marks} onChange={setMarks} />
                 ) : (
                   <p key={n} className="rounded-lg bg-card p-6 text-center text-muted-foreground">This page could not load. Reload the page.</p>
                 ),
               )}
             </div>
           </div>
-          <div role="group" aria-label="Zoom" className="absolute top-1/2 right-2 z-10 flex -translate-y-1/2 flex-col items-center gap-0.5 rounded-full bg-ink px-1.5 py-1.5 text-ink-foreground shadow-lg shadow-black/40 sm:right-[18px]">
+          <div className="absolute top-1/2 right-2 z-10 flex -translate-y-1/2 flex-col items-center gap-3 sm:right-[18px]">
+          <div role="group" aria-label="Mark the paper" className="flex flex-col items-center gap-0.5 rounded-full bg-ink px-1.5 py-1.5 text-ink-foreground shadow-lg shadow-black/40">
+            {([["move", Hand, "Scroll and read"], ["highlight", Highlighter, "Highlight"], ["note", StickyNote, "Add a note"], ["erase", Eraser, "Remove a mark"]] as const).map(([id, Icon, label]) => (
+              <button key={id} type="button" aria-label={label} title={label} aria-pressed={tool === id} onClick={() => setTool(id)} className={cn("grid size-9 place-items-center rounded-full transition-colors", tool === id ? "bg-gold text-gold-foreground" : "hover:bg-white/10")}>
+                <Icon className="size-4" aria-hidden />
+              </button>
+            ))}
+          </div>
+          <div role="group" aria-label="Zoom" className="flex flex-col items-center gap-0.5 rounded-full bg-ink px-1.5 py-1.5 text-ink-foreground shadow-lg shadow-black/40">
             <button type="button" aria-label="Zoom in" onClick={() => setZoom((z) => Math.min(1.5, +(z + 0.1).toFixed(1)))} className="grid size-9 place-items-center rounded-full hover:bg-white/10">
               <Plus className="size-4" aria-hidden />
             </button>
@@ -223,6 +234,7 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
             <button type="button" aria-label="Zoom out" onClick={() => setZoom((z) => Math.max(0.6, +(z - 0.1).toFixed(1)))} className="grid size-9 place-items-center rounded-full hover:bg-white/10">
               <Minus className="size-4" aria-hidden />
             </button>
+          </div>
           </div>
           </div>
 
