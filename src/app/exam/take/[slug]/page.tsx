@@ -32,6 +32,7 @@ export default async function TakeExamPage(props: PageProps<"/exam/take/[slug]">
       audioUrl={audioUrl}
       initialAnswers={attempt.answers}
       initialWriting={attempt.writing}
+      initialSpent={attempt.timer ?? {}}
       pageText={pageText}
       savedWords={savedWords}
       languages={user.languages}

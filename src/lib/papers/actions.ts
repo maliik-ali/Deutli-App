@@ -214,6 +214,32 @@ export async function saveAttempt(attemptId: unknown, answers: unknown, writing:
   return error ? { error: "We couldn't save your answers. Check your internet." } : { ok: true };
 }
 
+const timerSchema = z.record(z.enum(["lesen", "sprachbausteine", "hoeren", "schreiben"]), z.number().int().min(0).max(36_000));
+
+/** Save the seconds spent per section, so a reload does not reset the timers. */
+export async function saveTimer(attemptId: unknown, spent: unknown): Promise<Result> {
+  const user = await requireUser(LEARNERS);
+  const id = uuid.safeParse(attemptId);
+  const t = timerSchema.safeParse(spent);
+  if (!id.success || !t.success) return { error: GENERIC };
+  const supabase = await createClient();
+  const { error } = await supabase.from("mock_attempts").update({ timer: t.data }).eq("id", id.data).eq("user_id", user.id).is("submitted_at", null);
+  return error ? { error: GENERIC } : { ok: true };
+}
+
+const difficultySchema = z.enum(["much_easier", "easier", "same", "harder", "much_harder", "not_taken"]);
+
+/** "How hard was the real exam compared to this mock?" One answer per result. */
+export async function saveDifficulty(attemptId: unknown, difficulty: unknown): Promise<Result> {
+  const user = await requireUser(LEARNERS);
+  const id = uuid.safeParse(attemptId);
+  const d = difficultySchema.safeParse(difficulty);
+  if (!id.success || !d.success) return { error: GENERIC };
+  const supabase = await createClient();
+  const { error } = await supabase.from("mock_feedback").upsert({ attempt_id: id.data, user_id: user.id, difficulty: d.data }, { onConflict: "attempt_id", ignoreDuplicates: true });
+  return error ? { error: GENERIC } : { ok: true };
+}
+
 /** Finish the exam: save the last answers, mark them with the official key, store the result. */
 export async function submitAttempt(attemptId: unknown, answers: unknown, writing: unknown): Promise<{ error: string } | { id: string }> {
   const user = await requireUser(LEARNERS);

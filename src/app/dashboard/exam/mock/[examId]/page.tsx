@@ -8,6 +8,7 @@ import { SKILL_ICONS } from "@/components/exam/skill-icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { hasPro, requireUser } from "@/lib/auth/dal";
+import { getActivePlans, pkr } from "@/lib/pro/data";
 import { examShortName, getExamFormat } from "@/lib/exam/catalog";
 import { getLastResult, getPaperBySlug } from "@/lib/papers/data";
 import { listMocks } from "@/lib/papers/mocks";
@@ -23,6 +24,7 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
   const exam = (await listMocks()).mocks.find((m) => m.id === examId);
   if (!exam) notFound();
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
+  const cheapest = (await getActivePlans()).sort((a, b) => a.price_pkr - b.price_pkr)[0];
   const paper = await getPaperBySlug(examId);
   const last = paper ? await getLastResult(user.id, paper.id) : null;
   const skills = getExamFormat(user.exam).skills;
@@ -95,7 +97,7 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
             ) : (
               <Button asChild variant="outline" className="w-full sm:w-auto">
                 <Link href="/dashboard/upgrade">
-                  <Lock aria-hidden /> Unlock with Pro
+                  <Lock aria-hidden /> Unlock with Pro{cheapest ? ` · from ${pkr(cheapest.price_pkr)}` : ""}
                 </Link>
               </Button>
             )}

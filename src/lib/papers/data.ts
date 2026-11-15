@@ -84,8 +84,10 @@ export type AttemptRow = {
   started_at: string;
   submitted_at: string | null;
   result: import("./template").AttemptResult | null;
+  /** Seconds spent per section (saved so the timers survive a reload). */
+  timer: Record<string, number> | null;
 };
-const ATTEMPT_COLUMNS = "id, paper_id, answers, writing, started_at, submitted_at, result";
+const ATTEMPT_COLUMNS = "id, paper_id, answers, writing, started_at, submitted_at, result, timer";
 
 /** The student's unfinished attempt for a paper, or a new one (or always a new one with `fresh`). */
 export async function openAttempt(userId: string, paperId: string, fresh = false): Promise<AttemptRow | null> {

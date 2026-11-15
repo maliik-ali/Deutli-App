@@ -11,7 +11,7 @@ import { useAnnotations } from "@/components/exam/use-annotations";
 import { WritingBox } from "@/components/exam/writing-box";
 import { Button } from "@/components/ui/button";
 import type { LanguageCode } from "@/lib/languages";
-import { saveAttempt, submitAttempt } from "@/lib/papers/actions";
+import { saveAttempt, saveTimer, submitAttempt } from "@/lib/papers/actions";
 import type { TextItem } from "@/lib/papers/render";
 import type { SavedWord } from "@/lib/practice/plan";
 import { SECTIONS, countWords, partQuestions, type PaperPart, type PaperStructure } from "@/lib/papers/template";
@@ -26,6 +26,7 @@ type Props = {
   audioUrl: string | null;
   initialAnswers: Record<string, string>;
   initialWriting: string;
+  initialSpent: Record<string, number>;
   pageText: Record<number, TextItem[]>;
   savedWords: SavedWord[];
   languages: LanguageCode[];
@@ -38,7 +39,7 @@ function mmss(total: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
-export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioUrl, initialAnswers, initialWriting, pageText, savedWords, languages }: Props) {
+export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioUrl, initialAnswers, initialWriting, initialSpent, pageText, savedWords, languages }: Props) {
   const router = useRouter();
   const parts = structure.parts;
   const [partIndex, setPartIndex] = useState(0);
@@ -49,7 +50,9 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
   const [marks, setMarks] = useAnnotations(`deutli-paper-marks-${attemptId}`);
   // Hiding the timer only hides the numbers; the clock keeps running.
   const [showTimer, setShowTimer] = useState(true);
-  const [spent, setSpent] = useState<Record<string, number>>({});
+  const [spent, setSpent] = useState<Record<string, number>>(initialSpent);
+  const [paused, setPaused] = useState(false);
+  const spentRef = useRef(spent);
   const [saveState, setSaveState] = useState<"saved" | "saving" | "error">("saved");
   const [confirming, setConfirming] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -70,9 +73,28 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
 
   // Section timers count down while you are inside that section.
   useEffect(() => {
+    if (paused) return;
     const id = window.setInterval(() => setSpent((s) => ({ ...s, [part.section]: (s[part.section] ?? 0) + 1 })), 1000);
     return () => window.clearInterval(id);
-  }, [part.section]);
+  }, [part.section, paused]);
+
+  useEffect(() => {
+    spentRef.current = spent;
+  }, [spent]);
+
+  // Save the timers every 10 seconds, when you pause, and when you leave the tab, so a reload keeps your time.
+  useEffect(() => {
+    const send = () => void saveTimer(attemptId, spentRef.current);
+    const id = window.setInterval(send, 10_000);
+    const onHide = () => document.visibilityState === "hidden" && send();
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("pagehide", send);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("pagehide", send);
+    };
+  }, [attemptId]);
 
   // Save a moment after every change.
   useEffect(() => {
@@ -201,6 +223,9 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
             <span className="min-w-[4.5rem] text-center font-mono text-[15px] font-semibold tabular-nums" role="timer" aria-label={showTimer ? `${section.title}: ${mmss(sectionLeft)} left` : "Timer hidden"}>
               {showTimer ? <span className={sectionLeft <= 0 ? "text-destructive" : undefined}>{mmss(sectionLeft)}</span> : <span className="text-muted-foreground">Hidden</span>}
             </span>
+            <button type="button" onClick={() => { setPaused((v) => !v); void saveTimer(attemptId, spentRef.current); }} aria-pressed={paused} aria-label={paused ? "Resume the timer" : "Pause the timer"} className="grid size-9 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+              {paused ? <Play className="size-4" aria-hidden /> : <Pause className="size-4" aria-hidden />}
+            </button>
             <button type="button" onClick={() => setShowTimer((v) => !v)} aria-pressed={!showTimer} aria-label={showTimer ? "Hide timer" : "Show timer"} className="grid size-9 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
               {showTimer ? <Eye className="size-4" aria-hidden /> : <EyeOff className="size-4" aria-hidden />}
             </button>
@@ -252,6 +277,17 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
           </div>
 
           {wordTools}
+          {paused && (
+            <div className="fixed inset-x-0 top-16 bottom-0 z-40 grid place-content-center gap-3 bg-background/95 p-6 text-center backdrop-blur-sm" role="dialog" aria-label="Paused">
+              <p className="text-2xl font-extrabold">Paused</p>
+              <p className="max-w-xs text-muted-foreground">Your time is stopped. The paper is hidden until you continue.</p>
+              <div>
+                <Button type="button" onClick={() => setPaused(false)}>
+                  <Play aria-hidden /> Continue
+                </Button>
+              </div>
+            </div>
+          )}
           {part.section === "hoeren" && <AudioBar url={audioUrl} />}
         </section>
 

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 
 import { AnswersTable, type PartDots } from "@/components/exam/answers-table";
+import { DifficultySurvey } from "@/components/exam/difficulty-survey";
 import { Celebration } from "@/components/exam/celebration";
 import { CertificateCard } from "@/components/exam/certificate-card";
 import { ScoreHero } from "@/components/exam/score-hero";
@@ -12,6 +13,7 @@ import { WritingResult } from "@/components/exam/writing-feedback";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
+import { createClient } from "@/lib/supabase/server";
 import { certDate, certScores } from "@/lib/papers/certificate";
 import { getAttempt, getPaperById } from "@/lib/papers/data";
 import { SECTIONS, WRITTEN_MAX, WRITTEN_PASS, partQuestions } from "@/lib/papers/template";
@@ -36,6 +38,7 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
   const feedback = await getWritingFeedback(attempt.id);
   const teacherName = user.teacherId ? await getTeacherName(user.teacherId) : null;
   const parts = paper.structure.parts;
+  const { data: fb } = await (await createClient()).from("mock_feedback").select("difficulty").eq("attempt_id", attempt.id).maybeSingle();
 
   const pct = r.max ? r.total / r.max : 0;
   // Effort: how many questions got an answer. Mostly blank = the student skipped / did not try.
@@ -101,6 +104,8 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
       />
 
       <AnswersTable parts={dots} />
+
+      <DifficultySurvey attemptId={attempt.id} initial={fb?.difficulty ?? null} />
 
       <div className="flex flex-wrap gap-3">
         <Button asChild>
