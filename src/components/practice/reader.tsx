@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { saveVocabularyWord, setPractisedToday } from "@/lib/practice/actions";
 import type { PracticeTrack } from "@/lib/practice/data";
 import type { SavedWord } from "@/lib/practice/plan";
+import { splitSavedWords } from "@/lib/split-saved-words";
 import { cn } from "@/lib/utils";
 import { WordBox, wordBoxHeight } from "./word-box";
 
@@ -81,7 +82,6 @@ function parseTranscript(text: string): Line[] {
 /** Where a floating box should sit on screen, from the rectangle of the selected or clicked word. */
 type Anchor = { x: number; top: number; bottom: number };
 const anchorOf = (r: DOMRect): Anchor => ({ x: r.left + r.width / 2, top: r.top, bottom: r.bottom });
-const escapeRegExp = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const TRIM = /^[\s.,;:!?„“”"'»«()–-]+|[\s.,;:!?„“”"'»«()–-]+$/g;
 
 function floatStyle(a: Anchor, height: number, prefer: "above" | "below" = "above"): React.CSSProperties {
@@ -217,18 +217,10 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
   const meaningOf = (w: SavedWord) => languages.map((c) => w.translations[c]).find(Boolean) ?? "";
 
   // Marks every saved word inside a line of text.
-  const wordPattern = words.length
-    ? new RegExp(
-        `(?<![\\p{L}\\p{N}])(${[...words]
-          .sort((a, b) => b.word.length - a.word.length)
-          .map((w) => escapeRegExp(w.word))
-          .join("|")})(?![\\p{L}\\p{N}])`,
-        "giu",
-      )
-    : null;
+  const wordList = words.map((w) => w.word);
   function withWords(text: string) {
-    if (!wordPattern) return text;
-    return text.split(wordPattern).map((part, i) => {
+    if (!wordList.length) return text;
+    return splitSavedWords(text, wordList).map((part, i) => {
       if (i % 2 === 0) return part;
       const saved = words.find((w) => w.word.toLowerCase() === part.toLowerCase());
       if (!saved) return part;
@@ -334,7 +326,7 @@ export function PracticeReader({ track }: { track: PracticeTrack }) {
           {/* Close (✕) always at the right edge, the same as the word practice screen. */}
           <span className="h-6 w-px shrink-0 bg-border" aria-hidden />
           <Button asChild variant="ghost" size="icon" className="shrink-0">
-            <Link href={BACK} aria-label="Close and go back to Daily Practice">
+            <Link href={BACK} aria-label="Close and go back to Improve Accent">
               <X className="size-5" aria-hidden />
             </Link>
           </Button>

@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Deutli Pro" };
 
-const FREE = ["The free Hamburg mock exam, marked on screen", "Daily Practice: listen, read, speak along", "Vocabulary with meanings in your languages", "AI estimate for your writing"];
+const FREE = ["The free Hamburg mock exam, marked on screen", "Improve Accent: listen, read, speak along", "Vocabulary with meanings in your languages", "AI estimate for your writing"];
 const PRO = ["More full telc B1 mock exams", "Teacher-checked writing", "Everything in Free"];
 const STATUS: Record<string, string> = { pending: "Waiting for your payment", awaiting_review: "We are checking your payment", paid: "Paid", rejected: "Not accepted", cancelled: "Cancelled" };
 
@@ -97,7 +97,7 @@ export default async function UpgradePage() {
           <Card className="border-gold-ink/60">
             <div className="grid gap-1">
               <CardTitle>Pro</CardTitle>
-              <CardDescription>Plans and prices are coming soon</CardDescription>
+              <CardDescription>Pro is opening soon. Join the waitlist.</CardDescription>
             </div>
             <ul className="grid gap-2.5">
               {PRO.map((t) => (

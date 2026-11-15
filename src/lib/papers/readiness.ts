@@ -32,7 +32,7 @@ export async function getReadiness(userId: string): Promise<Readiness> {
     .not("submitted_at", "is", null)
     .order("submitted_at", { ascending: false })
     .limit(10);
-  const results = (data ?? []).map((r) => r.result as AttemptResult | null).filter((r): r is AttemptResult => !!r);
+  const results = (data ?? []).map((r) => r.result as AttemptResult | null).filter((r): r is AttemptResult => !!r && r.total > 0); // empty / 0-point attempts do not count
 
   let points = 0;
   let max = 0;

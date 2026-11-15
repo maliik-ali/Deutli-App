@@ -57,8 +57,8 @@ export const SKILLS: {
       { title: "Read for the main idea", text: "Skim a text first and decide what it is about before the details." },
       { title: "Find details fast", text: "Scan for names, dates, prices and the words from the question." },
     ],
-    help: "Daily Practice gives you a short text every day: listen, read along and save every word you don't know. Your words come back in Vocabulary until you know them.",
-    start: { href: "/dashboard/daily-practice", label: "Daily Practice", detail: "about 10 min" },
+    help: "Improve Accent gives you a short text every day: listen, read along and save every word you don't know. Your words come back in Vocabulary until you know them.",
+    start: { href: "/dashboard/daily-practice", label: "Improve Accent", detail: "about 10 min" },
   },
   {
     id: "sprachbausteine",
@@ -86,8 +86,8 @@ export const SKILLS: {
       { title: "Read the questions first", text: "Know what to listen for before the audio starts." },
       { title: "Listen for key words", text: "Times, places, reasons and opinions: the rest is background." },
     ],
-    help: "Daily Practice trains your ears in three rounds: listen only, listen and read, then speak along. You can slow the audio down to 0.75× while you get used to the speed.",
-    start: { href: "/dashboard/daily-practice", label: "Daily Practice", detail: "about 10 min" },
+    help: "Improve Accent trains your ears in three rounds: listen only, listen and read, then speak along. You can slow the audio down to 0.75× while you get used to the speed.",
+    start: { href: "/dashboard/daily-practice", label: "Improve Accent", detail: "about 10 min" },
   },
   {
     id: "schreiben",
@@ -103,8 +103,8 @@ export const SKILLS: {
         text: "Du for friends, Sie for formal emails, with the right greeting and closing.",
       },
     ],
-    help: "Homework with instant AI feedback, confirmed by your teacher, is coming to Deutli soon. Until then, Daily Practice builds the words and phrases you need for clear emails.",
-    start: { href: "/dashboard/daily-practice", label: "Daily Practice", detail: "about 10 min" },
+    help: "Homework with instant AI feedback, confirmed by your teacher, is coming to Deutli soon. Until then, Improve Accent builds the words and phrases you need for clear emails.",
+    start: { href: "/dashboard/daily-practice", label: "Improve Accent", detail: "about 10 min" },
   },
   {
     id: "sprechen",
@@ -117,8 +117,8 @@ export const SKILLS: {
       { title: "Plan together", text: "Make suggestions, agree and disagree politely, find a solution." },
       { title: "Present a topic", text: "Talk about your experience and give your opinion with reasons." },
     ],
-    help: "Speak along in Daily Practice every day to build fluency. A Speaking club to practise with other students is coming soon.",
-    start: { href: "/dashboard/daily-practice", label: "Daily Practice", detail: "speak-along round" },
+    help: "Speak along in Improve Accent every day to build fluency. A Speaking club to practise with other students is coming soon.",
+    start: { href: "/dashboard/daily-practice", label: "Improve Accent", detail: "speak-along round" },
   },
   {
     id: "unsure",
@@ -131,8 +131,8 @@ export const SKILLS: {
       { title: "Lesen and Hören", text: "Understand everyday texts, announcements and conversations." },
       { title: "Schreiben and Sprechen", text: "Write emails, give your opinion and talk with a partner." },
     ],
-    help: "Start with Daily Practice: one short text a day. It trains reading, listening and speaking together, and builds your vocabulary as you go.",
-    start: { href: "/dashboard/daily-practice", label: "Daily Practice", detail: "about 10 min" },
+    help: "Start with Improve Accent: one short text a day. It trains reading, listening and speaking together, and builds your vocabulary as you go.",
+    start: { href: "/dashboard/daily-practice", label: "Improve Accent", detail: "about 10 min" },
   },
 ];
 

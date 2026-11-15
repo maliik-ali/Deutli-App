@@ -27,6 +27,15 @@ const devanagari = Noto_Sans_Devanagari({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://app.deutli.com"),
+  openGraph: {
+    type: "website",
+    siteName: "Deutli",
+    title: "Deutli — German B1 exam prep",
+    description: "Pass your German B1 — with AI and a real teacher.",
+    url: "/",
+  },
+  twitter: { card: "summary", title: "Deutli — German B1 exam prep", description: "Pass your German B1 — with AI and a real teacher." },
   title: {
     default: "Deutli",
     template: "%s · Deutli",

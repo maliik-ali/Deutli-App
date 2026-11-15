@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/auth/dal";
 import { getPracticeSets } from "@/lib/practice/data";
 import { todayPKT } from "@/lib/practice/plan";
 
-export const metadata: Metadata = { title: "Daily Practice" };
+export const metadata: Metadata = { title: "Improve Accent" };
 
 export default async function DailyPracticePage() {
   const user = await requireUser(["student", "academy_admin", "super_admin"]);

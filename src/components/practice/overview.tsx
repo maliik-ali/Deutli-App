@@ -36,7 +36,7 @@ export function PracticeOverview({
     <main className="mx-auto grid max-w-[1240px] gap-6 px-4 py-6 sm:px-6 md:px-8 md:py-8">
       <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="grid gap-2">
-          <h1 className="text-[28px] leading-tight font-extrabold sm:text-[32px]">Daily Practice</h1>
+          <h1 className="text-[28px] leading-tight font-extrabold sm:text-[32px]">Improve Accent</h1>
           <p className="max-w-xl text-[15px] text-muted-foreground">
             20 minutes a day. Listen to a short German text, read it, then speak along. Your ears, your eyes and your
             mouth learn together.
@@ -57,7 +57,7 @@ export function PracticeOverview({
 
       {failed ? (
         <Card className="items-center py-12 text-center">
-          <h2 className="text-lg font-bold">Daily Practice couldn&apos;t load</h2>
+          <h2 className="text-lg font-bold">Improve Accent couldn&apos;t load</h2>
           <p className="max-w-sm text-muted-foreground">
             Something went wrong on our side. Please reload the page. If it keeps happening, tell your academy.
           </p>

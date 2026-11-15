@@ -75,7 +75,7 @@ export default async function VocabularyPage(props: PageProps<"/dashboard/vocabu
         <div className="grid gap-2">
           <h1 className="text-[28px] leading-tight font-extrabold sm:text-[32px]">Vocabulary</h1>
           <p className="text-[15px] text-muted-foreground">
-            Words you saved in Daily Practice. Practise them a little every day so they stick.
+            Words you saved in Improve Accent. Practise them a little every day so they stick.
           </p>
         </div>
         {counts.all > 0 && (
@@ -129,12 +129,12 @@ export default async function VocabularyPage(props: PageProps<"/dashboard/vocabu
           <div className="grid gap-2">
             <h2 className="text-lg font-bold">No saved words yet</h2>
             <p className="max-w-sm text-muted-foreground">
-              Open a text in Daily Practice and select a word you don&apos;t know. Tap “Save word” and it appears here
+              Open a text in Improve Accent and select a word you don&apos;t know. Tap “Save word” and it appears here
               with its meaning.
             </p>
           </div>
           <Button asChild>
-            <Link href="/dashboard/daily-practice">Go to Daily Practice</Link>
+            <Link href="/dashboard/daily-practice">Go to Improve Accent</Link>
           </Button>
         </Card>
       ) : (

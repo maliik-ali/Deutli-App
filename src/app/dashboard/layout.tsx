@@ -38,7 +38,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
         <span className="size-11" aria-hidden />
       </header>
 
-      <div className="min-w-0">{children}</div>
+      <div className="min-w-0 overflow-x-clip">{children}</div>
     </div>
   );
 }

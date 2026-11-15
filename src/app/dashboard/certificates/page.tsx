@@ -17,7 +17,7 @@ export const metadata: Metadata = { title: "Certificates" };
 export default async function CertificatesPage(props: PageProps<"/dashboard/certificates">) {
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
   const sp = await props.searchParams;
-  const attempts = (await getFinishedAttempts(user.id, 10)).filter((a) => a.result);
+  const attempts = (await getFinishedAttempts(user.id, 10)).filter((a) => a.result && a.result.total > 0);
   const chosen = attempts.find((a) => a.id === sp.a) ?? attempts[0];
 
   let content: React.ReactNode;

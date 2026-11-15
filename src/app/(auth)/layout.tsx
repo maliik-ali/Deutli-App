@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { AuthShowcase } from "@/components/auth/auth-showcase";
 import { Logo } from "@/components/logo";
 
@@ -11,7 +13,13 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
         <main className="flex w-full flex-1 items-center justify-center py-8">
           <div className="w-full max-w-[420px]">{children}</div>
         </main>
-        <footer className="text-center text-[13px] text-subtle-foreground">© Deutli · German B1 exam preparation</footer>
+        <footer className="grid gap-1 text-center text-[13px] text-subtle-foreground">
+          <span>© Deutli · German B1 exam preparation</span>
+          <span className="flex justify-center gap-4">
+            <Link href="/privacy" className="py-2 hover:text-foreground">Privacy policy</Link>
+            <Link href="/terms" className="py-2 hover:text-foreground">Terms</Link>
+          </span>
+        </footer>
       </div>
 
       <aside aria-label="About Deutli" className="relative hidden overflow-hidden bg-ink text-ink-foreground lg:flex lg:flex-col lg:justify-center lg:gap-10 lg:p-12 xl:p-16">

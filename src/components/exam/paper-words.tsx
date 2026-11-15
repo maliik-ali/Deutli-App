@@ -8,11 +8,11 @@ import { Button } from "@/components/ui/button";
 import type { LanguageCode } from "@/lib/languages";
 import { saveVocabularyWord } from "@/lib/practice/actions";
 import type { SavedWord } from "@/lib/practice/plan";
+import { splitSavedWords } from "@/lib/split-saved-words";
 
 type Anchor = { x: number; top: number; bottom: number };
 const anchorOf = (r: DOMRect): Anchor => ({ x: r.left + r.width / 2, top: r.top, bottom: r.bottom });
 const TRIM = /^[\s.,;:!?„“”"'»«()–-]+|[\s.,;:!?„“”"'»«()–-]+$/g;
-export const escapeRegExp = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 function floatStyle(a: Anchor, height: number, prefer: "above" | "below" = "above"): React.CSSProperties {
   const below = prefer === "below" ? a.bottom + height + 24 < window.innerHeight : a.top < height + 24;
@@ -103,14 +103,12 @@ export function usePaperWords({
     setPick(null);
   }
 
-  const pattern = words.length
-    ? new RegExp(`(?<![\\p{L}\\p{N}])(${[...words].sort((a, b) => b.word.length - a.word.length).map((w) => escapeRegExp(w.word)).join("|")})(?![\\p{L}\\p{N}])`, "giu")
-    : null;
+  const wordList = words.map((w) => w.word);
 
   /** Splits a piece of page text so saved words become clickable marks. */
   function withWords(text: string): React.ReactNode {
-    if (!pattern) return text;
-    return text.split(pattern).map((part, i) => {
+    if (!wordList.length) return text;
+    return splitSavedWords(text, wordList).map((part, i) => {
       if (i % 2 === 0) return part;
       const saved = words.find((w) => w.word.toLowerCase() === part.toLowerCase());
       if (!saved) return part;

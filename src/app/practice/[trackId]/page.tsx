@@ -5,7 +5,7 @@ import { PracticeReader } from "@/components/practice/reader";
 import { requireUser } from "@/lib/auth/dal";
 import { getPracticeTrack } from "@/lib/practice/data";
 
-export const metadata: Metadata = { title: "Daily Practice" };
+export const metadata: Metadata = { title: "Improve Accent" };
 
 export default async function PracticeTrackPage(props: PageProps<"/practice/[trackId]">) {
   const user = await requireUser(["student", "academy_admin", "super_admin"]);

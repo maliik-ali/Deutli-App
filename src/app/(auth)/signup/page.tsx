@@ -18,6 +18,11 @@ export default async function SignupPage() {
       />
       <SocialButtons />
       <SignupForm />
+      <p className="text-center text-[13px] text-muted-foreground">
+        By creating an account you agree to our{" "}
+        <Link href="/terms" className="underline underline-offset-4 hover:text-foreground">Terms</Link> and{" "}
+        <Link href="/privacy" className="underline underline-offset-4 hover:text-foreground">Privacy policy</Link>.
+      </p>
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
         <Link href="/login" className="py-3 font-semibold text-foreground underline underline-offset-4 hover:text-gold-ink">
