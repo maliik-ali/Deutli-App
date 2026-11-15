@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { Check, PenLine, RefreshCw, Sparkles, UserCheck } from "lucide-react";
+import { RefreshCw, Sparkles } from "lucide-react";
 
 import { AnimatedShinyText } from "@/components/magicui/animated-shiny-text";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ function AiBadge() {
   );
 }
 
-export function WritingFeedbackCard({ attemptId, text, words, initial }: { attemptId: string; text: string; words: number; initial: WritingFeedback | null }) {
+export function WritingFeedbackCard({ attemptId, text, words, initial, canCheck = true }: { attemptId: string; text: string; words: number; initial: WritingFeedback | null; canCheck?: boolean }) {
   const [feedback, setFeedback] = useState<WritingFeedback | null>(initial);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -87,7 +87,7 @@ export function WritingFeedbackCard({ attemptId, text, words, initial }: { attem
           <AiBadge />
         </div>
         <p className="text-[14px] text-muted-foreground">
-          The AI estimates your Schriftlicher Ausdruck score out of 45 and marks your mistakes. Your teacher gives the final score.
+          The AI estimates your Schriftlicher Ausdruck score out of 45 and marks your mistakes. It is a guide, not a final grade.
         </p>
         {error && (
           <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-[14px] text-destructive">
@@ -127,7 +127,6 @@ export function WritingFeedbackCard({ attemptId, text, words, initial }: { attem
   if (at < text.length) parts.push(text.slice(at));
   const current: Mistake | undefined = marks[open];
   const counts = (["word_order", "grammar", "spelling", "style"] as MistakeType[]).map((t) => [t, marks.filter((m) => m.type === t).length] as const).filter(([, n]) => n > 0);
-  const t = feedback.teacher;
   const left = MAX_CHECKS - feedback.checksUsed;
 
   return (
@@ -136,7 +135,7 @@ export function WritingFeedbackCard({ attemptId, text, words, initial }: { attem
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle>Your writing</CardTitle>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-soft px-2.5 py-1 text-[12px] font-semibold text-gold-ink">
-            <Sparkles className="size-3.5" aria-hidden /> AI estimate · your teacher confirms
+            <Sparkles className="size-3.5" aria-hidden /> AI estimate
           </span>
         </div>
         <p className="flex items-baseline gap-2">
@@ -213,26 +212,8 @@ export function WritingFeedbackCard({ attemptId, text, words, initial }: { attem
         )}
       </Card>
 
-      <Card className={cn("grid gap-2 p-6", t.status === "pending" && "border-dashed")}>
-        <p className="flex items-center gap-2 text-[12px] font-semibold tracking-[0.12em] text-subtle-foreground uppercase">
-          <UserCheck className="size-4" aria-hidden /> Teacher&apos;s decision
-        </p>
-        {t.status === "pending" ? (
-          <p className="text-[14px] text-muted-foreground">Waiting for your teacher. Their score is the final one and replaces the AI estimate.</p>
-        ) : (
-          <>
-            <p className="flex items-center gap-2 text-lg font-bold">
-              {t.status === "confirmed" ? <Check className="size-5 text-success" aria-hidden /> : <PenLine className="size-5 text-gold-ink" aria-hidden />}
-              {t.total ?? feedback.total} / {feedback.max}
-              <span className="text-[13px] font-medium text-muted-foreground">{t.status === "confirmed" ? "Teacher reviewed ✓" : "Teacher changed the score"}</span>
-            </p>
-            {t.comment && <p className="text-[14px]">{t.comment}</p>}
-          </>
-        )}
-      </Card>
-
       <div className="flex flex-wrap items-center gap-3">
-        {left > 0 && (
+        {canCheck && left > 0 && (
           <Button type="button" variant="outline" onClick={run}>
             <RefreshCw aria-hidden /> Check again ({left} left)
           </Button>

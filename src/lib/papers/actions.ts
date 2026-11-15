@@ -8,7 +8,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { COVER_TONES } from "@/lib/exam/catalog";
 import { PAPER_BUCKET } from "./data";
-import { grade, parseAnswerKey, partQuestions, type PaperStructure } from "./template";
+import { countWords, grade, parseAnswerKey, partQuestions, type PaperStructure } from "./template";
 
 const ADMINS = ["academy_admin", "super_admin"] as const;
 const LEARNERS = ["student", "academy_admin", "super_admin"] as const;
@@ -232,6 +232,12 @@ export async function submitAttempt(attemptId: unknown, answers: unknown, writin
     .eq("id", id.data)
     .is("submitted_at", null);
   if (error) return { error: GENERIC };
+  // A student with a teacher: the email goes to the teacher's review list (the AI is not used).
+  if (user.teacherId && countWords(w.data) >= 20) {
+    await admin
+      .from("writing_reviews")
+      .upsert({ attempt_id: id.data, student_id: user.id, teacher_id: user.teacherId, source: "assigned" }, { onConflict: "attempt_id", ignoreDuplicates: true });
+  }
   revalidatePath("/dashboard/exam", "layout");
   return { id: id.data };
 }

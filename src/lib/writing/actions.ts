@@ -23,6 +23,7 @@ export async function requestWritingFeedback(attemptId: unknown): Promise<Out> {
   const user = await requireUser(LEARNERS);
   const id = z.string().uuid().safeParse(attemptId);
   if (!id.success) return { error: "That didn't work. Please try again." };
+  if (user.teacherId) return { error: "Your teacher checks your writing, so the AI check is off for you." };
 
   const supabase = await createClient();
   const { data: attempt } = await supabase

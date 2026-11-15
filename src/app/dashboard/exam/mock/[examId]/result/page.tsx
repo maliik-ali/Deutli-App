@@ -5,10 +5,12 @@ import { ChevronLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
+import { TeacherCheckCard } from "@/components/exam/teacher-check-card";
 import { WritingFeedbackCard } from "@/components/exam/writing-feedback";
 import { requireUser } from "@/lib/auth/dal";
 import { getAttempt, getPaperById } from "@/lib/papers/data";
 import { getWritingFeedback } from "@/lib/writing/data";
+import { getReviewForStudent, getTeacherName } from "@/lib/writing/teacher";
 import { SECTIONS, WRITTEN_MAX, WRITTEN_PASS, partQuestions } from "@/lib/papers/template";
 import { cn } from "@/lib/utils";
 
@@ -23,9 +25,13 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
   const paper = await getPaperById(attempt.paper_id);
   if (!paper || paper.slug !== examId) notFound();
   const r = attempt.result;
+  // Writing: a student with a teacher only gets a message (the teacher checks it).
+  // A standalone student gets the AI estimate and can ask for a teacher check.
+  const review = await getReviewForStudent(attempt.id, user.id);
+  const hasTeacher = !!user.teacherId || review?.source === "assigned" || review?.source === "code";
   const feedback = await getWritingFeedback(attempt.id);
+  const teacherName = user.teacherId ? await getTeacherName(user.teacherId) : null;
   const parts = paper.structure.parts;
-  void user;
 
   return (
     <main className="mx-auto grid max-w-[820px] gap-6 px-4 py-6 sm:px-6 md:py-8">
@@ -40,7 +46,7 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
           <strong className="text-3xl">{r.total}</strong> <span className="text-muted-foreground">of {r.max} points (reading, grammar and listening)</span>
         </p>
         <p className="text-[14px] text-muted-foreground">
-          Your email ({r.writingWords} words) is marked separately below: the AI gives an estimate and your teacher confirms. The telc written exam has {WRITTEN_MAX} points in total, including 45 for writing. You pass with {WRITTEN_PASS}.
+          Your email ({r.writingWords} words) is marked separately below, by the AI or by a teacher. The telc written exam has {WRITTEN_MAX} points in total, including 45 for writing. You pass with {WRITTEN_PASS}.
         </p>
       </header>
 
@@ -63,7 +69,10 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
         </ul>
       </Card>
 
-      <WritingFeedbackCard attemptId={attempt.id} text={attempt.writing} words={r.writingWords} initial={feedback} />
+      {(!hasTeacher || feedback) && (
+        <WritingFeedbackCard attemptId={attempt.id} text={attempt.writing} words={r.writingWords} initial={feedback} canCheck={!hasTeacher} />
+      )}
+      <TeacherCheckCard attemptId={attempt.id} words={r.writingWords} hasTeacher={hasTeacher} teacherName={teacherName} review={review} />
 
       <Card className="grid gap-4 p-6">
         <CardTitle>Your answers</CardTitle>

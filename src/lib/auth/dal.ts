@@ -23,6 +23,8 @@ export type CurrentUser = {
   exam: string | null;
   /** Exam day (YYYY-MM-DD) if the student gave one. */
   examDate: string | null;
+  /** The student's own teacher (profiles.teacher_id), or null for a standalone student. */
+  teacherId: string | null;
 };
 
 /**
@@ -42,7 +44,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role, languages, avatar_path, onboarded_at, exam, exam_date")
+    .select("full_name, role, languages, avatar_path, onboarded_at, exam, exam_date, teacher_id")
     .eq("id", claims.sub)
     .maybeSingle();
 
@@ -57,6 +59,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     onboardedAt: profile?.onboarded_at ?? null,
     exam: profile?.exam ?? null,
     examDate: profile?.exam_date ?? null,
+    teacherId: profile?.teacher_id ?? null,
   };
 });
 
