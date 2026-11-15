@@ -46,3 +46,24 @@ export async function imageToJpeg(file: File, maxWidth = 900): Promise<Blob> {
   if (!blob) throw new Error("no blob");
   return blob;
 }
+
+/** A piece of text on a page: [text, left, top, width, font height], all as fractions of the page. */
+export type TextItem = [string, number, number, number, number];
+
+/** The PDF's own text with its position, so students can select words on the page picture. Empty for scanned PDFs. */
+export async function extractPageText(doc: PDFDocumentProxy, pageNumber: number): Promise<TextItem[]> {
+  const pdfjs = await import("pdfjs-dist");
+  const page = await doc.getPage(pageNumber);
+  const vp = page.getViewport({ scale: 1 });
+  const content = await page.getTextContent();
+  const r = (n: number) => Math.round(n * 10000) / 10000;
+  const out: TextItem[] = [];
+  for (const it of content.items) {
+    if (!("str" in it) || !it.str.trim()) continue;
+    const tx = pdfjs.Util.transform(vp.transform, it.transform);
+    const fh = Math.hypot(tx[2], tx[3]);
+    if (!fh || !Number.isFinite(fh)) continue;
+    out.push([it.str.slice(0, 200), r(tx[4] / vp.width), r((tx[5] - fh) / vp.height), r(it.width / vp.width), r(fh / vp.height)]);
+  }
+  return out;
+}

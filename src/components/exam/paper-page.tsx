@@ -5,12 +5,13 @@ import { StickyNote, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { TextItem } from "@/lib/papers/render";
 import type { Annotation } from "./use-annotations";
 
 export type PaperTool = "move" | "highlight" | "note" | "erase";
 
 /** One page image of the paper with the student's own highlights and notes on top. */
-export function PaperPage({ src, alt, page, tool, items, onChange }: { src: string; alt: string; page: number; tool: PaperTool; items: Annotation[]; onChange: (next: Annotation[]) => void }) {
+export function PaperPage({ src, alt, page, tool, items, onChange, text, withWords }: { src: string; alt: string; page: number; tool: PaperTool; items: Annotation[]; onChange: (next: Annotation[]) => void; text?: TextItem[]; withWords?: (t: string) => React.ReactNode }) {
   const box = useRef<HTMLDivElement>(null);
   const [draft, setDraft] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
   const [open, setOpen] = useState<string | null>(null);
@@ -58,6 +59,22 @@ export function PaperPage({ src, alt, page, tool, items, onChange }: { src: stri
     <div ref={box} className="relative">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src} alt={alt} loading="lazy" draggable={false} className="w-full rounded-sm bg-white shadow-xl shadow-black/40 select-none" />
+      {text && text.length > 0 && (
+        // The PDF's own text, invisible, exactly over the picture: lets the student select words.
+        <div data-text-layer={page} className={cn("absolute inset-0 overflow-hidden", tool === "move" ? "" : "pointer-events-none")} style={{ containerType: "size" }}>
+          {text.map(([s, x, y, w, h], i) => (
+            <span
+              key={i}
+              data-text-item
+              lang="de"
+              className="absolute cursor-text leading-none whitespace-pre text-transparent selection:bg-gold/40"
+              style={{ left: `${x * 100}%`, top: `${y * 100}%`, width: `${w * 100}%`, height: `${h * 120}%`, fontSize: `${h * 100}cqh`, textAlignLast: "justify" }}
+            >
+              {withWords ? withWords(s) : s}
+            </span>
+          ))}
+        </div>
+      )}
       <div
         onPointerDown={down}
         onPointerMove={move}

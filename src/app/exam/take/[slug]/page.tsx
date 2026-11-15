@@ -3,7 +3,8 @@ import { notFound, redirect } from "next/navigation";
 
 import { ExamPlayer } from "@/components/exam/exam-player";
 import { requireUser } from "@/lib/auth/dal";
-import { getAudioUrl, getPageUrls, getPaperBySlug, openAttempt } from "@/lib/papers/data";
+import { getSavedWords } from "@/lib/practice/data";
+import { getAudioUrl, getPageText, getPageUrls, getPaperBySlug, openAttempt } from "@/lib/papers/data";
 
 export const metadata: Metadata = { title: "Mock exam" };
 
@@ -18,7 +19,7 @@ export default async function TakeExamPage(props: PageProps<"/exam/take/[slug]">
 
   const attempt = await openAttempt(user.id, paper.id, sp.new === "1");
   if (!attempt) redirect(`/dashboard/exam/mock/${slug}`);
-  const [pageUrls, audioUrl] = await Promise.all([getPageUrls(paper), getAudioUrl(paper)]);
+  const [pageUrls, audioUrl, pageText, savedWords] = await Promise.all([getPageUrls(paper), getAudioUrl(paper), getPageText(paper.id), getSavedWords(user.id, 500)]);
 
   return (
     <ExamPlayer
@@ -31,6 +32,9 @@ export default async function TakeExamPage(props: PageProps<"/exam/take/[slug]">
       audioUrl={audioUrl}
       initialAnswers={attempt.answers}
       initialWriting={attempt.writing}
+      pageText={pageText}
+      savedWords={savedWords}
+      languages={user.languages}
     />
   );
 }

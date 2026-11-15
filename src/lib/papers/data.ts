@@ -126,3 +126,11 @@ export async function getLastResult(userId: string, paperId: string): Promise<At
     .maybeSingle();
   return (data as AttemptRow | null) ?? null;
 }
+
+/** Selectable text of the paper pages (empty if the admin has not added it). */
+export async function getPageText(paperId: string): Promise<Record<number, import("./render").TextItem[]>> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("mock_papers").select("page_text").eq("id", paperId).maybeSingle();
+  const raw = ((data as { page_text?: Record<string, import("./render").TextItem[]> } | null)?.page_text ?? {}) as Record<string, import("./render").TextItem[]>;
+  return Object.fromEntries(Object.entries(raw).map(([k, v]) => [Number(k), v]));
+}

@@ -142,6 +142,21 @@ export async function setPaperCover(id: unknown, path: unknown): Promise<Result>
   return { ok: true };
 }
 
+const textSchema = z.record(z.string().regex(/^\d{1,3}$/), z.array(z.tuple([z.string().max(200), z.number(), z.number(), z.number(), z.number()])).max(4000));
+
+/** Selectable text for the paper pages (taken from the PDF in the admin's browser). */
+export async function setPaperText(id: unknown, pages: unknown): Promise<Result> {
+  await requireUser(ADMINS);
+  const pid = uuid.safeParse(id);
+  const t = textSchema.safeParse(pages);
+  if (!pid.success || !t.success) return { error: GENERIC };
+  const supabase = await createClient();
+  const { error } = await supabase.from("mock_papers").update({ page_text: t.data }).eq("id", pid.data);
+  if (error) return { error: "We couldn't save the text. Check that the latest database update (migration 20261115000017) was run." };
+  refresh();
+  return { ok: true };
+}
+
 export async function setPaperTone(id: unknown, tone: unknown): Promise<Result> {
   await requireUser(ADMINS);
   const pid = uuid.safeParse(id);

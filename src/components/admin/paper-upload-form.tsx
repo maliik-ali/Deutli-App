@@ -9,8 +9,8 @@ import { FormError } from "@/components/auth/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createPaper, createPaperUploadUrls } from "@/lib/papers/actions";
-import { openPdf, pageToJpeg, renderPage } from "@/lib/papers/render";
+import { createPaper, createPaperUploadUrls, setPaperText } from "@/lib/papers/actions";
+import { extractPageText, openPdf, pageToJpeg, renderPage, type TextItem } from "@/lib/papers/render";
 import { COVER_TONES } from "@/lib/exam/catalog";
 import { SECTIONS, TELC_B1_PARTS, type PaperPart } from "@/lib/papers/template";
 import { cn } from "@/lib/utils";
@@ -115,10 +115,26 @@ export function PaperUploadForm() {
         audioPath: hasAudio ? (links.audio?.path ?? null) : null,
         answersText: String(f.get("answers") ?? ""),
       });
+      let textNote = "";
+      if (!("error" in res)) {
+        // Selectable text for the chosen pages (best effort: scanned PDFs have none).
+        setStatus("Reading the text of the pages…");
+        try {
+          const text: Record<string, TextItem[]> = {};
+          for (const n of pages) text[String(n)] = await extractPageText(doc, n);
+          const found = Object.values(text).reduce((a, b) => a + b.length, 0);
+          if (found > 0) {
+            const saved = await setPaperText(res.id, text);
+            if ("error" in saved) textNote = " Students can't select words yet: " + saved.error;
+          } else textNote = " This PDF has no selectable text (it may be a scan), so students can't select words on it.";
+        } catch {
+          textNote = " The text of the pages could not be read, so students can't select words yet.";
+        }
+      }
       setStatus(null);
       if ("error" in res) setError(res.error);
       else {
-        setDone(`"${String(f.get("title"))}" is uploaded and saved as a draft. Click Publish in the list above so students can see it.`);
+        setDone(`"${String(f.get("title"))}" is uploaded and saved as a draft. Click Publish in the list above so students can see it.${textNote}`);
         formEl.reset();
         setDoc(null);
         setParts(TELC_B1_PARTS);

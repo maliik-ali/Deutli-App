@@ -44,7 +44,7 @@ export default async function AdminMockPapersPage() {
         ) : (
           <ul className="grid gap-2">
             {papers.map((p) => (
-              <PaperRow key={p.id} id={p.id} title={p.title} slug={p.slug} published={p.is_published} hasAudio={!!p.audio_path} tone={p.tone} free={p.is_free} coverUrl={covers.get(p.id) ?? null} />
+              <PaperRow key={p.id} id={p.id} title={p.title} slug={p.slug} published={p.is_published} hasAudio={!!p.audio_path} tone={p.tone} free={p.is_free} coverUrl={covers.get(p.id) ?? null} pages={[...new Set(p.structure.parts.flatMap((q) => Array.from({ length: q.toPage - q.fromPage + 1 }, (_, i) => q.fromPage + i)))]} />
             ))}
           </ul>
         )}

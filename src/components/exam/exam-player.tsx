@@ -6,10 +6,14 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ChevronLeft, ChevronRight, Eraser, Eye, EyeOff, Highlighter, Hand, Loader2, Minus, Pause, Play, Plus, RotateCcw, RotateCw, Send, StickyNote, Timer } from "lucide-react";
 
 import { PaperPage, type PaperTool } from "@/components/exam/paper-page";
+import { usePaperWords } from "@/components/exam/paper-words";
 import { useAnnotations } from "@/components/exam/use-annotations";
 import { WritingBox } from "@/components/exam/writing-box";
 import { Button } from "@/components/ui/button";
+import type { LanguageCode } from "@/lib/languages";
 import { saveAttempt, submitAttempt } from "@/lib/papers/actions";
+import type { TextItem } from "@/lib/papers/render";
+import type { SavedWord } from "@/lib/practice/plan";
 import { SECTIONS, countWords, partQuestions, type PaperPart, type PaperStructure } from "@/lib/papers/template";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +26,9 @@ type Props = {
   audioUrl: string | null;
   initialAnswers: Record<string, string>;
   initialWriting: string;
+  pageText: Record<number, TextItem[]>;
+  savedWords: SavedWord[];
+  languages: LanguageCode[];
 };
 
 const WRITING_AIM = 100;
@@ -31,7 +38,7 @@ function mmss(total: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
-export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioUrl, initialAnswers, initialWriting }: Props) {
+export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioUrl, initialAnswers, initialWriting, pageText, savedWords, languages }: Props) {
   const router = useRouter();
   const parts = structure.parts;
   const [partIndex, setPartIndex] = useState(0);
@@ -48,6 +55,12 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const paperRef = useRef<HTMLDivElement>(null);
+  const { overlay: wordTools, withWords } = usePaperWords({
+    initialWords: savedWords,
+    initialLanguages: languages,
+    areaRef: paperRef,
+    onHighlight: (page, rects) => setMarks([...marks, ...rects.map((r) => ({ id: crypto.randomUUID(), page, kind: "hl" as const, ...r }))]),
+  });
   const lastSaved = useRef(JSON.stringify([initialAnswers, initialWriting]));
 
   const part = parts[partIndex];
@@ -211,7 +224,7 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
             <div className="mx-auto grid gap-6" style={{ width: `min(100%, ${Math.round(820 * zoom)}px)` }}>
               {pages.map((n) =>
                 pageUrls[n] ? (
-                  <PaperPage key={n} src={pageUrls[n]} alt={`Page ${n} of the exam paper`} page={n} tool={tool} items={marks} onChange={setMarks} />
+                  <PaperPage key={n} src={pageUrls[n]} alt={`Page ${n} of the exam paper`} page={n} tool={tool} items={marks} onChange={setMarks} text={pageText[n]} withWords={withWords} />
                 ) : (
                   <p key={n} className="rounded-lg bg-card p-6 text-center text-muted-foreground">This page could not load. Reload the page.</p>
                 ),
@@ -238,6 +251,7 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
           </div>
           </div>
 
+          {wordTools}
           {part.section === "hoeren" && <AudioBar url={audioUrl} />}
         </section>
 

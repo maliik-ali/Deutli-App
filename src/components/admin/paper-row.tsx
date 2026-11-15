@@ -7,16 +7,18 @@ import { ExamCover } from "@/components/exam/exam-cover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { COVER_TONES, type CoverTone } from "@/lib/exam/catalog";
-import { createCoverUploadUrl, deletePaper, setPaperCover, setPaperPublished, setPaperTone } from "@/lib/papers/actions";
-import { imageToJpeg } from "@/lib/papers/render";
+import { createCoverUploadUrl, deletePaper, setPaperCover, setPaperPublished, setPaperText, setPaperTone } from "@/lib/papers/actions";
+import { extractPageText, imageToJpeg, openPdf, type TextItem } from "@/lib/papers/render";
 
-type Props = { id: string; title: string; slug: string; published: boolean; hasAudio: boolean; tone: CoverTone; free: boolean; coverUrl: string | null };
+type Props = { id: string; title: string; slug: string; published: boolean; hasAudio: boolean; tone: CoverTone; free: boolean; coverUrl: string | null; pages: number[] };
 
-export function PaperRow({ id, title, slug, published, hasAudio, tone, free, coverUrl }: Props) {
+export function PaperRow({ id, title, slug, published, hasAudio, tone, free, coverUrl, pages }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
+  const pdfRef = useRef<HTMLInputElement>(null);
+  const [note, setNote] = useState<string | null>(null);
 
   function run(fn: () => Promise<{ error: string } | { ok: true }>) {
     setError(null);
@@ -44,6 +46,27 @@ export function PaperRow({ id, title, slug, published, hasAudio, tone, free, cov
       const res = await fetch(link.url, { method: "PUT", body, headers: { "x-upsert": "true" } }).catch(() => null);
       if (!res?.ok) return { error: "The upload failed. Check your internet connection and try again." };
       return setPaperCover(id, link.path);
+    });
+  }
+
+  /** Reads the text of the exam pages from the PDF (it stays on this computer) so students can select words. */
+  function addText(file: File | undefined) {
+    if (!file) return;
+    setNote(null);
+    run(async () => {
+      try {
+        const doc = await openPdf(file);
+        if (pages.some((n) => n > doc.numPages)) return { error: "This PDF has fewer pages than the paper uses. Choose the same PDF you uploaded." };
+        const text: Record<string, TextItem[]> = {};
+        for (const n of pages) text[String(n)] = await extractPageText(doc, n);
+        const found = Object.values(text).reduce((a, b) => a + b.length, 0);
+        if (found === 0) return { error: "This PDF has no selectable text (it may be a scan)." };
+        const r = await setPaperText(id, text);
+        if (!("error" in r)) setNote(`Done: ${found} pieces of text added. Students can now select words.`);
+        return r;
+      } catch {
+        return { error: "We couldn't read this PDF. Choose the PDF you uploaded for this paper." };
+      }
     });
   }
 
@@ -98,8 +121,14 @@ export function PaperRow({ id, title, slug, published, hasAudio, tone, free, cov
               Remove photo
             </Button>
           )}
-          {pending && <span className="text-sm text-muted-foreground">Saving…</span>}
+          <input ref={pdfRef} type="file" accept="application/pdf" hidden onChange={(e) => { addText(e.target.files?.[0]); e.target.value = ""; }} />
+          <Button type="button" variant="outline" size="sm" disabled={pending} onClick={() => pdfRef.current?.click()}>
+            Add selectable text
+          </Button>
+          {pending && <span className="text-sm text-muted-foreground">Working…</span>}
         </div>
+        {note && <p className="text-sm text-success">{note}</p>}
+        <p className="text-[13px] text-muted-foreground">Selectable text: choose the same PDF again; it stays on your computer. Needed once for papers uploaded before this feature.</p>
         <p className="text-[13px] text-muted-foreground">Without a photo the cover shows the Deutli owl on the colour.</p>
         {error && (
           <p role="alert" className="text-sm text-destructive">
