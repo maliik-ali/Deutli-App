@@ -5,6 +5,10 @@ import { ChevronLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
+import { Celebration } from "@/components/exam/celebration";
+import { PracticeCertificate } from "@/components/exam/practice-certificate";
+import { ScoreHero } from "@/components/exam/score-hero";
+import { BlurFade } from "@/components/magicui/blur-fade";
 import { TeacherCheckCard } from "@/components/exam/teacher-check-card";
 import { WritingFeedbackCard } from "@/components/exam/writing-feedback";
 import { requireUser } from "@/lib/auth/dal";
@@ -32,6 +36,24 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
   const feedback = await getWritingFeedback(attempt.id);
   const teacherName = user.teacherId ? await getTeacherName(user.teacherId) : null;
   const parts = paper.structure.parts;
+  const pct = r.max ? r.total / r.max : 0;
+  const sum = (section: string) => {
+    const ids = parts.filter((p) => p.section === section).map((p) => p.id);
+    const rows = r.parts.filter((x) => ids.includes(x.id));
+    return { got: rows.reduce((a, x) => a + x.points, 0), max: rows.reduce((a, x) => a + x.max, 0) };
+  };
+  const lesen = sum("lesen");
+  const sprach = sum("sprachbausteine");
+  const hoeren = sum("hoeren");
+  const skills = [
+    { label: "Lesen", ...lesen },
+    { label: "Sprachbausteine", ...sprach },
+    { label: "Hören", ...hoeren },
+  ];
+  // Writing score on the certificate: the teacher's if marked, else the AI estimate, else nothing yet.
+  const writingScore = review?.status === "done" && review.total != null ? review.total : (feedback?.total ?? null);
+  const writingBy = review?.status === "done" && review.total != null ? ("teacher" as const) : feedback ? ("ai" as const) : null;
+  const when = new Date(attempt.submitted_at ?? attempt.started_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Asia/Karachi" });
 
   return (
     <main className="mx-auto grid max-w-[820px] gap-6 px-4 py-6 sm:px-6 md:py-8">
@@ -39,16 +61,26 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
         <ChevronLeft className="size-4" aria-hidden /> {paper.title}
       </Link>
 
-      <header className="grid gap-2">
-        <p className="text-[12px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">telc B1 · {paper.title}</p>
-        <h1 className="text-[28px] font-extrabold sm:text-[32px]">Your score</h1>
-        <p className="text-lg">
-          <strong className="text-3xl">{r.total}</strong> <span className="text-muted-foreground">of {r.max} points (reading, grammar and listening)</span>
-        </p>
-        <p className="text-[14px] text-muted-foreground">
-          Your email ({r.writingWords} words) is marked separately below, by the AI or by a teacher. The telc written exam has {WRITTEN_MAX} points in total, including 45 for writing. You pass with {WRITTEN_PASS}.
-        </p>
-      </header>
+      {pct >= 0.6 && <Celebration attemptId={attempt.id} level={pct >= 0.85 ? 2 : 1} />}
+      <p className="text-[12px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">telc B1 · {paper.title}</p>
+      <ScoreHero total={r.total} max={r.max} passLine={Math.round(r.max * 0.6)} caption={`Reading, grammar and listening. The pass line is ${Math.round(r.max * 0.6)}. Your email (${r.writingWords} words) is marked separately below: the telc written exam has ${WRITTEN_MAX} points including 45 for writing, and you pass with ${WRITTEN_PASS}.`} />
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        {skills.map((k, i) => (
+          <BlurFade key={k.label} delay={0.08 * i}>
+            <Card className="grid gap-2 p-4">
+              <p className="text-[12px] font-semibold tracking-[0.1em] text-subtle-foreground uppercase">{k.label}</p>
+              <p className="text-2xl font-extrabold tabular-nums">
+                {k.got}
+                <span className="text-base font-semibold text-muted-foreground"> / {k.max}</span>
+              </p>
+              <div className="h-2 overflow-hidden rounded-full bg-muted" role="presentation">
+                <div className="h-full rounded-full bg-brand-gradient" style={{ width: `${k.max ? Math.round((k.got / k.max) * 100) : 0}%` }} />
+              </div>
+            </Card>
+          </BlurFade>
+        ))}
+      </div>
 
       <Card className="grid gap-3 p-6">
         <CardTitle>Section scores</CardTitle>
@@ -68,6 +100,11 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
           })}
         </ul>
       </Card>
+
+      <section aria-label="Sample certificate" className="grid gap-3">
+        <h2 className="text-xl font-extrabold">Your certificate preview</h2>
+        <PracticeCertificate s={{ name: user.fullName ?? "Your name", examTitle: paper.title, date: when, lesen, sprach, hoeren, writing: writingScore, writingBy }} />
+      </section>
 
       {(!hasTeacher || feedback) && (
         <WritingFeedbackCard attemptId={attempt.id} text={attempt.writing} words={r.writingWords} initial={feedback} canCheck={!hasTeacher} />
