@@ -44,3 +44,6 @@ next-env.d.ts
 # local screenshots / test output
 /screenshots-tmp/
 /test-results/
+
+# Real student emails for the AI test (private)
+scripts/writing-test/real-emails.json

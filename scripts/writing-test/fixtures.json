@@ -1,0 +1,92 @@
+[
+ {
+  "id": "weak-1",
+  "level": "weak",
+  "band": [
+   8,
+   22
+  ],
+  "task": "Marianne, eine Freundin aus dem Ausland, hat Sie zu einem Besuch eingeladen. Schreiben Sie ihr: 1) Wann Sie kommen koennen. 2) Welche Ausfluege Sie machen moechten. 3) Wie das Wetter ist und was Sie mitbringen sollen (Frage). 4) Wer Sie am Flughafen abholen kann (Frage). (Test task written for this test, not from a real paper.)",
+  "email": "Hallo Marianne, ich komme nach dein Land. Ich will gehen Museum und Strand. Wetter ist heiß? Ich brauche Kleider. Tschüß"
+ },
+ {
+  "id": "weak-2",
+  "level": "weak",
+  "band": [
+   8,
+   22
+  ],
+  "task": "Marianne, eine Freundin aus dem Ausland, hat Sie zu einem Besuch eingeladen. Schreiben Sie ihr: 1) Wann Sie kommen koennen. 2) Welche Ausfluege Sie machen moechten. 3) Wie das Wetter ist und was Sie mitbringen sollen (Frage). 4) Wer Sie am Flughafen abholen kann (Frage). (Test task written for this test, not from a real paper.)",
+  "email": "Liebe Marianne, danke für Einladung. Ich komme im August weil ich habe Urlaub. Ich möchte sehen die Stadt. Wie ist Wetter, was ich muss mitbringen. Bis bald, Ali"
+ },
+ {
+  "id": "weak-3",
+  "level": "weak",
+  "band": [
+   8,
+   24
+  ],
+  "task": "Marianne, eine Freundin aus dem Ausland, hat Sie zu einem Besuch eingeladen. Schreiben Sie ihr: 1) Wann Sie kommen koennen. 2) Welche Ausfluege Sie machen moechten. 3) Wie das Wetter ist und was Sie mitbringen sollen (Frage). 4) Wer Sie am Flughafen abholen kann (Frage). (Test task written for this test, not from a real paper.)",
+  "email": "Marianne, ich bin glücklich für deine Einladung. Ich kann kommen in Juli. Wir können gehen zum Meer und essen Fisch. Kannst du holen mich Flughafen? Gruß"
+ },
+ {
+  "id": "mid-1",
+  "level": "mid",
+  "band": [
+   22,
+   34
+  ],
+  "task": "Marianne, eine Freundin aus dem Ausland, hat Sie zu einem Besuch eingeladen. Schreiben Sie ihr: 1) Wann Sie kommen koennen. 2) Welche Ausfluege Sie machen moechten. 3) Wie das Wetter ist und was Sie mitbringen sollen (Frage). 4) Wer Sie am Flughafen abholen kann (Frage). (Test task written for this test, not from a real paper.)",
+  "email": "Liebe Marianne,\n\nvielen Dank für deine Einladung! Ich kann im August kommen, weil ich habe dann drei Wochen Urlaub. Ich möchte gern die Altstadt besichtigen und ans Meer fahren. Kannst du mir sagen, wie ist das Wetter und was ich mitbringen soll? Holst du mich vom Flughafen ab? Ich freue mich auf dich zu sehen.\n\nViele Grüße\nAli"
+ },
+ {
+  "id": "mid-2",
+  "level": "mid",
+  "band": [
+   22,
+   34
+  ],
+  "task": "Marianne, eine Freundin aus dem Ausland, hat Sie zu einem Besuch eingeladen. Schreiben Sie ihr: 1) Wann Sie kommen koennen. 2) Welche Ausfluege Sie machen moechten. 3) Wie das Wetter ist und was Sie mitbringen sollen (Frage). 4) Wer Sie am Flughafen abholen kann (Frage). (Test task written for this test, not from a real paper.)",
+  "email": "Liebe Marianne,\n\ndanke für deine nette Einladung. Ich komme gern im Juli. Ich möchte gerne die Museen besuchen und auch einen Ausflug in die Berge machen. Wie wird das Wetter im Juli und braucht man warme Kleidung? Kannst du mich am Flughafen abholen, weil ich kenne den Weg nicht? \n\nLiebe Grüße\nAli"
+ },
+ {
+  "id": "mid-3",
+  "level": "mid",
+  "band": [
+   22,
+   34
+  ],
+  "task": "Marianne, eine Freundin aus dem Ausland, hat Sie zu einem Besuch eingeladen. Schreiben Sie ihr: 1) Wann Sie kommen koennen. 2) Welche Ausfluege Sie machen moechten. 3) Wie das Wetter ist und was Sie mitbringen sollen (Frage). 4) Wer Sie am Flughafen abholen kann (Frage). (Test task written for this test, not from a real paper.)",
+  "email": "Hallo Marianne,\n\nich habe mich sehr über deine Einladung gefreut. Im September habe ich Zeit zu kommen. Wir könnten zusammen die Stadt anschauen und ein Konzert besuchen. Ich weiß nicht, wie ist das Wetter im September. Soll ich einen Regenschirm mitnehmen? Wer kann mich abholen am Flughafen?\n\nBis bald\nAli"
+ },
+ {
+  "id": "strong-1",
+  "level": "strong",
+  "band": [
+   33,
+   43
+  ],
+  "task": "Marianne, eine Freundin aus dem Ausland, hat Sie zu einem Besuch eingeladen. Schreiben Sie ihr: 1) Wann Sie kommen koennen. 2) Welche Ausfluege Sie machen moechten. 3) Wie das Wetter ist und was Sie mitbringen sollen (Frage). 4) Wer Sie am Flughafen abholen kann (Frage). (Test task written for this test, not from a real paper.)",
+  "email": "Liebe Marianne,\n\nvielen Dank für deine nette Einladung! Ich freue mich sehr darauf, dich und dein Land endlich kennenzulernen. Ich kann im August kommen, weil ich dann drei Wochen Urlaub habe. Am liebsten würde ich mit dir die Altstadt besichtigen und einen Ausflug ans Meer machen. Kannst du mir bitte sagen, wie das Wetter im August ist und was ich einpacken soll? Außerdem wäre es toll, wenn du mich am Flughafen abholen könntest, denn ich kenne mich dort nicht aus. Ich schicke dir bald meine Flugdaten.\n\nViele Grüße\nAli"
+ },
+ {
+  "id": "strong-2",
+  "level": "strong",
+  "band": [
+   32,
+   43
+  ],
+  "task": "Marianne, eine Freundin aus dem Ausland, hat Sie zu einem Besuch eingeladen. Schreiben Sie ihr: 1) Wann Sie kommen koennen. 2) Welche Ausfluege Sie machen moechten. 3) Wie das Wetter ist und was Sie mitbringen sollen (Frage). 4) Wer Sie am Flughafen abholen kann (Frage). (Test task written for this test, not from a real paper.)",
+  "email": "Liebe Marianne,\n\nherzlichen Dank für deine Einladung, über die ich mich sehr gefreut habe. Ich würde gern im Juli zu dir kommen, da ich in dieser Zeit frei habe. Ich möchte gern die Museen besuchen und, wenn das Wetter schön ist, einen Ausflug in die Berge unternehmen. Weißt du, wie warm es dann ist und ob ich eine Jacke mitbringen muss? Es wäre schön, wenn mich jemand vom Flughafen abholen könnte. Ich freue mich darauf, dich zu sehen!\n\nHerzliche Grüße\nAli"
+ },
+ {
+  "id": "strong-3",
+  "level": "strong",
+  "band": [
+   32,
+   43
+  ],
+  "task": "Marianne, eine Freundin aus dem Ausland, hat Sie zu einem Besuch eingeladen. Schreiben Sie ihr: 1) Wann Sie kommen koennen. 2) Welche Ausfluege Sie machen moechten. 3) Wie das Wetter ist und was Sie mitbringen sollen (Frage). 4) Wer Sie am Flughafen abholen kann (Frage). (Test task written for this test, not from a real paper.)",
+  "email": "Liebe Marianne,\n\nich danke dir herzlich für die Einladung! Ende August kann ich kommen, denn dann beginnen meine Ferien. Gern würde ich mit dir das Schloss besichtigen und am Wochenende an den See fahren. Könntest du mir bitte schreiben, wie das Wetter dann ist und was ich einpacken sollte? Außerdem würde ich gern wissen, ob du mich am Flughafen abholen kannst. Ich freue mich sehr auf unser Wiedersehen.\n\nViele liebe Grüße\nAli"
+ }
+]

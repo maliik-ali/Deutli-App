@@ -1,0 +1,8 @@
+[
+ {
+  "id": "student-1",
+  "teacher_total": 30,
+  "task": "(optional) the task text",
+  "email": "Paste a real student email here (remove names)."
+ }
+]
