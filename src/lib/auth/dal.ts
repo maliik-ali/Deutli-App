@@ -25,6 +25,8 @@ export type CurrentUser = {
   examDate: string | null;
   /** The student's own teacher (profiles.teacher_id), or null for a standalone student. */
   teacherId: string | null;
+  /** Deutli Pro runs until this date (YYYY-MM-DD), or null. */
+  proUntil: string | null;
 };
 
 /**
@@ -44,7 +46,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role, languages, avatar_path, onboarded_at, exam, exam_date, teacher_id")
+    .select("full_name, role, languages, avatar_path, onboarded_at, exam, exam_date, teacher_id, pro_until")
     .eq("id", claims.sub)
     .maybeSingle();
 
@@ -60,6 +62,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     exam: profile?.exam ?? null,
     examDate: profile?.exam_date ?? null,
     teacherId: profile?.teacher_id ?? null,
+    proUntil: profile?.pro_until ?? null,
   };
 });
 
@@ -75,4 +78,12 @@ export async function requireUser(allowed?: readonly Role[]): Promise<CurrentUse
 export async function redirectIfLoggedIn() {
   const user = await getCurrentUser();
   if (user) redirect(homeForRole(user.role));
+}
+
+/** Pro students (and admins, who can test everything) may open premium papers. */
+export function hasPro(user: Pick<CurrentUser, "proUntil" | "role">): boolean {
+  if (user.role !== "student") return true;
+  if (!user.proUntil) return false;
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Karachi" }).format(new Date());
+  return user.proUntil >= today;
 }

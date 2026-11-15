@@ -7,7 +7,7 @@ import { ExamCover } from "@/components/exam/exam-cover";
 import { SKILL_ICONS } from "@/components/exam/skill-icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { requireUser } from "@/lib/auth/dal";
+import { hasPro, requireUser } from "@/lib/auth/dal";
 import { examShortName, getExamFormat } from "@/lib/exam/catalog";
 import { getLastResult, getPaperBySlug } from "@/lib/papers/data";
 import { listMocks } from "@/lib/papers/mocks";
@@ -84,7 +84,7 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
           )}
 
           <div className="grid gap-2 sm:flex sm:items-center sm:gap-4">
-            {paper && (paper.is_free || user.role !== "student") ? (
+            {paper && (paper.is_free || hasPro(user)) ? (
               <Button asChild className="w-full sm:w-auto">
                 <Link href={`/exam/take/${examId}`}>Start mock exam</Link>
               </Button>
