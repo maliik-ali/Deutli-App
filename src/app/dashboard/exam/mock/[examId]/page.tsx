@@ -46,7 +46,7 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
           <div className="grid gap-2">
             <p className="text-[12px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
               {examShortName(user.exam)} · B1 ·{" "}
-              {exam.free ? <span className="text-success">Free</span> : <span className="text-gold-ink">Premium</span>}
+              {!paper ? <span className="text-subtle-foreground">Coming soon</span> : exam.free ? <span className="text-success">Free</span> : <span className="text-gold-ink">Premium</span>}
             </p>
             <h1 className="text-[28px] font-extrabold sm:text-[32px]">{exam.city} Modellprüfung</h1>
             <p className="text-muted-foreground">Topics: {exam.topics}</p>
@@ -86,13 +86,13 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
           )}
 
           <div className="grid gap-2 sm:flex sm:items-center sm:gap-4">
-            {paper && (paper.is_free || hasPro(user)) ? (
+            {!paper ? (
+              <Button disabled className="w-full sm:w-auto">
+                Coming soon
+              </Button>
+            ) : paper.is_free || hasPro(user) ? (
               <Button asChild className="w-full sm:w-auto">
                 <Link href={`/exam/take/${examId}`}>Start mock exam</Link>
-              </Button>
-            ) : exam.free ? (
-              <Button disabled className="w-full sm:w-auto">
-                Start mock exam
               </Button>
             ) : (
               <Button asChild variant="outline" className="w-full sm:w-auto">
@@ -102,10 +102,10 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
               </Button>
             )}
             <p className="text-[14px] text-muted-foreground">
-              {paper && exam.free
-                ? "Solve the real paper on screen. Your answers are saved as you go."
-                : exam.free
-                  ? "The timed mock exam opens soon. We'll let you know."
+              {!paper
+                ? "This mock exam is not ready yet. Try the free Hamburg paper in the meantime."
+                : paper.is_free
+                  ? "Solve the real paper on screen. Your answers are saved as you go."
                   : "Premium mock exams come with Deutli Pro. Tell us you are interested and we will contact you."}
             </p>
           </div>
