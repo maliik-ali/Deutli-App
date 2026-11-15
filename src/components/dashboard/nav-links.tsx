@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Award,
   ChevronDown,
+  GraduationCap,
   Home,
   Languages,
   MessageCircleQuestion,
@@ -28,6 +29,7 @@ const ICONS: Record<NavIcon, LucideIcon> = {
   mic: Mic,
   message: MessageCircleQuestion,
   award: Award,
+  skills: GraduationCap,
 };
 
 type WithLabel<T> = T extends unknown ? Omit<T, "label"> & { label: string } : never;
@@ -52,7 +54,7 @@ export function NavLinks({ onNavigate, examTitle }: { onNavigate?: () => void; e
             <NavGroup key={item.href} item={item} items={item.children} pathname={pathname} onNavigate={onNavigate} />
           ) : (
             <li key={item.href}>
-              <NavLink item={item} active={pathname === item.href} onNavigate={onNavigate} />
+              <NavLink item={item} active={pathname === item.href || (item.href === "/dashboard/exam" && pathname.startsWith("/dashboard/exam/mock"))} onNavigate={onNavigate} />
             </li>
           ));
         })}
@@ -89,7 +91,7 @@ function NavGroup({
   pathname: string;
   onNavigate?: () => void;
 }) {
-  const inside = pathname === item.href || pathname.startsWith(`${item.href}/`);
+  const inside = pathname === item.href || pathname.startsWith(`${item.href}/`) || items.some((c) => pathname === c.href);
   const [open, setOpen] = useState(inside);
   const childActive = items.some((c) => c.href === pathname);
   const listId = `nav-${item.href.split("/").pop()}`;

@@ -6,10 +6,11 @@
 export const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: "home" },
   { href: "/dashboard/daily-practice", label: "Improve Accent", icon: "speech" },
+  { href: "/dashboard/exam", label: "My B1 Exam", icon: "timer" },
   {
-    href: "/dashboard/exam",
-    label: "My B1 Exam",
-    icon: "timer",
+    href: "/dashboard/skills",
+    label: "Skills",
+    icon: "skills",
     children: [
       { href: "/dashboard/exam/reading", label: "Reading" },
       { href: "/dashboard/exam/listening", label: "Listening" },
@@ -17,11 +18,12 @@ export const NAV_ITEMS = [
       { href: "/dashboard/exam/speaking", label: "Speaking" },
     ],
   },
-  { href: "/dashboard/homework", label: "Homework", icon: "pen", soon: true },
   { href: "/dashboard/vocabulary", label: "Vocabulary", icon: "languages" },
+  { href: "/dashboard/certificates", label: "Certificates", icon: "award" },
+  // Not built yet: always at the bottom, marked "Soon".
+  { href: "/dashboard/homework", label: "Homework", icon: "pen", soon: true },
   { href: "/dashboard/speaking-club", label: "Speaking club", icon: "mic", soon: true },
   { href: "/dashboard/ask-a-teacher", label: "Ask a teacher", icon: "message", soon: true },
-  { href: "/dashboard/certificates", label: "Certificates", icon: "award" },
 ] as const;
 
 export type NavIcon = (typeof NAV_ITEMS)[number]["icon"];
