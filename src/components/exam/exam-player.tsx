@@ -202,7 +202,8 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
             </div>
           </div>
 
-          <div ref={paperRef} className="relative min-h-0 flex-1 overflow-y-auto bg-muted/40 px-3 py-6 sm:px-6">
+          <div className="relative flex min-h-0 flex-1 flex-col">
+          <div ref={paperRef} className="min-h-0 flex-1 overflow-y-auto bg-muted/40 px-3 py-6 sm:px-6">
             <div className="mx-auto grid gap-6" style={{ width: `min(100%, ${Math.round(820 * zoom)}px)` }}>
               {pages.map((n) =>
                 pageUrls[n] ? (
@@ -213,15 +214,16 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
                 ),
               )}
             </div>
-            <div className="sticky bottom-3 z-10 mx-auto mt-6 flex w-fit items-center gap-1 rounded-full bg-ink px-2 py-1.5 text-ink-foreground shadow-lg shadow-black/40">
-              <button type="button" aria-label="Zoom out" onClick={() => setZoom((z) => Math.max(0.6, +(z - 0.1).toFixed(1)))} className="grid size-8 place-items-center rounded-full hover:bg-white/10">
-                <Minus className="size-4" aria-hidden />
-              </button>
-              <span className="w-12 text-center text-sm font-semibold">{Math.round(zoom * 100)}%</span>
-              <button type="button" aria-label="Zoom in" onClick={() => setZoom((z) => Math.min(1.5, +(z + 0.1).toFixed(1)))} className="grid size-8 place-items-center rounded-full hover:bg-white/10">
-                <Plus className="size-4" aria-hidden />
-              </button>
-            </div>
+          </div>
+          <div role="group" aria-label="Zoom" className="absolute top-1/2 right-2 z-10 flex -translate-y-1/2 flex-col items-center gap-0.5 rounded-full bg-ink px-1.5 py-1.5 text-ink-foreground shadow-lg shadow-black/40 sm:right-[18px]">
+            <button type="button" aria-label="Zoom in" onClick={() => setZoom((z) => Math.min(1.5, +(z + 0.1).toFixed(1)))} className="grid size-9 place-items-center rounded-full hover:bg-white/10">
+              <Plus className="size-4" aria-hidden />
+            </button>
+            <span className="py-0.5 text-center text-[12px] font-semibold tabular-nums" aria-live="polite">{Math.round(zoom * 100)}%</span>
+            <button type="button" aria-label="Zoom out" onClick={() => setZoom((z) => Math.max(0.6, +(z - 0.1).toFixed(1)))} className="grid size-9 place-items-center rounded-full hover:bg-white/10">
+              <Minus className="size-4" aria-hidden />
+            </button>
+          </div>
           </div>
 
           {part.section === "hoeren" && <AudioBar url={audioUrl} />}
