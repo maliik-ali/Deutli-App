@@ -98,3 +98,24 @@ The HTML for these emails lives in `supabase/templates/`. Supabase sends them; y
 3. The links use `{{ .SiteURL }}/auth/confirm?token_hash=…`, which works on any device
    (Supabase's default link only works in the browser where the student signed up).
    Site URL must be `https://app.deutli.com`.
+
+## F. Sign in with Google and Apple
+
+The buttons are already in the app (login and signup pages). They work after you switch the providers on. Until then the buttons show a friendly "isn't available yet" message.
+
+Redirect URL to paste into Google and Apple (this is Supabase's, not ours): `https://epawkdeosmuvczpsyoru.supabase.co/auth/v1/callback`
+
+**Google**
+1. Google Cloud Console → APIs & Services → Credentials → Create credentials → OAuth client ID → Web application.
+2. Authorized redirect URI: the Supabase URL above. (Set up the OAuth consent screen first if asked.)
+3. Copy the Client ID and Client secret.
+4. Supabase → Authentication → Sign In / Providers → Google → switch on, paste both, save.
+
+**Apple** (needs an Apple Developer account, 99 USD a year)
+1. developer.apple.com → Identifiers → create an App ID, then a Services ID (this is the "client ID"). Enable "Sign in with Apple" on the Services ID, with Domain `epawkdeosmuvczpsyoru.supabase.co` and Return URL = the Supabase URL above.
+2. Keys → create a key with "Sign in with Apple" and download the .p8 file.
+3. Supabase → Authentication → Sign In / Providers → Apple → switch on, paste the Services ID, Team ID, Key ID and the secret key. Apple's client secret expires every 6 months, so Supabase asks for a new one then.
+
+**Both:** Supabase → Authentication → URL Configuration: Site URL `https://app.deutli.com` and add `https://app.deutli.com/**` under Redirect URLs.
+
+New students who sign up this way go through onboarding like everyone else. Their role is always "student".

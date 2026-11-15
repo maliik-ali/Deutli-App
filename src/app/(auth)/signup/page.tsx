@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { redirectIfLoggedIn } from "@/lib/auth/dal";
+import { SocialButtons } from "@/components/auth/social-buttons";
 import { SignupForm } from "./signup-form";
 
 export const metadata: Metadata = { title: "Create account" };
@@ -15,6 +16,7 @@ export default async function SignupPage() {
         title="Create your account"
         subtitle="Free student account — start preparing for German B1 today."
       />
+      <SocialButtons />
       <SignupForm />
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}

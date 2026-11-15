@@ -115,6 +115,26 @@ export async function updatePassword(input: unknown): Promise<ActionResult> {
   redirect(`${homeForRole(isRole(profile?.role) ? profile.role : "student")}?password=updated`);
 }
 
+export type SocialProvider = "google" | "apple";
+
+/** Continue with Google or Apple. Sends the browser to the provider; they come back to /auth/confirm. */
+export async function signInWithProvider(provider: unknown): Promise<ActionResult> {
+  if (provider !== "google" && provider !== "apple") return { error: GENERIC_ERROR };
+  if (!getSupabaseEnv()) return { error: NOT_CONFIGURED_MESSAGE };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider,
+    // "/" sends the user to the right page for their role; new students land in onboarding from the dashboard.
+    options: { redirectTo: `${await siteUrl()}/auth/confirm?next=/` },
+  });
+  if (error || !data.url) {
+    const name = provider === "google" ? "Google" : "Apple";
+    return { error: `Sign-in with ${name} isn't available yet. Use your email and password for now.` };
+  }
+  redirect(data.url);
+}
+
 export async function signOut() {
   if (getSupabaseEnv()) {
     const supabase = await createClient();

@@ -21,6 +21,8 @@ export async function GET(request: NextRequest) {
   if (type === "recovery") next = "/reset-password";
 
   const fail = NextResponse.redirect(new URL("/login?error=link", request.url));
+  // The provider (Google/Apple) sent the person back with an error, e.g. they pressed Cancel.
+  if (searchParams.get("error")) return NextResponse.redirect(new URL("/login?error=oauth", request.url));
   if (!getSupabaseEnv()) return fail;
 
   const supabase = await createClient();
