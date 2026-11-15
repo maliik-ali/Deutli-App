@@ -37,6 +37,10 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
   const teacherName = user.teacherId ? await getTeacherName(user.teacherId) : null;
   const parts = paper.structure.parts;
   const pct = r.max ? r.total / r.max : 0;
+  // Effort: how many questions got an answer. Mostly blank = the student skipped / did not try.
+  const questions = Object.values(r.review);
+  const answeredCount = questions.filter((q) => q.given).length;
+  const skipped = questions.length > 0 && answeredCount / questions.length < 0.5;
   const sum = (section: string) => {
     const ids = parts.filter((p) => p.section === section).map((p) => p.id);
     const rows = r.parts.filter((x) => ids.includes(x.id));
@@ -61,9 +65,18 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
         <ChevronLeft className="size-4" aria-hidden /> {paper.title}
       </Link>
 
-      {pct >= 0.6 && <Celebration attemptId={attempt.id} level={pct >= 0.85 ? 2 : 1} />}
+      {!skipped && <Celebration attemptId={attempt.id} level={pct >= 0.85 ? 2 : 1} />}
       <p className="text-[12px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">telc B1 · {paper.title}</p>
-      <ScoreHero total={r.total} max={r.max} passLine={Math.round(r.max * 0.6)} caption={`Reading, grammar and listening. The pass line is ${Math.round(r.max * 0.6)}. Your email (${r.writingWords} words) is marked separately below: the telc written exam has ${WRITTEN_MAX} points including 45 for writing, and you pass with ${WRITTEN_PASS}.`} />
+      <ScoreHero skipped={skipped} left={questions.length - answeredCount} total={r.total} max={r.max} passLine={Math.round(r.max * 0.6)} caption={`Reading, grammar and listening. The pass line is ${Math.round(r.max * 0.6)}. Your email (${r.writingWords} words) is marked separately below: the telc written exam has ${WRITTEN_MAX} points including 45 for writing, and you pass with ${WRITTEN_PASS}.`} />
+
+      {skipped && (
+        <Card className="flex flex-wrap items-center justify-between gap-3 p-5">
+          <p className="max-w-md text-[15px]">Take it again when you are ready. Even a quick second try will show you how much you already know.</p>
+          <Button asChild>
+            <Link href={`/exam/take/${examId}?new=1`}>Try again</Link>
+          </Button>
+        </Card>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-3">
         {skills.map((k, i) => (

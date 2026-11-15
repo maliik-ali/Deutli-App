@@ -6,20 +6,21 @@ import { BorderBeam } from "@/components/magicui/border-beam";
 import { NumberTicker } from "@/components/magicui/number-ticker";
 
 export type Tier = { title: string; line: string };
-export function tierFor(pct: number): Tier {
+export function tierFor(pct: number, skipped = false, left = 0): Tier {
+  if (skipped) return { title: "It looks like you skipped a lot", line: `${left} questions were left empty. A guess is always better than a blank: every answer teaches you something. Try again and give each question a go.` };
   if (pct >= 0.9) return { title: "Outstanding!", line: "That is a top-level result. You are ready for the real exam." };
   if (pct >= 0.75) return { title: "Great work!", line: "You are clearly above the pass line. Keep this rhythm going." };
   if (pct >= 0.6) return { title: "You passed this part", line: "Nice. A little more practice will make it even safer." };
-  return { title: "Good start", line: "Every mock makes you stronger. Check your mistakes below and try again." };
+  return { title: "Good effort", line: "You gave it a real try, and that is how you improve. Check your mistakes below, then try again. You will do better." };
 }
 
 const R = 70;
 const C = 2 * Math.PI * R;
 
 /** The big score card: a ring that fills, the number counting up, and a short message. */
-export function ScoreHero({ total, max, passLine, caption }: { total: number; max: number; passLine: number; caption: string }) {
+export function ScoreHero({ total, max, passLine, caption, skipped = false, left = 0 }: { total: number; max: number; passLine: number; caption: string; skipped?: boolean; left?: number }) {
   const pct = max ? total / max : 0;
-  const tier = tierFor(pct);
+  const tier = tierFor(pct, skipped, left);
   const passAngle = (passLine / max) * 360;
   return (
     <section aria-label="Your score" className="relative overflow-hidden rounded-[28px] border border-border bg-card p-6 sm:p-8">
