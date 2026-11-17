@@ -48,7 +48,10 @@ export default async function AdminDictionaryPage(props: PageProps<"/admin/dicti
             <code className="text-foreground">article</code> (der/die/das),{" "}
             <code className="text-foreground">plural</code>, then one column per language:{" "}
             <code className="text-foreground">en</code>, <code className="text-foreground">ur</code>,{" "}
-            <code className="text-foreground">hi</code>… Uploading the same word again updates it.
+            <code className="text-foreground">hi</code>… For level lists you can add <code className="text-foreground">topic</code>,{" "}
+            <code className="text-foreground">example_de</code> (German sentence) and{" "}
+            <code className="text-foreground">example_en</code> / <code className="text-foreground">example_ur</code>{" "}
+            (its translation). Uploading the same word again updates it.
           </CardDescription>
         </div>
         <DictionaryUpload />

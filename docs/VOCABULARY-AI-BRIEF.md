@@ -8,7 +8,7 @@ Create a CSV file of German vocabulary on the topic and level I give you. I will
 
 ## Output format (strict)
 - Output only the CSV. No explanations, no markdown code fences, no extra text.
-- The first row is exactly: `german,article,plural,en,ur`
+- The first row is exactly: `german,article,plural,en,ur,topic,example_de,example_en`
 - One word per row, UTF-8 text.
 - Put quotes around any cell that contains a comma.
 
@@ -20,13 +20,16 @@ Create a CSV file of German vocabulary on the topic and level I give you. I will
 | `plural` | The plural form for nouns. Leave it empty if there is none or the word is not a noun. |
 | `en` | Short, natural English meaning, max 4 words. Verbs start with "to" (e.g. `to rent`). |
 | `ur` | The Urdu meaning in Urdu script, short and natural, the way a student would say it. Not transliteration. |
+| `topic` | A short topic name in German, e.g. `Kennenlernen`, `Familie`, `Wohnen`. 20–60 words per topic. Students learn the list topic by topic, in the order of the rows. |
+| `example_de` | One short, simple German example sentence at the same level, written by you (not copied from a textbook). |
+| `example_en` | The English translation of that sentence. |
 
 ## Example
 ```
-german,article,plural,en,ur
-Mietvertrag,der,Mietverträge,rental contract,کرایہ نامہ
-Kaffeeküche,die,Kaffeeküchen,coffee kitchen,کافی کچن
-mieten,,,to rent,کرایہ پر لینا
+german,article,plural,en,ur,topic,example_de,example_en
+Mietvertrag,der,Mietverträge,rental contract,کرایہ نامہ,Wohnen,Ich unterschreibe den Mietvertrag.,I am signing the rental contract.
+Kaffeeküche,die,Kaffeeküchen,coffee kitchen,کافی کچن,Arbeit,Die Kaffeeküche ist im ersten Stock.,The coffee kitchen is on the first floor.
+mieten,,,to rent,کرایہ پر لینا,Wohnen,Wir mieten eine kleine Wohnung.,We are renting a small flat.
 ```
 
 ## Quality rules
@@ -41,4 +44,4 @@ mieten,,,to rent,کرایہ پر لینا
 Add a column with its language code after `ur`, for example `hi` for Hindi, and follow the same rules.
 
 ## Before you answer
-Check each row: the header is correct, every row has 5 columns, and the articles are only der, die or das.
+Check each row: the header is correct, every row has 8 columns, and the articles are only der, die or das.

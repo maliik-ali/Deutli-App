@@ -8,6 +8,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { AUDIO_BUCKET } from "./data";
 import { LANGUAGE_CODES, MAX_LANGUAGES, type LanguageCode } from "@/lib/languages";
+import { dictionaryKeys } from "@/lib/dictionary/keys";
 import { translateWord } from "@/lib/translate/word";
 import { LEVELS } from "./levels";
 import { SAVED_WORD_COLUMNS, todayPKT, type SavedWord } from "./plan";
@@ -114,12 +115,15 @@ export async function translateVocabularyWord(
   const admin = createAdminClient();
   if (!admin) return { error: NO_TRANSLATION };
 
-  const key = row.word.trim().toLowerCase();
-  const { data: entry } = await admin
+  // Rule: always look in the offline dictionary first (free). Try the word as selected, then without
+  // punctuation and article ("der Name," -> "name"). Only languages it doesn't have go to AI (paid).
+  const keys = dictionaryKeys(row.word);
+  const key = keys[0] ?? row.word.trim().toLowerCase();
+  const { data: found } = await admin
     .from("word_dictionary")
-    .select("dictionary_form, translations")
-    .eq("word_key", key)
-    .maybeSingle();
+    .select("word_key, dictionary_form, translations")
+    .in("word_key", keys);
+  const entry = keys.map((k) => found?.find((e) => e.word_key === k)).find(Boolean) ?? null;
   const shared = (entry?.translations ?? {}) as Record<string, string>;
   translations = { ...shared, ...translations };
   dictionaryForm ??= entry?.dictionary_form ?? null;
@@ -142,7 +146,7 @@ export async function translateVocabularyWord(
         dictionaryForm ??= result.dictionaryForm;
         // Share the new meanings with every student.
         await admin.from("word_dictionary").upsert({
-          word_key: key,
+          word_key: entry?.word_key ?? key,
           dictionary_form: entry?.dictionary_form ?? result.dictionaryForm,
           translations: { ...result.translations, ...shared },
           updated_at: new Date().toISOString(),

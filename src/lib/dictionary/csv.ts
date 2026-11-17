@@ -43,12 +43,39 @@ export type DictionaryRow = {
   article: "der" | "die" | "das" | null;
   plural: string | null;
   translations: Partial<Record<LanguageCode, string>>;
+  /** Only for level lists: level, topic and example sentences ("de" = German sentence). */
+  level: Level | null;
+  topic: string | null;
+  examples: Partial<Record<"de" | LanguageCode, string>>;
 };
+
+export const LEVELS = ["a1", "a2", "b1"] as const;
+export type Level = (typeof LEVELS)[number];
+export function toLevel(value: unknown): Level | null {
+  const v = String(value ?? "").trim().toLowerCase();
+  return (LEVELS as readonly string[]).includes(v) ? (v as Level) : null;
+}
+
+/** Matches "example_de", "example", "beispiel", "example_en", "example (Urdu)"… to "de" or a language code. */
+function exampleForHeader(header: string): "de" | LanguageCode | null {
+  const h = header.trim().toLowerCase().replace(/[()]/g, " ").replace(/\s+/g, " ").trim();
+  if (["example", "example_de", "example de", "beispiel", "beispielsatz", "sentence", "german sentence", "sentence_de"].includes(h))
+    return "de";
+  const m = h.match(/^(?:example|sentence|beispiel)[ _-](.+)$/);
+  if (!m) return null;
+  // "example_en", "example (Urdu)", or "example_de_en" (= the English translation of the German example).
+  const rest = m[1].trim().split(/[ _-]/).pop() ?? "";
+  if (rest === "de" || rest === "german" || rest === "deutsch") return "de";
+  return languageForHeader(rest);
+}
 
 export type ParsedSheet = {
   rows: DictionaryRow[];
   problems: { line: number; reason: string }[];
   languages: LanguageCode[];
+  hasLevel: boolean;
+  hasTopic: boolean;
+  exampleLanguages: ("de" | LanguageCode)[];
 };
 
 /** Matches a header like "en", "English" or "Urdu (ur)" to a language code. */
@@ -72,8 +99,13 @@ export function readDictionarySheet(text: string): ParsedSheet | { error: string
   if (germanCol < 0) return { error: 'The first row needs a column called "german".' };
   const articleCol = col(["article", "artikel"]);
   const pluralCol = col(["plural"]);
+  const levelCol = col(["level", "niveau", "stufe"]);
+  const topicCol = col(["topic", "category", "thema", "kapitel", "chapter", "unit", "lesson"]);
+  const exampleCols = header
+    .map((h, i) => ({ i, code: exampleForHeader(h) }))
+    .filter((c): c is { i: number; code: "de" | LanguageCode } => c.code !== null);
   const languageCols = header
-    .map((h, i) => ({ i, code: languageForHeader(h) }))
+    .map((h, i) => ({ i, code: exampleForHeader(h) ? null : languageForHeader(h) }))
     .filter((c): c is { i: number; code: LanguageCode } => c.code !== null);
   if (languageCols.length === 0) {
     return { error: 'Add at least one language column, for example "en" or "ur".' };
@@ -108,11 +140,38 @@ export function readDictionarySheet(text: string): ParsedSheet | { error: string
     }
     if (Object.keys(translations).length === 0) return problems.push({ line, reason: "No meaning in any language." });
 
+    const rawLevel = get(levelCol);
+    const level = toLevel(rawLevel);
+    if (rawLevel && !level) return problems.push({ line, reason: `Level must be A1, A2 or B1 (found "${rawLevel}").` });
+    const topic = get(topicCol).slice(0, 80) || null;
+    const examples: DictionaryRow["examples"] = {};
+    for (const { i, code } of exampleCols) {
+      const value = get(i);
+      if (value.length > 300) return problems.push({ line, reason: "Example sentence is too long (max 300 letters)." });
+      if (value) examples[code] = value;
+    }
+
     const key = german.toLowerCase();
     if (seen.has(key)) return problems.push({ line, reason: `"${german}" appears twice; the first one is used.` });
     seen.add(key);
-    rows.push({ line, german, article: (rawArticle || null) as DictionaryRow["article"], plural, translations });
+    rows.push({
+      line,
+      german,
+      article: (rawArticle || null) as DictionaryRow["article"],
+      plural,
+      translations,
+      level,
+      topic,
+      examples,
+    });
   });
 
-  return { rows, problems, languages: [...new Set(languageCols.map((c) => c.code))] };
+  return {
+    rows,
+    problems,
+    languages: [...new Set(languageCols.map((c) => c.code))],
+    hasLevel: levelCol >= 0,
+    hasTopic: topicCol >= 0,
+    exampleLanguages: [...new Set(exampleCols.map((c) => c.code))],
+  };
 }

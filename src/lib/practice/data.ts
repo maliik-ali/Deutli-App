@@ -1,5 +1,6 @@
 import "server-only";
 
+import { dictionaryKeys } from "@/lib/dictionary/keys";
 import { createClient } from "@/lib/supabase/server";
 import type { LanguageCode } from "@/lib/languages";
 import { SAVED_WORD_COLUMNS, todayPKT, type SavedWord, type TrackSummary } from "./plan";
@@ -152,7 +153,7 @@ export async function getSavedWords(userId: string, limit = 5): Promise<SavedWor
 export async function fillFromDictionary<T extends SavedWord>(words: T[]): Promise<T[]> {
   if (words.length === 0) return words;
   const supabase = await createClient();
-  const keys = [...new Set(words.map((w) => w.word.trim().toLowerCase()))];
+  const keys = [...new Set(words.flatMap((w) => dictionaryKeys(w.word)))];
   const chunks: string[][] = [];
   for (let i = 0; i < keys.length; i += 100) chunks.push(keys.slice(i, i + 100));
   const results = await Promise.all(
@@ -167,7 +168,9 @@ export async function fillFromDictionary<T extends SavedWord>(words: T[]): Promi
     ),
   );
   return words.map((w) => {
-    const entry = byKey.get(w.word.trim().toLowerCase());
+    const entry = dictionaryKeys(w.word)
+      .map((k) => byKey.get(k))
+      .find(Boolean);
     if (!entry) return w;
     return {
       ...w,

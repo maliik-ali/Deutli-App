@@ -14,12 +14,14 @@ export type VocabWord = SavedWord & {
   rightCount: number;
   wrongCount: number;
   track: { id: string; title: string } | null;
+  /** "reading" = saved in Improve Accent, "level" = learned from an A1/A2/B1 list. */
+  source: "reading" | "level";
 };
 
 export type VocabSet = "all" | "marked" | "due" | "learned";
 
 const COLUMNS =
-  "id, word, dictionaryForm:dictionary_form, translations, context, starred, box, dueOn:due_on, savedAt:created_at, rightCount:right_count, wrongCount:wrong_count, practice_tracks (id, title)";
+  "id, word, dictionaryForm:dictionary_form, translations, context, starred, box, dueOn:due_on, savedAt:created_at, rightCount:right_count, wrongCount:wrong_count, source, practice_tracks (id, title)";
 
 /** All of the student's saved words (newest first), with meanings filled from the dictionary. */
 export async function getVocabulary(userId: string): Promise<{ words: VocabWord[]; today: string; failed: boolean }> {

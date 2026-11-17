@@ -14,6 +14,8 @@ export function DictionaryUpload() {
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [busy, startBusy] = useTransition();
+  const [level, setLevel] = useState("");
+  const [topic, setTopic] = useState("");
 
   function upload() {
     if (!file) return;
@@ -29,7 +31,7 @@ export function DictionaryUpload() {
     startBusy(async () => {
       try {
         const text = await file.text();
-        setResult(await importDictionarySheet(text));
+        setResult(await importDictionarySheet(text, { level: level || undefined, topic: topic.trim() || undefined }));
       } catch {
         setResult({ error: "The upload didn't finish. Check your internet and try again." });
       }
@@ -60,6 +62,45 @@ export function DictionaryUpload() {
         />
       </label>
 
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-1.5">
+          <label htmlFor="dictionary-level" className="text-sm font-semibold">
+            Also add to a level list
+          </label>
+          <select
+            id="dictionary-level"
+            value={level}
+            onChange={(e) => setLevel(e.target.value)}
+            className="h-11 rounded-xl border border-input bg-card px-3 text-[15px] outline-none focus-visible:border-gold-ink"
+          >
+            <option value="">No, only the dictionary</option>
+            <option value="a1">A1 vocabulary</option>
+            <option value="a2">A2 vocabulary</option>
+            <option value="b1">B1 vocabulary</option>
+          </select>
+          <p className="text-[13px] text-muted-foreground">
+            Students learn level lists on the Vocabulary page. A &quot;level&quot; column in the sheet works too.
+          </p>
+        </div>
+        <div className="grid gap-1.5">
+          <label htmlFor="dictionary-topic" className="text-sm font-semibold">
+            Topic (optional)
+          </label>
+          <input
+            id="dictionary-topic"
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            maxLength={80}
+            disabled={!level}
+            placeholder="e.g. Kapitel 1 · Hallo"
+            className="h-11 rounded-xl border border-input bg-card px-3 text-[15px] outline-none placeholder:text-muted-foreground/70 focus-visible:border-gold-ink disabled:opacity-50"
+          />
+          <p className="text-[13px] text-muted-foreground">
+            Used when the sheet has no &quot;topic&quot; column. Words without a topic are grouped in sets of 50.
+          </p>
+        </div>
+      </div>
+
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={upload} disabled={!file || busy}>
           <Upload aria-hidden /> {busy ? "Uploading…" : "Upload words"}
@@ -85,6 +126,7 @@ export function DictionaryUpload() {
             {result.added + result.updated === 0
               ? "No words were saved."
               : `${result.added} new ${result.added === 1 ? "word" : "words"} added, ${result.updated} updated.`}
+            {result.levelWords > 0 && ` ${result.levelWords} words are in the level list.`}
           </p>
           {result.problems.length > 0 && (
             <div className="grid gap-1.5">

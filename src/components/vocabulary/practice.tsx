@@ -7,7 +7,7 @@ import { Check, Lightbulb, Volume2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getLanguage, type LanguageCode } from "@/lib/languages";
 import { cn } from "@/lib/utils";
-import { recordReview } from "@/lib/vocabulary/actions";
+import { recordLevelAnswer, recordReview } from "@/lib/vocabulary/actions";
 import { Meaning } from "./meanings";
 import { speakGerman } from "./speak";
 
@@ -17,12 +17,13 @@ export type PracticeWord = {
   head: string;
   translations: Record<string, string>;
   context: string | null;
+  /** The example sentence in the student's language, if the word list has it. */
+  contextTranslation?: string | null;
   box: number;
 };
 
-type Step = { word: PracticeWord; kind: "card" | "choose"; options: PracticeWord[] };
-
-const BACK = "/dashboard/vocabulary";
+type Step = { word: PracticeWord; kind: "intro" | "card" | "choose"; options: PracticeWord[] };
+type Mode = "review" | "learn";
 
 /** Same "random" order on the server and in the browser (no flicker), different per word. */
 function seeded(seed: string) {
@@ -44,8 +45,27 @@ function shuffle<T>(list: T[], seed: string): T[] {
   return out;
 }
 
-/** New words are shown as cards first; words seen before become "choose the right meaning". */
-function buildSteps(words: PracticeWord[], distractors: PracticeWord[], first: LanguageCode, round: number): Step[] {
+/**
+ * Review: new words are shown as cards; words seen before become "choose the right meaning".
+ * Learn: every new word is introduced first (meaning + example), then a quiz on the same words.
+ */
+function buildSteps(
+  words: PracticeWord[],
+  distractors: PracticeWord[],
+  first: LanguageCode,
+  round: number,
+  mode: Mode = "review",
+): Step[] {
+  if (mode === "learn") {
+    const intros: Step[] = round === 0 ? words.map((word) => ({ word, kind: "intro", options: [] })) : [];
+    const quiz = buildSteps(
+      shuffle(words, `quiz-${round}`).map((w) => ({ ...w, box: Math.max(1, w.box) })),
+      distractors,
+      first,
+      0,
+    );
+    return [...intros, ...quiz];
+  }
   return words.map((word) => {
     const meaning = word.translations[first];
     const others = shuffle(
@@ -109,15 +129,23 @@ export function VocabPractice({
   distractors,
   languages,
   setLabel,
+  mode = "review",
+  backHref = "/dashboard/vocabulary",
+  emptyHref = "/vocabulary/practice?set=all",
 }: {
   words: PracticeWord[];
   distractors: PracticeWord[];
   languages: LanguageCode[];
   setLabel: string;
+  mode?: Mode;
+  backHref?: string;
+  /** Where "Practise all words" goes when the list is empty. */
+  emptyHref?: string;
 }) {
+  const BACK = backHref;
   const first = languages[0];
   const [round, setRound] = useState(0);
-  const [steps, setSteps] = useState(() => buildSteps(words, distractors, first, 0));
+  const [steps, setSteps] = useState(() => buildSteps(words, distractors, first, 0, mode));
   const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [picked, setPicked] = useState<string | null>(null);
@@ -131,7 +159,7 @@ export function VocabPractice({
   function answer(right: boolean) {
     const w = step.word;
     setResults((r) => [...r, { word: w, right }]);
-    recordReview(w.id, right)
+    (mode === "learn" ? recordLevelAnswer(w.id, right) : recordReview(w.id, right))
       .then((r) => "error" in r && setSaveFailed(true))
       .catch(() => setSaveFailed(true));
   }
@@ -149,7 +177,7 @@ export function VocabPractice({
     const wrong = results.filter((r) => !r.right).map((r) => r.word);
     const nextRound = round + 1;
     setRound(nextRound);
-    setSteps(buildSteps(wrong, distractors, first, nextRound));
+    setSteps(buildSteps(wrong, distractors, first, nextRound, mode));
     setResults([]);
     setIndex(0);
     setRevealed(false);
@@ -198,7 +226,9 @@ export function VocabPractice({
             <div className="m-auto grid max-w-sm gap-3 text-center">
               <h1 className="text-xl font-bold">Nothing to practise here</h1>
               <p className="text-muted-foreground">
-                There are no words in this list right now. Come back tomorrow, or practise all your words.
+                {mode === "learn"
+                  ? "You've started every word in this list. Review your due words to keep them fresh."
+                  : "There are no words in this list right now. Come back tomorrow, or practise all your words."}
               </p>
             </div>
           ) : done ? (
@@ -249,6 +279,33 @@ export function VocabPractice({
                     </ul>
                   </section>
                 ))}
+            </div>
+          ) : step.kind === "intro" ? (
+            <div className="flex flex-1 flex-col gap-8">
+              <p className="text-center text-[15px] font-semibold text-muted-foreground">New word</p>
+              <div className="grid justify-items-center gap-3">
+                <SpeakButton text={step.word.head} label={`Listen to ${step.word.head}`} />
+                <p
+                  lang="de"
+                  className="text-center font-heading text-[40px] leading-tight font-extrabold break-words sm:text-[52px]"
+                >
+                  {step.word.head}
+                </p>
+              </div>
+              <Meanings word={step.word} languages={languages} />
+              {step.word.context && (
+                <div className="mt-auto grid gap-2 rounded-2xl border border-border bg-card p-4">
+                  <p lang="de" className="text-[17px] leading-relaxed font-semibold">
+                    {step.word.context}
+                  </p>
+                  {step.word.contextTranslation && (
+                    <p className="text-[15px] text-muted-foreground">{step.word.contextTranslation}</p>
+                  )}
+                  <div className="flex justify-end">
+                    <SpeakButton text={step.word.context} label="Listen to the sentence" />
+                  </div>
+                </div>
+              )}
             </div>
           ) : step.kind === "card" ? (
             <div className="flex flex-1 flex-col gap-8">
@@ -366,7 +423,7 @@ export function VocabPractice({
         <div className="mx-auto flex w-full max-w-[560px] gap-3 p-4 sm:px-5">
           {steps.length === 0 ? (
             <Button asChild className="h-12 flex-1">
-              <Link href="/vocabulary/practice?set=all">Practise all words</Link>
+              <Link href={emptyHref}>{mode === "learn" ? "Back to the word list" : "Practise all words"}</Link>
             </Button>
           ) : done ? (
             <>
@@ -375,10 +432,21 @@ export function VocabPractice({
                   Practise mistakes
                 </Button>
               )}
-              <Button asChild className="h-12 flex-1">
-                <Link href={BACK}>Close</Link>
-              </Button>
+              {mode === "learn" && wrong.length === 0 ? (
+                // A full page load picks the next 10 new words.
+                <Button asChild className="h-12 flex-1">
+                  <a href={typeof window === "undefined" ? BACK : window.location.href}>Learn 10 more</a>
+                </Button>
+              ) : (
+                <Button asChild className="h-12 flex-1">
+                  <Link href={BACK}>Close</Link>
+                </Button>
+              )}
             </>
+          ) : step.kind === "intro" ? (
+            <Button className="h-12 flex-1" onClick={next}>
+              {steps[index + 1]?.kind === "intro" ? "Next word" : "Start the quiz"}
+            </Button>
           ) : step.kind === "card" ? (
             revealed ? (
               <>
