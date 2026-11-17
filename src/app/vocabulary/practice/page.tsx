@@ -35,7 +35,7 @@ export default async function VocabPracticePage(props: PageProps<"/vocabulary/pr
     // A1 / A2 / B1 word lists.
     const set = typeof sp.set === "string" && sp.set in LABELS ? sp.set : "due";
     const topic = typeof sp.topic === "string" ? sp.topic : null;
-    const data = await getLevelList(user.id, level);
+    const data = await getLevelList(user.id, level, user.languages);
     const languages = meaningLanguages(data, user.languages);
     const first = languages[0];
     const back = `/dashboard/vocabulary?list=${level}${topic ? `&topic=${encodeURIComponent(topic)}` : ""}`;

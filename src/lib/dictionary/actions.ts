@@ -115,16 +115,26 @@ async function saveLevelWords(
     const list = rows.filter((r) => r.level === level).map((r) => r.row);
     const { data: current, error } = await admin
       .from("level_words")
-      .select("word_key, position, topic, translations, examples")
+      .select("word_key, position, topic_id, translations, examples")
       .eq("level", level)
       .limit(10000);
     if (error) return { error: "We couldn't read the level list. Please try again." };
+
+    // Topics named in the sheet (or the form) are created once, in order of first appearance.
+    const topicIds = await saveTopics(
+      admin,
+      level,
+      list.map((row) => row.topic ?? defaultTopic).filter((t): t is string => !!t),
+      now,
+    );
+    if ("error" in topicIds) return topicIds;
 
     const byKey = new Map((current ?? []).map((c) => [c.word_key, c]));
     let next = Math.max(0, ...(current ?? []).map((c) => c.position)) + 1;
     const upserts = list.map((row) => {
       const key = row.german.toLowerCase();
       const old = byKey.get(key);
+      const topicName = row.topic ?? defaultTopic;
       return {
         level,
         word_key: key,
@@ -132,7 +142,7 @@ async function saveLevelWords(
         article: row.article,
         plural: row.plural,
         position: old?.position ?? next++,
-        topic: row.topic ?? defaultTopic ?? old?.topic ?? null,
+        topic_id: (topicName && topicIds.get(topicName)) || old?.topic_id || null,
         translations: { ...((old?.translations ?? {}) as Record<string, string>), ...row.translations },
         examples: { ...((old?.examples ?? {}) as Record<string, string>), ...row.examples },
         updated_at: now,
@@ -147,4 +157,31 @@ async function saveLevelWords(
     count += upserts.length;
   }
   return { count };
+}
+
+/** Creates the topics that don't exist yet (at the end of the level) and returns name -> id. */
+async function saveTopics(
+  admin: Admin,
+  level: Level,
+  names: string[],
+  now: string,
+): Promise<Map<string, string> | { error: string }> {
+  const wanted = [...new Set(names.map((n) => n.trim()).filter(Boolean))];
+  const ids = new Map<string, string>();
+  if (wanted.length === 0) return ids;
+  const { data: existing, error } = await admin
+    .from("level_topics")
+    .select("id, name, position")
+    .eq("level", level)
+    .limit(1000);
+  if (error) return { error: "We couldn't read the topics. Please try again." };
+  for (const t of existing ?? []) ids.set(t.name, t.id);
+  let next = Math.max(0, ...(existing ?? []).map((t) => t.position)) + 1;
+  const missing = wanted.filter((n) => !ids.has(n)).map((name) => ({ level, name, position: next++, updated_at: now }));
+  if (missing.length) {
+    const { data: created, error: saveError } = await admin.from("level_topics").insert(missing).select("id, name");
+    if (saveError) return { error: "We couldn't save the topics. Please try again." };
+    for (const t of created ?? []) ids.set(t.name, t.id);
+  }
+  return ids;
 }

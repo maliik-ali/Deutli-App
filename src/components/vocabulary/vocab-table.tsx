@@ -3,7 +3,7 @@
 import { useState, useSyncExternalStore, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Columns3, Star, Trash2, Volume2 } from "lucide-react";
+import { Check, ListFilter, Star, Trash2, Volume2 } from "lucide-react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { removeVocabularyWord } from "@/lib/practice/actions";
@@ -83,7 +83,7 @@ function IconButton({
       aria-label={label}
       aria-pressed={pressed}
       disabled={disabled}
-      className="grid size-11 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50 md:size-9"
+      className="grid size-11 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50 lg:size-9"
     >
       {children}
     </button>
@@ -157,9 +157,11 @@ export function ColumnPicker({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="inline-flex h-11 shrink-0 items-center gap-2 rounded-xl border border-input bg-background px-3 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground focus-visible:border-gold-ink focus-visible:outline-none"
+          aria-label="Choose which columns to show"
+          title="Choose columns"
+          className="grid size-11 shrink-0 place-items-center rounded-xl border border-input bg-background text-muted-foreground transition-colors hover:text-foreground focus-visible:border-gold-ink focus-visible:outline-none"
         >
-          <Columns3 className="size-4" aria-hidden /> Columns
+          <ListFilter className="size-5" aria-hidden />
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-64 p-2">
@@ -177,7 +179,7 @@ export function ColumnPicker({
               <li key={c.id}>
                 <button
                   type="button"
-                  role="menuitemcheckbox"
+                  role="checkbox"
                   aria-checked={on}
                   onClick={() => toggle(c.id)}
                   className="flex h-10 w-full items-center gap-3 rounded-lg px-2 text-left text-sm transition-colors hover:bg-muted"
@@ -196,6 +198,12 @@ export function ColumnPicker({
             );
           })}
         </ul>
+        <Link
+          href="/dashboard/account"
+          className="mt-1 flex h-10 items-center rounded-lg border-t border-border px-2 pt-1 text-[13px] font-semibold text-gold-ink hover:underline"
+        >
+          Change my meaning languages
+        </Link>
       </PopoverContent>
     </Popover>
   );
@@ -205,7 +213,12 @@ function Example({ code, text }: { code: string; text: string | undefined }) {
   if (!text) return <span className="text-subtle-foreground">—</span>;
   const props = textProps(code);
   return (
-    <span lang={code} dir={props.dir} className={cn(props.className, code === "de" && "text-foreground/90")}>
+    <span
+      lang={code}
+      dir={props.dir}
+      title={text}
+      className={cn("line-clamp-2", props.className, code === "de" && "text-foreground/90")}
+    >
       {text}
     </span>
   );
@@ -264,7 +277,7 @@ export function VocabTable({ rows, columns }: { rows: TableRow[]; columns: Colum
       )}
       <div
         style={{ "--cols": template } as React.CSSProperties}
-        className="hidden gap-4 border-b border-border bg-ink/40 px-6 py-3 text-[13px] font-semibold text-subtle-foreground md:grid md:[grid-template-columns:var(--cols)]"
+        className="hidden gap-4 border-b border-border bg-ink/40 px-6 py-3 text-[13px] font-semibold text-subtle-foreground lg:grid lg:[grid-template-columns:var(--cols)]"
       >
         <span>German</span>
         {columns.map((c) => (
@@ -281,7 +294,7 @@ export function VocabTable({ rows, columns }: { rows: TableRow[]; columns: Colum
             <li
               key={r.key}
               style={{ "--cols": template } as React.CSSProperties}
-              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1.5 px-4 py-3 transition-colors hover:bg-muted/40 sm:px-6 md:gap-4 md:[grid-template-columns:var(--cols)]"
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-4 py-4 transition-colors hover:bg-muted/40 sm:px-6 lg:gap-4 lg:py-3 lg:[grid-template-columns:var(--cols)]"
             >
               <div className="min-w-0">
                 <p lang="de" className="truncate text-[15px] font-semibold">
@@ -302,11 +315,15 @@ export function VocabTable({ rows, columns }: { rows: TableRow[]; columns: Colum
                   <div
                     key={c.id}
                     className={cn(
-                      "col-span-2 min-w-0 md:col-span-1",
+                      // Phones and tablets: one labelled line per column. Wide screens: a table cell.
+                      "col-span-2 grid min-w-0 grid-cols-[96px_minmax(0,1fr)] items-baseline gap-3 lg:col-span-1 lg:block",
                       kind === "meaning" && "text-[15px] text-muted-foreground",
-                      (kind === "example" || kind === "from") && "text-[13px] text-muted-foreground md:text-sm",
+                      (kind === "example" || kind === "from") && "text-sm text-muted-foreground",
                     )}
                   >
+                    <span className="text-[12px] font-semibold text-subtle-foreground lg:hidden">
+                      {c.label.replace(/ meaning$/, "")}
+                    </span>
                     {kind === "meaning" ? (
                       r.translations[code] ? (
                         <Meaning code={code as LanguageCode} text={r.translations[code]} />
@@ -334,7 +351,7 @@ export function VocabTable({ rows, columns }: { rows: TableRow[]; columns: Colum
                 );
               })}
 
-              <div className="col-start-2 row-start-1 flex justify-end md:col-start-auto md:row-start-auto md:w-[120px]">
+              <div className="col-start-2 row-start-1 flex justify-end lg:col-start-auto lg:row-start-auto lg:w-[120px]">
                 <IconButton label={`Listen to ${r.head}`} onClick={() => speakGerman(r.head)}>
                   <Volume2 className="size-[18px]" aria-hidden />
                 </IconButton>
@@ -383,7 +400,7 @@ export function VocabTableWithColumns({
     <>
       <div className="flex flex-col gap-3 border-b border-border p-4 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
         {tabs}
-        <div className="flex gap-2">
+        <div className="flex w-full gap-2 lg:w-auto">
           {search}
           <ColumnPicker columns={columns} isShown={isShown} toggle={toggle} />
         </div>

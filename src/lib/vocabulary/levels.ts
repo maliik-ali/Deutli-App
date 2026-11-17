@@ -21,7 +21,7 @@ export type LevelWord = {
   plural: string | null;
   /** "der Name" for nouns, the word itself otherwise. */
   head: string;
-  /** The topic from the sheet, or "Set 1", "Set 2"… (50 words each, in list order). */
+  /** The topic name, or "Set 1", "Set 2"… (50 words each, in list order) for words without a topic yet. */
   topic: string;
   translations: Record<string, string>;
   /** Example sentences: "de" = German, other keys = its translation. */
@@ -30,7 +30,14 @@ export type LevelWord = {
   progress: VocabWord | null;
 };
 
-export type LevelTopic = { name: string; total: number; started: number; learned: number };
+export type LevelTopic = {
+  name: string;
+  /** The topic name in other languages, e.g. {"en": "Food and drink"}. */
+  translations: Record<string, string>;
+  total: number;
+  started: number;
+  learned: number;
+};
 
 export type LevelList = {
   level: Level;
@@ -59,18 +66,61 @@ export function levelStatus(w: LevelWord): LevelStatus {
   return w.progress.box >= LEARNED_BOX ? "learned" : "learning";
 }
 
-/** One level's word list with the student's progress on each word. */
-export async function getLevelList(userId: string, level: Level): Promise<LevelList> {
+type TopicRow = { name: string; position: number; translations: Record<string, string> | null };
+type WordRow = {
+  id: string;
+  position: number;
+  german: string;
+  article: string | null;
+  plural: string | null;
+  translations: Record<string, string> | null;
+  examples: Record<string, string> | null;
+  level_topics: TopicRow | TopicRow[] | null;
+};
+
+/** All words of a level, 1000 at a time (the database returns at most 1000 rows per request). */
+async function readLevelWords(level: Level): Promise<WordRow[] | null> {
   const supabase = await createClient();
-  const [{ data, error }, vocab] = await Promise.all([
-    supabase
+  const rows: WordRow[] = [];
+  for (let from = 0; from < 10000; from += 1000) {
+    const { data, error } = await supabase
       .from("level_words")
-      .select("id, position, topic, german, article, plural, translations, examples")
+      .select("id, position, german, article, plural, translations, examples, level_topics (name, position, translations)")
       .eq("level", level)
       .order("position", { ascending: true })
-      .limit(5000),
-    getVocabulary(userId),
-  ]);
+      .range(from, from + 999);
+    if (error) return null;
+    rows.push(...((data ?? []) as unknown as WordRow[]));
+    if ((data ?? []).length < 1000) break;
+  }
+  return rows;
+}
+
+/** Meanings the list doesn't have in the student's languages, from the shared dictionary (free, no AI). */
+async function fillMeanings(rows: WordRow[], languages: string[]) {
+  const missing = rows.filter((r) => languages.some((c) => !r.translations?.[c]));
+  if (missing.length === 0) return;
+  const supabase = await createClient();
+  const keys = [...new Set(missing.map((r) => r.german.toLowerCase()))];
+  const found = new Map<string, Record<string, string>>();
+  for (let i = 0; i < keys.length; i += 200) {
+    const { data } = await supabase
+      .from("word_dictionary")
+      .select("word_key, translations")
+      .in("word_key", keys.slice(i, i + 200));
+    for (const e of data ?? []) found.set(e.word_key, (e.translations ?? {}) as Record<string, string>);
+  }
+  for (const r of missing) {
+    const extra = found.get(r.german.toLowerCase());
+    if (extra) r.translations = { ...extra, ...(r.translations ?? {}) };
+  }
+}
+
+/** One level's word list with the student's progress on each word, in topic order. */
+export async function getLevelList(userId: string, level: Level, languages: string[] = []): Promise<LevelList> {
+  const [data, vocab] = await Promise.all([readLevelWords(level), getVocabulary(userId)]);
+  const error = data === null;
+  if (data) await fillMeanings(data, languages);
   const empty = { level, words: [], topics: [], languages: [], exampleLanguages: [], today: vocab.today };
   if (error || vocab.failed) return { ...empty, failed: true };
 
@@ -82,9 +132,19 @@ export async function getLevelList(userId: string, level: Level): Promise<LevelL
     }
   }
 
+  // Words with a topic first (in the topics' order), then the rest in sets of 50.
+  const topicOf = (r: WordRow) => (Array.isArray(r.level_topics) ? r.level_topics[0] : r.level_topics) ?? null;
+  const sorted = [...(data ?? [])].sort((a, b) => {
+    const ta = topicOf(a)?.position ?? Number.MAX_SAFE_INTEGER;
+    const tb = topicOf(b)?.position ?? Number.MAX_SAFE_INTEGER;
+    return ta - tb || a.position - b.position;
+  });
+  const topicNames = new Map<string, Record<string, string>>();
   let untitled = 0;
-  const words: LevelWord[] = (data ?? []).map((r) => {
-    const topic = r.topic?.trim() || `Set ${Math.floor(untitled++ / SET_SIZE) + 1}`;
+  const words: LevelWord[] = sorted.map((r) => {
+    const t = topicOf(r);
+    const topic = t?.name ?? `Set ${Math.floor(untitled++ / SET_SIZE) + 1}`;
+    if (t && !topicNames.has(t.name)) topicNames.set(t.name, (t.translations ?? {}) as Record<string, string>);
     return {
       id: r.id,
       position: r.position,
@@ -101,7 +161,13 @@ export async function getLevelList(userId: string, level: Level): Promise<LevelL
 
   const topics = new Map<string, LevelTopic>();
   for (const w of words) {
-    const t = topics.get(w.topic) ?? { name: w.topic, total: 0, started: 0, learned: 0 };
+    const t = topics.get(w.topic) ?? {
+      name: w.topic,
+      translations: topicNames.get(w.topic) ?? {},
+      total: 0,
+      started: 0,
+      learned: 0,
+    };
     t.total++;
     if (w.progress) t.started++;
     if (w.progress && w.progress.box >= LEARNED_BOX) t.learned++;

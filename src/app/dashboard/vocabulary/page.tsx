@@ -88,7 +88,7 @@ function Tabs({ tabs }: { tabs: { key: string; label: string; count: number; hre
 
 function SearchBox({ q, hidden }: { q: string; hidden: Record<string, string | undefined> }) {
   return (
-    <form role="search" className="relative w-full lg:w-64">
+    <form role="search" className="relative min-w-0 flex-1 lg:w-64 lg:flex-none">
       {Object.entries(hidden).map(([k, v]) => v && <input key={k} type="hidden" name={k} value={v} />)}
       <Search
         className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
@@ -392,7 +392,7 @@ async function LevelView({
   pageParam: number;
   switcher: React.ReactNode;
 }) {
-  const data = await getLevelList(userId, level);
+  const data = await getLevelList(userId, level, userLanguages);
   const L = levelLabel(level);
   const today = data.today;
   const topic = data.topics.some((t) => t.name === sp.topic) ? sp.topic : null;
@@ -427,7 +427,6 @@ async function LevelView({
     );
   const pages = Math.max(1, Math.ceil(filtered.length / LEVEL_PAGE));
   const page = Math.min(pages, Math.max(1, pageParam));
-  const langs = meaningLanguages(data, userLanguages);
 
   const rows: TableRow[] = filtered.slice((page - 1) * LEVEL_PAGE, page * LEVEL_PAGE).map((w) => ({
     key: w.id,
@@ -443,12 +442,13 @@ async function LevelView({
     due: !!w.progress && w.progress.dueOn <= today,
     removable: false,
   }));
+  // Meaning columns in the student's own languages (set in Account), not the sheet's.
   const columns = buildColumns({
-    languages: data.languages,
+    languages: userLanguages,
     exampleLanguages: data.exampleLanguages,
     fromLabel: "Topic",
   });
-  const defaults: ColumnId[] = [...langs.map((l) => `meaning:${l}` as ColumnId), "progress"];
+  const defaults: ColumnId[] = [...userLanguages.map((l) => `meaning:${l}` as ColumnId), "progress"];
 
   const lesson = nextLesson(data, topic);
   const totalStarted = data.words.filter((w) => w.progress).length;
@@ -558,7 +558,7 @@ async function LevelView({
           <section aria-label="Topics" className="grid gap-3">
             <h2 className="text-[15px] font-semibold text-muted-foreground">Topics</h2>
             <nav className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-              {[{ name: null as string | null, total: data.words.length, started: totalStarted }, ...data.topics].map(
+              {[{ name: null as string | null, translations: {} as Record<string, string>, total: data.words.length, started: totalStarted }, ...data.topics].map(
                 (t) => {
                   const active = t.name === topic;
                   return (
@@ -573,7 +573,9 @@ async function LevelView({
                           : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
                       )}
                     >
-                      <span lang="de">{t.name ?? "All topics"}</span>
+                      <span lang="de" title={t.name ? Object.values(t.translations ?? {})[0] : undefined}>
+                        {t.name ?? "All topics"}
+                      </span>
                       <span className="text-[12px] tabular-nums text-subtle-foreground">
                         {t.started}/{t.total}
                       </span>
