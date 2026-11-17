@@ -515,23 +515,24 @@ export function Onboarding({
               title="What worries you most about the exam?"
               text="Pick everything that applies. Your dashboard will show you where to start for each."
             />
-            <div className="grid gap-3">
+            {/* Two columns from tablet up, so all worries and the button fit on one screen. */}
+            <div className="grid gap-3 md:grid-cols-2">
               {skills.map((s) => {
                 const Icon = SKILL_ICONS[s.id];
                 return (
                   <Choice key={s.id} kind="check" selected={focus.includes(s.id)} onClick={() => toggleFocus(s.id)}>
-                    <span className="flex items-center gap-4">
-                      <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-gold-soft text-gold-ink">
-                        <Icon className="size-6" aria-hidden />
+                    <span className="flex items-center gap-3">
+                      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-gold-soft text-gold-ink">
+                        <Icon className="size-5" aria-hidden />
                       </span>
                       <span className="grid min-w-0 gap-0.5">
                         <span className="flex flex-wrap items-baseline gap-x-2">
-                          <span lang={s.id === "unsure" ? undefined : "de"} className="text-[17px] font-bold">
+                          <span lang={s.id === "unsure" ? undefined : "de"} className="text-base font-bold">
                             {s.name}
                           </span>
                           {s.id !== "unsure" && <span className="text-sm text-muted-foreground">{s.english}</span>}
                         </span>
-                        <span className="text-[15px] text-muted-foreground">{s.worry}</span>
+                        <span className="text-sm text-muted-foreground">{s.worry}</span>
                       </span>
                     </span>
                   </Choice>
@@ -569,7 +570,7 @@ export function Onboarding({
         )}
 
         {/* Same button on every step; on phones it stays at the bottom of the screen. */}
-        <div className="sticky bottom-0 -mx-4 grid justify-items-center gap-2 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+        <div className="sticky bottom-0 -mx-4 grid justify-items-center gap-2 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
           {step < STEP_COUNT - 1 ? (
             <Button className={cn("h-12 text-base", actionWidth)} disabled={!canContinue} onClick={() => go(step + 1)}>
               Continue <ArrowRight aria-hidden />

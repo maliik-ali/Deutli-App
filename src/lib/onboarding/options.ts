@@ -52,7 +52,7 @@ export const SKILLS: {
     id: "lesen",
     name: "Lesen",
     english: "Reading",
-    worry: "Long texts with difficult words — I can't finish in time",
+    worry: "Long texts — I can't finish in time",
     about:
       "In the reading part you read emails, short articles, adverts and notices, then find the key information. You don't need every word. You need to spot the important ones quickly.",
     parts: [
@@ -67,7 +67,7 @@ export const SKILLS: {
     id: "sprachbausteine",
     name: "Sprachbausteine",
     english: "Grammar & vocabulary",
-    worry: "Dativ or Akkusativ, which preposition, adjective endings — grammar confuses me",
+    worry: "Cases, prepositions and endings confuse me",
     onlyFor: ["telc_b1", "other"],
     about:
       "In telc B1 you fill gaps in a text. It tests the same patterns again and again: prepositions, verb forms, linking words and which word fits the meaning.",
@@ -83,7 +83,7 @@ export const SKILLS: {
     id: "hoeren",
     name: "Hören",
     english: "Listening",
-    worry: "People speak too fast — I keep missing important details",
+    worry: "People speak too fast — I miss details",
     about:
       "In the listening part you hear announcements, phone messages, conversations and a discussion. Some recordings play twice, some only once, so you have to catch the key details the first time.",
     parts: [
@@ -98,7 +98,7 @@ export const SKILLS: {
     id: "schreiben",
     name: "Schreiben",
     english: "Writing",
-    worry: "I don't know how to structure my email or what to write",
+    worry: "I don't know how to structure my email",
     about:
       "In the writing part you write emails or short posts: to a friend, to a teacher or boss, or giving your opinion. Each task tells you which points to cover, and a clear structure earns many of the marks.",
     parts: [
@@ -116,7 +116,7 @@ export const SKILLS: {
     id: "sprechen",
     name: "Sprechen",
     english: "Speaking",
-    worry: "Speaking German makes me nervous — I don't have anyone to practise with",
+    worry: "Speaking makes me nervous — no one to practise with",
     about:
       "In the speaking part you plan something together with a partner, present a topic and answer questions about it. The examiners want you to keep talking, react to your partner and explain your opinion.",
     parts: [
@@ -131,7 +131,7 @@ export const SKILLS: {
     id: "unsure",
     name: "I'm not sure",
     english: "Show me the exam",
-    worry: "I'm new to the B1 exam — show me what it looks like",
+    worry: "I'm new to B1 — show me what the exam looks like",
     about:
       "The B1 exam has four skills: reading, listening, writing and speaking. You need a pass in each. Daily practice in small steps works better than long sessions before the exam.",
     parts: [
