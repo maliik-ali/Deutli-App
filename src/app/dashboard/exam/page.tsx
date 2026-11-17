@@ -31,34 +31,35 @@ export default async function ExamPage() {
         </p>
       </header>
 
-      {[
-        { id: "free", title: "Free", note: "Start these right now", list: freeMocks },
-        { id: "premium", title: "Premium", note: pro ? "Included in your Pro" : "Unlock with Deutli Pro", list: premiumMocks },
-      ]
-        .filter((g) => g.list.length > 0)
-        .map((g) => (
-          <section key={g.id} aria-labelledby={`mocks-${g.id}`} className="grid gap-5">
-            <div className="flex flex-wrap items-baseline justify-between gap-3">
-              <h2 id={`mocks-${g.id}`} className="text-xl font-bold">
-                {g.title} <span className="text-[14px] font-normal text-muted-foreground">· {g.list.length} {g.list.length === 1 ? "exam" : "exams"} · {g.note}</span>
-              </h2>
-              {g.id === "premium" && !pro && (
-                <Button asChild size="sm" variant="outline" className="h-11 sm:h-9">
-                  <Link href="/dashboard/upgrade">Go Pro</Link>
-                </Button>
-              )}
-            </div>
-            <ul className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 md:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
-              {g.list.map((exam, i) => (
-                <li key={exam.id}>
-                  <BlurFade delay={Math.min(i, 8) * 0.05}>
-                    <ExamCard exam={exam} examName={examName} />
-                  </BlurFade>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
+      {/* One grid for now (free first), so a single free exam doesn't leave a half-empty row. */}
+      {mocks.length > 0 && (
+        <section aria-labelledby="mocks-all" className="grid gap-5">
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <h2 id="mocks-all" className="text-xl font-bold">
+              Mock exams{" "}
+              <span className="text-[14px] font-normal text-muted-foreground">
+                · {mocks.length} {mocks.length === 1 ? "exam" : "exams"}
+                {freeMocks.length > 0 && ` · ${freeMocks.length} free`}
+                {premiumMocks.length > 0 && (pro ? " · the rest included in your Pro" : " · the rest with Deutli Pro")}
+              </span>
+            </h2>
+            {premiumMocks.length > 0 && !pro && (
+              <Button asChild size="sm" variant="outline" className="h-11 sm:h-9">
+                <Link href="/dashboard/upgrade">Go Pro</Link>
+              </Button>
+            )}
+          </div>
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 md:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
+            {[...freeMocks, ...premiumMocks].map((exam, i) => (
+              <li key={exam.id}>
+                <BlurFade delay={Math.min(i, 8) * 0.05}>
+                  <ExamCard exam={exam} examName={examName} />
+                </BlurFade>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </main>
     </MotionProvider>
   );
