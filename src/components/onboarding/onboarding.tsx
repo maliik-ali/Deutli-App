@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  LogOut,
   ArrowRight,
   BookOpen,
   CalendarDays,
@@ -350,6 +349,16 @@ export function Onboarding({
               title={firstName ? `Welcome to Deutli, ${firstName}!` : "Welcome to Deutli!"}
               text="Which languages do you speak? We'll show the meaning of new German words in them."
             />
+            {/* Rare escape hatch (wrong account): small, only here, like Google's "Not you?". */}
+            <form action={signOut} className="-mt-6">
+              <button
+                type="submit"
+                title={email ? `Signed in as ${email}` : undefined}
+                className="inline-flex min-h-11 items-center px-2 text-[13px] text-subtle-foreground underline-offset-4 hover:text-foreground hover:underline"
+              >
+                Not you? Log out
+              </button>
+            </form>
             <div className="grid gap-6 text-left">
               <LanguageSelect
                 id="first-language"
@@ -641,22 +650,6 @@ export function Onboarding({
           )}
         </div>
       </main>
-
-      <footer className="mx-auto mt-auto flex w-full max-w-[1040px] flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 pb-6 text-center text-sm text-muted-foreground">
-        {email && (
-          <span>
-            Signed in as <span className="font-medium text-foreground">{email}</span>.
-          </span>
-        )}
-        <form action={signOut}>
-          <button
-            type="submit"
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 font-semibold text-gold-ink underline-offset-4 hover:underline"
-          >
-            <LogOut className="size-4" aria-hidden /> Wrong account? Log out
-          </button>
-        </form>
-      </footer>
     </div>
   );
 }
