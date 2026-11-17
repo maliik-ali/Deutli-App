@@ -540,13 +540,23 @@ export function Onboarding({
             </div>
 
             {/* Clear consent: unticked unless the student ticks it. */}
-            <label className="flex min-h-11 cursor-pointer items-start gap-3 px-1 text-[15px] text-muted-foreground">
+            <label className="flex min-h-11 cursor-pointer items-start gap-3 px-1 text-[15px] text-muted-foreground hover:text-foreground">
+              {/* Real checkbox for keyboards and screen readers, drawn like the answer cards' check. */}
               <input
                 type="checkbox"
                 checked={emailTips}
                 onChange={(e) => setEmailTips(e.target.checked)}
-                className="mt-1 size-5 shrink-0 accent-[var(--color-gold)]"
+                className="peer sr-only"
               />
+              <span
+                aria-hidden
+                className={cn(
+                  "mt-0.5 grid size-6 shrink-0 place-items-center rounded-md border-2 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-gold-ink peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background",
+                  emailTips ? "border-gold bg-gold text-white" : "border-border",
+                )}
+              >
+                {emailTips && <Check className="size-3.5" strokeWidth={3} />}
+              </span>
               <span>Email me occasional exam tips and new features. Unsubscribe anytime.</span>
             </label>
 
