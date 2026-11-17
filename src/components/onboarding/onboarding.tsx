@@ -16,8 +16,18 @@ import {
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { signOut } from "@/app/(auth)/actions";
 import { LanguageFlag } from "@/components/language-flag";
 import { SKILL_ICONS } from "./skill-icons";
@@ -37,7 +47,12 @@ import {
 import { cn } from "@/lib/utils";
 
 const STEP_COUNT = 4;
-const TIMELINE_ICONS = { zap: Zap, trend: TrendingUp, layers: Layers, help: CircleHelp } as const;
+const TIMELINE_ICONS = {
+  zap: Zap,
+  trend: TrendingUp,
+  layers: Layers,
+  help: CircleHelp,
+} as const;
 
 /** A selectable card. "radio" = pick one, "check" = pick several. */
 function Choice({
@@ -61,7 +76,9 @@ function Choice({
       onClick={onClick}
       className={cn(
         "flex min-h-16 w-full items-center gap-4 rounded-2xl border bg-card p-4 text-left transition-colors sm:p-5",
-        selected ? "border-gold-ink bg-gold-soft" : "border-border hover:border-gold-ink/60 hover:bg-muted/40",
+        selected
+          ? "border-gold-ink bg-gold-soft"
+          : "border-border hover:border-gold-ink/60 hover:bg-muted/40",
         className,
       )}
     >
@@ -83,7 +100,9 @@ function Choice({
 function Heading({ title, text }: { title: string; text: string }) {
   return (
     <div className="grid gap-2">
-      <h1 className="text-[26px] leading-tight font-extrabold sm:text-[32px]">{title}</h1>
+      <h1 className="text-[26px] leading-tight font-extrabold sm:text-[32px]">
+        {title}
+      </h1>
       <p className="text-[15px] text-muted-foreground sm:text-base">{text}</p>
     </div>
   );
@@ -105,9 +124,12 @@ function startOfToday() {
   return d;
 }
 function longDate(iso: string) {
-  return new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "long", year: "numeric" }).format(
-    fromIso(iso),
-  );
+  return new Intl.DateTimeFormat("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(fromIso(iso));
 }
 
 /** Dropdown of all languages, each shown in English and in its own script. */
@@ -122,7 +144,7 @@ function LanguageSelect({
 }: {
   id: string;
   label: string;
-  hint: string;
+  hint?: string;
   value: LanguageCode | null;
   onChange: (code: LanguageCode | null) => void;
   exclude?: LanguageCode | null;
@@ -131,19 +153,29 @@ function LanguageSelect({
   const chosen = value ? getLanguage(value) : null;
   return (
     <div className="grid gap-2">
-      <label id={`${id}-label`} htmlFor={id} className="text-[15px] font-semibold">
+      <label
+        id={`${id}-label`}
+        htmlFor={id}
+        className="text-[15px] font-semibold"
+      >
         {label}
-        {optional && <span className="ml-1.5 font-normal text-subtle-foreground">(optional)</span>}
+        {optional && (
+          <span className="ml-1.5 font-normal text-subtle-foreground">
+            (optional)
+          </span>
+        )}
       </label>
       {/* No choice yet: "" shows the placeholder; the optional list starts on "None". */}
       <Select
         value={value ?? (optional ? NONE : "")}
-        onValueChange={(v) => onChange(v === NONE || v === "" ? null : (v as LanguageCode))}
+        onValueChange={(v) =>
+          onChange(v === NONE || v === "" ? null : (v as LanguageCode))
+        }
       >
         <SelectTrigger
           id={id}
           aria-labelledby={`${id}-label`}
-          aria-describedby={`${id}-hint`}
+          aria-describedby={hint || chosen ? `${id}-hint` : undefined}
           className={cn(value && "border-gold-ink/60")}
         >
           <SelectValue placeholder="Choose a language" />
@@ -175,23 +207,28 @@ function LanguageSelect({
           ))}
         </SelectContent>
       </Select>
-      <p id={`${id}-hint`} className="text-sm text-muted-foreground">
-        {chosen && chosen.native !== chosen.name ? (
-          <>
-            Meanings will appear in{" "}
-            <span
-              lang={chosen.code}
-              dir={chosen.rtl ? "rtl" : "ltr"}
-              className={cn("text-foreground", chosen.code === "ur" && "urdu")}
-            >
-              {chosen.native}
-            </span>
-            .
-          </>
-        ) : (
-          hint
-        )}
-      </p>
+      {(hint || (chosen && chosen.native !== chosen.name)) && (
+        <p id={`${id}-hint`} className="text-sm text-muted-foreground">
+          {chosen && chosen.native !== chosen.name ? (
+            <>
+              Meanings will appear in{" "}
+              <span
+                lang={chosen.code}
+                dir={chosen.rtl ? "rtl" : "ltr"}
+                className={cn(
+                  "text-foreground",
+                  chosen.code === "ur" && "urdu",
+                )}
+              >
+                {chosen.native}
+              </span>
+              .
+            </>
+          ) : (
+            hint
+          )}
+        </p>
+      )}
     </div>
   );
 }
@@ -199,9 +236,12 @@ function LanguageSelect({
 export function Onboarding({
   firstName,
   email,
+  suggestedLanguage = null,
   languages: initialLanguages,
   home,
 }: {
+  /** The device's language (from the browser), pre-selected as the first language if we support it. */
+  suggestedLanguage?: LanguageCode | null;
   firstName: string | null;
   /** Shown at the bottom with "Log out", in case the student opened the wrong account. */
   email: string | null;
@@ -211,7 +251,9 @@ export function Onboarding({
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [first, setFirst] = useState<LanguageCode | null>(
-    initialLanguages[0] && initialLanguages[0] !== "en" ? initialLanguages[0] : null,
+    initialLanguages[0] && initialLanguages[0] !== "en"
+      ? initialLanguages[0]
+      : suggestedLanguage,
   );
   const [second, setSecond] = useState<LanguageCode | null>(null);
   const [goals, setGoals] = useState<GoalId[]>([]);
@@ -224,14 +266,18 @@ export function Onboarding({
   const [error, setError] = useState<string | null>(null);
   const [busy, startBusy] = useTransition();
 
-  const skills = SKILLS.filter((s) => !s.onlyFor || !exam || s.onlyFor.includes(exam));
+  const skills = SKILLS.filter(
+    (s) => !s.onlyFor || !exam || s.onlyFor.includes(exam),
+  );
   // The chosen worries, in list order. The plan for them is the "Your focus" card on the dashboard.
   const chosen = skills.filter((s) => focus.includes(s.id));
 
   // Native language first, then the second one, then English (if there is room).
   function finalLanguages(): LanguageCode[] {
     if (!first) return initialLanguages;
-    return [...new Set([first, second, "en"].filter(Boolean) as LanguageCode[])].slice(0, 3);
+    return [
+      ...new Set([first, second, "en"].filter(Boolean) as LanguageCode[]),
+    ].slice(0, 3);
   }
 
   function go(next: number) {
@@ -277,11 +323,24 @@ export function Onboarding({
     });
   }
 
-  const canContinue = [!!first, goals.length > 0, !!exam && (timeline !== "date" || !!examDate), focus.length > 0][
-    step
-  ];
-  const skippable = step < STEP_COUNT - 1;
+  const canContinue = [
+    !!first,
+    goals.length > 0,
+    !!exam && (timeline !== "date" || !!examDate),
+    focus.length > 0,
+  ][step];
+  // Step 1 takes one tap (the language is pre-selected), so no Skip there.
+  const skippable = step > 0 && step < STEP_COUNT - 1;
   const actionWidth = "w-full sm:w-80";
+  // Says why the button is disabled, so a tap on it never feels broken.
+  const missing = [
+    "Choose your first language to continue.",
+    "Pick at least one answer to continue.",
+    timeline === "date" && exam
+      ? "Pick your exam date to continue."
+      : "Choose your exam to continue.",
+    "Pick at least one to continue.",
+  ][step];
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
@@ -289,11 +348,19 @@ export function Onboarding({
         <div className="mx-auto grid h-16 w-full max-w-[1040px] grid-cols-[1fr_auto_1fr] items-center gap-2 px-2 sm:px-6">
           <div className="flex items-center gap-1">
             {step > 0 && (
-              <Button variant="ghost" size="icon" onClick={() => go(step - 1)} aria-label="Back">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => go(step - 1)}
+                aria-label="Back"
+              >
                 <ArrowLeft className="size-5" aria-hidden />
               </Button>
             )}
-            <Logo href={home} className={cn("px-1", step > 0 && "max-sm:[&>span]:hidden")} />
+            <Logo
+              href={home}
+              className={cn("px-1", step > 0 && "max-sm:[&>span]:hidden")}
+            />
           </div>
           <div
             className="flex items-center gap-1.5"
@@ -317,7 +384,11 @@ export function Onboarding({
           </div>
           <div className="flex justify-end">
             {skippable && (
-              <Button variant="ghost" className="text-muted-foreground" onClick={() => go(step + 1)}>
+              <Button
+                variant="ghost"
+                className="text-muted-foreground"
+                onClick={() => go(step + 1)}
+              >
                 Skip
               </Button>
             )}
@@ -330,7 +401,11 @@ export function Onboarding({
           // First screen: one centred column (heading, text and both dropdowns).
           <div className="mx-auto grid w-full max-w-xl gap-8 text-center sm:pt-6">
             <Heading
-              title={firstName ? `Welcome to Deutli, ${firstName}!` : "Welcome to Deutli!"}
+              title={
+                firstName
+                  ? `Welcome to Deutli, ${firstName}!`
+                  : "Welcome to Deutli!"
+              }
               text="Which languages do you speak? We'll show the meaning of new German words in them."
             />
             <div className="grid gap-6 text-left">
@@ -347,7 +422,6 @@ export function Onboarding({
               <LanguageSelect
                 id="second-language"
                 label="I also speak"
-                hint="Saved words can show up to three meanings, for example Urdu and English."
                 value={second}
                 onChange={setSecond}
                 exclude={first}
@@ -366,7 +440,12 @@ export function Onboarding({
             <div className="grid gap-3">
               <div className="grid gap-3 sm:grid-cols-2">
                 {GOALS.map((g) => (
-                  <Choice key={g.id} kind="check" selected={goals.includes(g.id)} onClick={() => toggleGoal(g.id)}>
+                  <Choice
+                    key={g.id}
+                    kind="check"
+                    selected={goals.includes(g.id)}
+                    onClick={() => toggleGoal(g.id)}
+                  >
                     <span className="font-semibold">{g.label}</span>{" "}
                     <span lang="de" className="text-muted-foreground">
                       ({g.de})
@@ -378,9 +457,14 @@ export function Onboarding({
                 className="flex items-center gap-4 py-1 text-[13px] font-semibold text-subtle-foreground"
                 aria-hidden
               >
-                <span className="h-px flex-1 bg-border" /> OR <span className="h-px flex-1 bg-border" />
+                <span className="h-px flex-1 bg-border" /> OR{" "}
+                <span className="h-px flex-1 bg-border" />
               </div>
-              <Choice kind="check" selected={goals.includes("improve")} onClick={() => toggleGoal(IMPROVE_GOAL.id)}>
+              <Choice
+                kind="check"
+                selected={goals.includes("improve")}
+                onClick={() => toggleGoal(IMPROVE_GOAL.id)}
+              >
                 <span className="font-semibold">{IMPROVE_GOAL.label}</span>
               </Choice>
             </div>
@@ -389,25 +473,38 @@ export function Onboarding({
 
         {step === 2 && (
           <>
-            <Heading title="Which exam are you preparing for?" text="We'll plan your practice around it." />
+            <Heading
+              title="Which exam are you preparing for?"
+              text="We'll plan your practice around it."
+            />
             <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
               <div className="grid gap-3" role="radiogroup" aria-label="Exam">
                 {EXAMS.map((e) => (
-                  <Choice key={e.id} kind="radio" selected={exam === e.id} onClick={() => setExam(e.id)}>
+                  <Choice
+                    key={e.id}
+                    kind="radio"
+                    selected={exam === e.id}
+                    onClick={() => setExam(e.id)}
+                  >
                     <span className="flex items-center gap-4">
                       <span className="grid h-8 min-w-14 shrink-0 place-items-center rounded-lg bg-ink px-2 text-[13px] font-bold text-gold-ink">
                         {e.level}
                       </span>
                       <span className="grid min-w-0 gap-0.5">
                         <span className="font-semibold">{e.name}</span>
-                        <span className="text-sm text-muted-foreground">{e.note}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {e.note}
+                        </span>
                       </span>
                     </span>
                   </Choice>
                 ))}
               </div>
 
-              <section className="grid gap-4 rounded-2xl border border-border bg-card p-5" aria-labelledby="exam-date">
+              <section
+                className="grid gap-4 rounded-2xl border border-border bg-card p-5"
+                aria-labelledby="exam-date"
+              >
                 <div className="grid gap-1">
                   <h2
                     id="exam-date"
@@ -415,9 +512,15 @@ export function Onboarding({
                   >
                     Exam date
                   </h2>
-                  <p className="text-sm text-muted-foreground">Helps us suggest your study pace.</p>
+                  <p className="text-sm text-muted-foreground">
+                    Helps us suggest your study pace.
+                  </p>
                 </div>
-                <div className="grid gap-3" role="radiogroup" aria-labelledby="exam-date">
+                <div
+                  className="grid gap-3"
+                  role="radiogroup"
+                  aria-labelledby="exam-date"
+                >
                   <button
                     type="button"
                     role="radio"
@@ -428,28 +531,45 @@ export function Onboarding({
                     }}
                     className={cn(
                       "flex h-14 items-center gap-3 rounded-xl border px-4 text-left font-semibold transition-colors",
-                      timeline === "date" ? "border-gold-ink bg-gold-soft" : "border-border hover:border-gold-ink/60",
+                      timeline === "date"
+                        ? "border-gold-ink bg-gold-soft"
+                        : "border-border hover:border-gold-ink/60",
                     )}
                   >
-                    <CalendarDays className="size-5 text-gold-ink" aria-hidden /> I have a specific date
+                    <CalendarDays
+                      className="size-5 text-gold-ink"
+                      aria-hidden
+                    />{" "}
+                    I have a specific date
                   </button>
                   {timeline === "date" && (
                     <div className="grid gap-1.5 text-sm">
-                      <span id="exam-day-label" className="text-muted-foreground">
+                      <span
+                        id="exam-day-label"
+                        className="text-muted-foreground"
+                      >
                         Exam day
                       </span>
-                      <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                      <Popover
+                        open={calendarOpen}
+                        onOpenChange={setCalendarOpen}
+                      >
                         <PopoverTrigger asChild>
                           <button
                             type="button"
                             aria-labelledby="exam-day-label"
                             className={cn(
                               "flex h-12 items-center justify-between gap-2 rounded-xl border bg-background px-4 text-left text-[15px] outline-none transition-colors focus-visible:border-gold-ink",
-                              examDate ? "border-gold-ink/60 text-foreground" : "border-border text-muted-foreground",
+                              examDate
+                                ? "border-gold-ink/60 text-foreground"
+                                : "border-border text-muted-foreground",
                             )}
                           >
                             {examDate ? longDate(examDate) : "Pick a date"}
-                            <CalendarDays className="size-5 text-gold-ink" aria-hidden />
+                            <CalendarDays
+                              className="size-5 text-gold-ink"
+                              aria-hidden
+                            />
                           </button>
                         </PopoverTrigger>
                         <PopoverContent align="end">
@@ -457,7 +577,9 @@ export function Onboarding({
                             mode="single"
                             weekStartsOn={1}
                             selected={examDate ? fromIso(examDate) : undefined}
-                            defaultMonth={examDate ? fromIso(examDate) : undefined}
+                            defaultMonth={
+                              examDate ? fromIso(examDate) : undefined
+                            }
                             disabled={{ before: startOfToday() }}
                             startMonth={startOfToday()}
                             onSelect={(d) => {
@@ -510,19 +632,33 @@ export function Onboarding({
               {skills.map((s) => {
                 const Icon = SKILL_ICONS[s.id];
                 return (
-                  <Choice key={s.id} kind="check" selected={focus.includes(s.id)} onClick={() => toggleFocus(s.id)}>
+                  <Choice
+                    key={s.id}
+                    kind="check"
+                    selected={focus.includes(s.id)}
+                    onClick={() => toggleFocus(s.id)}
+                  >
                     <span className="flex items-center gap-3">
                       <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-gold-soft text-gold-ink">
                         <Icon className="size-5" aria-hidden />
                       </span>
                       <span className="grid min-w-0 gap-0.5">
                         <span className="flex flex-wrap items-baseline gap-x-2">
-                          <span lang={s.id === "unsure" ? undefined : "de"} className="text-base font-bold">
+                          <span
+                            lang={s.id === "unsure" ? undefined : "de"}
+                            className="text-base font-bold"
+                          >
                             {s.name}
                           </span>
-                          {s.id !== "unsure" && <span className="text-sm text-muted-foreground">{s.english}</span>}
+                          {s.id !== "unsure" && (
+                            <span className="text-sm text-muted-foreground">
+                              {s.english}
+                            </span>
+                          )}
                         </span>
-                        <span className="text-sm text-muted-foreground">{s.worry}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {s.worry}
+                        </span>
                       </span>
                     </span>
                   </Choice>
@@ -543,16 +679,24 @@ export function Onboarding({
                 aria-hidden
                 className={cn(
                   "mt-0.5 grid size-6 shrink-0 place-items-center rounded-md border-2 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-gold-ink peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background",
-                  emailTips ? "border-gold bg-gold text-white" : "border-border",
+                  emailTips
+                    ? "border-gold bg-gold text-white"
+                    : "border-border",
                 )}
               >
                 {emailTips && <Check className="size-3.5" strokeWidth={3} />}
               </span>
-              <span>Email me occasional exam tips and new features. Unsubscribe anytime.</span>
+              <span>
+                Email me occasional exam tips and new features. Unsubscribe
+                anytime.
+              </span>
             </label>
 
             {error && (
-              <p className="rounded-xl bg-destructive-soft px-4 py-3 text-sm text-destructive" role="alert">
+              <p
+                className="rounded-xl bg-destructive-soft px-4 py-3 text-sm text-destructive"
+                role="alert"
+              >
                 {error}
               </p>
             )}
@@ -565,14 +709,29 @@ export function Onboarding({
             // Pinned at the bottom with a soft fade (no hard line), so the button is always in reach.
             "sticky bottom-0 -mx-4 grid justify-items-center gap-2 bg-gradient-to-t from-background from-70% to-transparent px-4 pt-6 pb-3",
             // Larger screens: inline under the content. Only the long worries step stays pinned.
-            step === STEP_COUNT - 1 ? "sm:-mx-6 sm:px-6 sm:pt-8" : "sm:static sm:mx-0 sm:bg-none sm:p-0",
+            step === STEP_COUNT - 1
+              ? "sm:-mx-6 sm:px-6 sm:pt-8"
+              : "sm:static sm:mx-0 sm:bg-none sm:p-0",
           )}
         >
           {step < STEP_COUNT - 1 ? (
             <>
-              <Button className={cn("h-12 text-base", actionWidth)} disabled={!canContinue} onClick={() => go(step + 1)}>
+              <Button
+                className={cn("h-12 text-base", actionWidth)}
+                disabled={!canContinue}
+                aria-describedby={canContinue ? undefined : "continue-hint"}
+                onClick={() => go(step + 1)}
+              >
                 Continue <ArrowRight aria-hidden />
               </Button>
+              {!canContinue && (
+                <p
+                  id="continue-hint"
+                  className="text-[13px] text-subtle-foreground"
+                >
+                  {missing}
+                </p>
+              )}
               {/* Rare escape hatch (wrong account): small, under the button, first step only. */}
               {step === 0 && (
                 <form action={signOut}>
@@ -587,13 +746,24 @@ export function Onboarding({
               )}
             </>
           ) : (
-            <Button
-              className={cn("h-12 text-base", actionWidth)}
-              disabled={busy || !canContinue}
-              onClick={() => finish(home)}
-            >
-              {busy ? "Saving…" : "See my plan"} <ArrowRight aria-hidden />
-            </Button>
+            <>
+              <Button
+                className={cn("h-12 text-base", actionWidth)}
+                disabled={busy || !canContinue}
+                aria-describedby={canContinue ? undefined : "continue-hint"}
+                onClick={() => finish(home)}
+              >
+                {busy ? "Saving…" : "See my plan"} <ArrowRight aria-hidden />
+              </Button>
+              {!canContinue && (
+                <p
+                  id="continue-hint"
+                  className="text-[13px] text-subtle-foreground"
+                >
+                  {missing}
+                </p>
+              )}
+            </>
           )}
         </div>
       </main>
