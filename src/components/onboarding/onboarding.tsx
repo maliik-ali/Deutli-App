@@ -570,7 +570,14 @@ export function Onboarding({
         )}
 
         {/* Same button on every step; on phones it stays at the bottom of the screen. */}
-        <div className="sticky bottom-0 -mx-4 grid justify-items-center gap-2 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+        <div
+          className={cn(
+            // Pinned at the bottom with a soft fade (no hard line), so the button is always in reach.
+            "sticky bottom-0 -mx-4 grid justify-items-center gap-2 bg-gradient-to-t from-background from-70% to-transparent px-4 pt-6 pb-3",
+            // Larger screens: inline under the content. Only the long worries step stays pinned.
+            step === STEP_COUNT - 1 ? "sm:-mx-6 sm:px-6 sm:pt-8" : "sm:static sm:mx-0 sm:bg-none sm:p-0",
+          )}
+        >
           {step < STEP_COUNT - 1 ? (
             <Button className={cn("h-12 text-base", actionWidth)} disabled={!canContinue} onClick={() => go(step + 1)}>
               Continue <ArrowRight aria-hidden />
