@@ -252,8 +252,8 @@ export function VocabPractice({
                 </p>
               )}
               {[
-                { title: "Incorrect", list: wrong, tone: "text-destructive" },
-                { title: "Correct", list: right, tone: "text-success" },
+                { title: "Incorrect", list: wrong, tone: "text-answer-wrong" },
+                { title: "Correct", list: right, tone: "text-answer-right" },
               ]
                 .filter((g) => g.list.length > 0)
                 .map((g) => (
@@ -381,8 +381,8 @@ export function VocabPractice({
                       aria-pressed={isPicked}
                       className={cn(
                         "flex min-h-28 flex-col justify-between gap-3 rounded-2xl border border-border bg-card p-4 text-left text-[15px] transition-colors enabled:hover:border-gold-ink",
-                        picked && isRight && "border-success bg-success-soft",
-                        isPicked && !isRight && "border-destructive bg-destructive-soft",
+                        picked && isRight && "border-answer-right bg-answer-right-soft",
+                        isPicked && !isRight && "border-answer-wrong bg-answer-wrong-soft",
                       )}
                     >
                       <Meaning code={first} text={o.translations[first]} className="text-foreground" />
@@ -402,7 +402,7 @@ export function VocabPractice({
                   role="status"
                   className={cn(
                     "flex items-center justify-center gap-2 text-center font-semibold",
-                    picked === step.word.id ? "text-success" : "text-destructive",
+                    picked === step.word.id ? "text-answer-right" : "text-answer-wrong",
                   )}
                 >
                   {picked === step.word.id ? (

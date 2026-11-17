@@ -53,6 +53,11 @@
   --accent-foreground: #ffffff;
   --destructive: #ff6b6b;
   --destructive-soft: #3b1222;
+  /* Answer feedback in practice: mint close to brand cyan, rose close to brand pink. Soft tints keep cards calm. */
+  --answer-right: #4fe3c1;
+  --answer-right-soft: rgb(79 227 193 / 0.08);
+  --answer-wrong: #ff7d9c;
+  --answer-wrong-soft: rgb(255 125 156 / 0.08);
 
   --radius: 1rem; /* 16px cards */
 }
@@ -120,6 +125,10 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-soft: var(--destructive-soft);
+  --color-answer-right: var(--answer-right);
+  --color-answer-right-soft: var(--answer-right-soft);
+  --color-answer-wrong: var(--answer-wrong);
+  --color-answer-wrong-soft: var(--answer-wrong-soft);
 
   /* Brand font is "AOK Buenos Aires" (licensed). Until its web files are added,
      Figtree is the closest free fallback. */
