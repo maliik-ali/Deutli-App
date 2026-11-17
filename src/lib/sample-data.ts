@@ -7,6 +7,7 @@ export const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: "home" },
   { href: "/dashboard/daily-practice", label: "Improve Accent", icon: "speech" },
   { href: "/dashboard/exam", label: "My B1 Exam", icon: "timer" },
+  { href: "/dashboard/vocabulary", label: "Vocabulary", icon: "languages" },
   {
     href: "/dashboard/skills",
     label: "Skills",
@@ -18,7 +19,6 @@ export const NAV_ITEMS = [
       { href: "/dashboard/exam/speaking", label: "Speaking" },
     ],
   },
-  { href: "/dashboard/vocabulary", label: "Vocabulary", icon: "languages" },
   { href: "/dashboard/certificates", label: "Certificates", icon: "award" },
   // Not built yet: always at the bottom, marked "Soon".
   { href: "/dashboard/homework", label: "Homework", icon: "pen", soon: true },
