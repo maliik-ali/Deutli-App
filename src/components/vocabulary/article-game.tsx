@@ -150,7 +150,7 @@ export function ArticleGame({
               )}
               {wrong.length > 0 && (
                 <section className="grid gap-3 rounded-2xl border border-border bg-card p-4">
-                  <h2 className="text-[15px] font-bold text-destructive">Learn these</h2>
+                  <h2 className="text-[15px] font-bold text-answer-wrong">Learn these</h2>
                   <ul className="grid gap-2">
                     {wrong.map(({ word: w, picked: p }) => (
                       <li
@@ -184,7 +184,7 @@ export function ArticleGame({
                 <p lang="de" className="font-heading text-[40px] leading-tight font-extrabold break-words sm:text-[52px]">
                   {picked ? (
                     <>
-                      <span className={picked === word.article ? "text-success" : "text-gold-ink"}>
+                      <span className={picked === word.article ? "text-answer-right" : "text-gold-ink"}>
                         {word.article}
                       </span>{" "}
                       {word.noun}
@@ -218,8 +218,8 @@ export function ArticleGame({
                       aria-keyshortcuts={String(i + 1)}
                       className={cn(
                         "flex h-20 items-center justify-center rounded-2xl border border-border bg-card font-heading text-2xl font-extrabold transition-[transform,colors] duration-150 enabled:hover:border-gold-ink enabled:active:scale-95 sm:h-24 sm:text-[28px]",
-                        picked && isRight && "border-success bg-success-soft text-success",
-                        isPicked && !isRight && "border-destructive bg-destructive-soft text-destructive",
+                        picked && isRight && "border-answer-right bg-answer-right-soft text-answer-right",
+                        isPicked && !isRight && "border-answer-wrong bg-answer-wrong-soft text-answer-wrong",
                         picked && !isRight && !isPicked && "opacity-50",
                       )}
                     >
@@ -235,7 +235,7 @@ export function ArticleGame({
                     <p
                       className={cn(
                         "flex items-center justify-center gap-2 text-center font-semibold",
-                        picked === word.article ? "text-success" : "text-destructive",
+                        picked === word.article ? "text-answer-right" : "text-answer-wrong",
                       )}
                     >
                       {picked === word.article ? (
