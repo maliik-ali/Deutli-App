@@ -397,13 +397,7 @@ export function Onboarding({
         </div>
       </header>
 
-      <main
-        className={cn(
-          "mx-auto grid w-full content-start gap-8 px-4 py-8 sm:px-6 sm:py-10",
-          // The exam step has two panels (exam + date) and needs the room; the others are a calm, narrow column.
-          step === 2 ? "max-w-[1040px]" : "max-w-3xl",
-        )}
-      >
+      <main className="mx-auto grid w-full max-w-[1040px] content-start gap-8 px-4 py-8 sm:px-6 sm:py-10">
         {step === 0 && (
           // First screen: one centred column (heading, text and both dropdowns).
           <div className="mx-auto grid w-full max-w-xl gap-8 text-center sm:pt-6">
