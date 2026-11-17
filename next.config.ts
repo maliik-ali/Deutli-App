@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Keep Next.js on its security-upgrade track (set by `next upgrade --agent=security`).
+    agentUpgrade: "security",
+  },
   // Old link from before the menu change.
   async redirects() {
     return [{ source: "/dashboard/mock-exams", destination: "/dashboard/exam", permanent: true }];
