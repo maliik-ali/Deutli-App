@@ -132,3 +132,46 @@ export async function recordLevelAnswer(
   if (!rowId) return { error: ERROR };
   return saveAnswer(supabase, rowId, right);
 }
+
+/**
+ * Save one answer from the der/die/das game. It doesn't move the word's review step (that is about
+ * the meaning), but a wrong article brings the word back for review today. Words the student
+ * hasn't started yet are not saved.
+ */
+export async function recordArticleAnswer(input: unknown, right: unknown): Promise<VocabResult> {
+  const user = await requireUser(ROLES);
+  const parsed = z.object({ id: uuid, kind: z.enum(["level", "mine"]) }).safeParse(input);
+  if (!parsed.success || typeof right !== "boolean") return { error: ERROR };
+  const supabase = await createClient();
+
+  let rowId: string | null = parsed.data.kind === "mine" ? parsed.data.id : null;
+  if (parsed.data.kind === "level") {
+    const { data: lw } = await supabase.from("level_words").select("german").eq("id", parsed.data.id).maybeSingle();
+    if (!lw) return { error: ERROR };
+    const { data: mine } = await supabase
+      .from("vocabulary_words")
+      .select("id")
+      .eq("user_id", user.id)
+      .ilike("word", lw.german.replace(/[%_\\]/g, "\\$&"))
+      .maybeSingle();
+    rowId = (mine?.id as string | undefined) ?? null;
+  }
+  if (!rowId) return { ok: true };
+
+  const { data: row } = await supabase
+    .from("vocabulary_words")
+    .select("right_count, wrong_count")
+    .eq("id", rowId)
+    .maybeSingle();
+  if (!row) return { ok: true };
+  const { error } = await supabase
+    .from("vocabulary_words")
+    .update(
+      right
+        ? { right_count: (row.right_count ?? 0) + 1 }
+        : { wrong_count: (row.wrong_count ?? 0) + 1, due_on: todayPKT() },
+    )
+    .eq("id", rowId);
+  if (error) return { error: ERROR };
+  return { ok: true };
+}

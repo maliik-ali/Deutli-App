@@ -47,6 +47,14 @@ function practiceHref(p: { list?: Level | null; set: string; topic?: string | nu
   return `/vocabulary/practice?${sp}`;
 }
 
+function gameHref(list: Level | null, topic: string | null) {
+  const sp = new URLSearchParams();
+  if (list) sp.set("list", list);
+  if (topic) sp.set("topic", topic);
+  const s = sp.toString();
+  return `/vocabulary/play/articles${s ? `?${s}` : ""}`;
+}
+
 /** How many words each level list has (to show "Soon" for empty ones). */
 async function levelCounts(): Promise<Record<Level, number>> {
   const supabase = await createClient();
@@ -257,6 +265,7 @@ export default async function VocabularyPage(props: PageProps<"/dashboard/vocabu
   const defaults: ColumnId[] = [...user.languages.map((l) => `meaning:${l}` as ColumnId), "from", "progress"];
   const from = filtered.length ? (page - 1) * MY_PAGE + 1 : 0;
   const practiseSet: VocabSet = c.due > 0 ? "due" : "all";
+  const nounCount = words.filter((w) => /^(der|die|das)\s/i.test(w.dictionaryForm ?? "")).length;
 
   return (
     <main className="mx-auto grid max-w-[1240px] gap-6 px-4 py-6 sm:px-6 md:px-8 md:py-8">
@@ -270,6 +279,13 @@ export default async function VocabularyPage(props: PageProps<"/dashboard/vocabu
         </div>
         {c.all > 0 && (
           <div className="flex flex-wrap gap-2">
+            {nounCount >= 4 && (
+              <Button asChild variant="outline">
+                <Link href={gameHref(null, null)}>
+                  <span lang="de">der, die, das</span> game
+                </Link>
+              </Button>
+            )}
             {c.marked > 0 && (
               <Button asChild variant="outline">
                 <Link href={practiceHref({ set: "marked" })}>Practise marked</Link>
@@ -554,6 +570,30 @@ async function LevelView({
               <div className="h-full rounded-full bg-brand-gradient" style={{ width: `${pct}%` }} />
             </div>
           </Card>
+
+          <section aria-label="Games" className="grid gap-3">
+            <h2 className="text-[15px] font-semibold text-muted-foreground">Games</h2>
+            <Card className="flex-row items-center gap-4 p-4 sm:p-5">
+              <span
+                aria-hidden
+                lang="de"
+                className="grid size-12 shrink-0 place-items-center rounded-2xl bg-gold-soft font-heading text-sm font-extrabold text-gold-ink"
+              >
+                der
+              </span>
+              <div className="grid min-w-0 flex-1 gap-0.5">
+                <h3 className="font-bold">
+                  <span lang="de">der, die oder das?</span>
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Tap the right article for 10 nouns{topic ? ` from ${topic}` : ""}. Wrong ones come back for review.
+                </p>
+              </div>
+              <Button asChild variant="outline" className="shrink-0">
+                <Link href={gameHref(level, topic)}>Play</Link>
+              </Button>
+            </Card>
+          </section>
 
           <section aria-label="Topics" className="grid gap-3">
             <h2 className="text-[15px] font-semibold text-muted-foreground">Topics</h2>
