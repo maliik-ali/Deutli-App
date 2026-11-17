@@ -6,8 +6,17 @@ import { SKILL_ICONS } from "@/components/exam/skill-icons";
 import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
 import { getExamFormat } from "@/lib/exam/catalog";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Skills" };
+
+// One Deutli brand colour per skill, used only for the card border (soft, stronger on hover).
+const BORDERS: Record<string, string> = {
+  reading: "border-gold/50 group-hover:border-gold",
+  listening: "border-brand-cyan/50 group-hover:border-brand-cyan",
+  writing: "border-brand-magenta/50 group-hover:border-brand-magenta",
+  speaking: "border-success/50 group-hover:border-success",
+};
 
 export default async function SkillsPage() {
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
@@ -23,7 +32,7 @@ export default async function SkillsPage() {
           const Icon = SKILL_ICONS[s.slug];
           return (
             <Link key={s.slug} href={`/dashboard/exam/${s.slug}`} className="group rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-ring">
-              <Card className="h-full transition-colors group-hover:border-gold-ink/60">
+              <Card className={cn("h-full transition-colors", BORDERS[s.slug])}>
                 <span className="grid size-11 place-items-center rounded-xl bg-gold-soft text-gold-ink">
                   <Icon className="size-5" aria-hidden />
                 </span>
