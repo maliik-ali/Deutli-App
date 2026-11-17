@@ -3,6 +3,16 @@
 German B1 exam-prep platform. Pilot inside a German academy in Pakistan (100+ students).
 Owner: Malik Ali (designer, not a developer — explain decisions in plain words, short).
 
+## How Malik wants you to work (read first, always follow)
+1. **Think like a senior product UX/UI (and AI) designer before building.** For every request, first ask: is it needed, is this the right place, how prominent should it be, how often does this case really happen? Give a 2–4 line verdict, and if you disagree or see a risk (e.g. selling something that doesn't exist yet), say so before coding.
+2. **Change only what was asked.** Don't bundle extra layout, width, spacing or copy changes. Before every commit, diff against the previous version and check each changed line belongs to the request.
+3. **Be proactive with suggestions, not changes.** When touching a screen, list the top 3–5 small UX tweaks you notice (placement, unclear disabled states, smart defaults, redundant text, tap targets) and wait for a yes.
+4. **Check every visual change on screen before pushing.** Run the dev server (`.claude/launch.json`, name `deutli-dev`), render the component in a temporary `src/app/zz-preview-*` route (delete it before committing), and take screenshots at 1440px and 390px (also 1366×700 for long forms). Never push a screen you haven't looked at.
+5. **Follow the design language exactly.** Use the `g2d-ui` skill, existing tokens and components. Never use browser-default form controls (checkbox, radio, select): use the styled pattern (sr-only input + styled span, or shadcn Select). Keep one rule per screen (e.g. all onboarding headings centred).
+6. **Deutli is for learners worldwide, not only Pakistan.** Never assume Pakistan/Urdu in defaults or copy; take defaults from the user's device or answers (browser language, device time zone).
+7. **Keep replies short and plain.** Malik is a designer, not a developer: a few clear lines, no walls of text.
+8. **Never make careless mistakes.** Re-read the request, check the result, and only then report.
+
 ## Stack
 - Next.js (App Router) + TypeScript, Tailwind CSS, shadcn/ui, Lucide icons
 - Supabase: Postgres database, Auth, Storage. Use the official `@supabase/ssr` package and follow Supabase's current Next.js server-side auth guide.
