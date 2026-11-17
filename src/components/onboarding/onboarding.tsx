@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  LogOut,
   ArrowRight,
   BookOpen,
   CalendarDays,
@@ -24,6 +25,8 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { signOut } from "@/app/(auth)/actions";
+import { LanguageFlag } from "@/components/language-flag";
 import { LANGUAGES, getLanguage, type LanguageCode } from "@/lib/languages";
 import { completeOnboarding } from "@/lib/onboarding/actions";
 import {
@@ -179,7 +182,10 @@ function LanguageSelect({
                 )
               }
             >
-              {l.name}
+              <span className="flex items-center gap-2.5">
+                <LanguageFlag code={l.code} />
+                {l.name}
+              </span>
             </SelectItem>
           ))}
         </SelectContent>
@@ -207,10 +213,13 @@ function LanguageSelect({
 
 export function Onboarding({
   firstName,
+  email,
   languages: initialLanguages,
   home,
 }: {
   firstName: string | null;
+  /** Shown at the bottom with "Log out", in case the student opened the wrong account. */
+  email: string | null;
   languages: LanguageCode[];
   home: string;
 }) {
@@ -632,6 +641,22 @@ export function Onboarding({
           )}
         </div>
       </main>
+
+      <footer className="mx-auto mt-auto flex w-full max-w-[1040px] flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 pb-6 text-center text-sm text-muted-foreground">
+        {email && (
+          <span>
+            Signed in as <span className="font-medium text-foreground">{email}</span>.
+          </span>
+        )}
+        <form action={signOut}>
+          <button
+            type="submit"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 font-semibold text-gold-ink underline-offset-4 hover:underline"
+          >
+            <LogOut className="size-4" aria-hidden /> Wrong account? Log out
+          </button>
+        </form>
+      </footer>
     </div>
   );
 }

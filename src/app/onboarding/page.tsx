@@ -13,5 +13,10 @@ export default async function OnboardingPage(props: PageProps<"/onboarding">) {
   // Asked once. "?again=1" lets a student answer again later.
   if (user.onboardedAt && sp.again !== "1") redirect(homeForRole(user.role));
   const firstName = (user.fullName ?? "").trim().split(/\s+/)[0] || null;
-  return <Onboarding firstName={firstName} languages={user.languages} home={homeForRole(user.role)} />;
+  return <Onboarding
+      firstName={firstName}
+      email={user.email}
+      languages={user.languages}
+      home={homeForRole(user.role)}
+    />;
 }

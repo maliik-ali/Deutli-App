@@ -2,6 +2,7 @@
 
 import { Check } from "lucide-react";
 
+import { LanguageFlag } from "@/components/language-flag";
 import { LANGUAGES, MAX_LANGUAGES, type LanguageCode } from "@/lib/languages";
 import { cn } from "@/lib/utils";
 
@@ -35,13 +36,19 @@ export function LanguageChips({
               disabled={full}
               onClick={() => toggle(l.code)}
               className={cn(
-                "inline-flex h-9 items-center gap-1 rounded-full border px-3 text-[13px] font-medium transition-colors disabled:opacity-40",
+                "inline-flex h-11 items-center gap-2 rounded-full border pr-3.5 pl-2 text-[13px] font-medium transition-colors disabled:opacity-40",
                 on
                   ? "border-gold-ink bg-gold/30 text-foreground"
                   : "border-border text-muted-foreground hover:text-foreground",
               )}
             >
-              {on && <Check className="size-3.5" aria-hidden />}
+              {on ? (
+                <span aria-hidden className="grid size-5 place-items-center rounded-full bg-gold text-white">
+                  <Check className="size-3.5" />
+                </span>
+              ) : (
+                <LanguageFlag code={l.code} className="size-5" />
+              )}
               {l.name}
             </button>
           );
