@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, Clock, Lock } from "lucide-react";
+import { ChevronLeft, Clock, Lock, Sparkles } from "lucide-react";
 
 import { ExamCover } from "@/components/exam/exam-cover";
 import { SKILL_ICONS } from "@/components/exam/skill-icons";
@@ -87,9 +87,14 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
 
           <div className="grid gap-2 sm:flex sm:items-center sm:gap-4">
             {!paper ? (
-              <Button disabled className="w-full sm:w-auto">
-                Coming soon
-              </Button>
+              // Not uploaded yet: offer Pro (it unlocks this mock the day it's published), but stay honest that it's not ready.
+              !exam.free && !hasPro(user) ? (
+                <Button asChild className="w-full sm:w-auto">
+                  <Link href="/dashboard/upgrade">
+                    <Sparkles aria-hidden /> Go Pro{cheapest ? ` · from ${pkr(cheapest.price_pkr)}` : ""}
+                  </Link>
+                </Button>
+              ) : null
             ) : paper.is_free || hasPro(user) ? (
               <Button asChild className="w-full sm:w-auto">
                 <Link href={`/exam/take/${examId}`}>Start mock exam</Link>
@@ -103,7 +108,11 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
             )}
             <p className="text-[14px] text-muted-foreground">
               {!paper
-                ? "This mock exam is not ready yet. Try the free Hamburg paper in the meantime."
+                ? exam.free
+                  ? "This mock exam is not ready yet. Try the free Hamburg paper in the meantime."
+                  : hasPro(user)
+                    ? `You have Pro: ${exam.city} unlocks for you the day it's published.`
+                    : `${exam.city} is coming soon. Pro unlocks it the day it's published, plus every premium mock exam.`
                 : paper.is_free
                   ? "Solve the real paper on screen. Your answers are saved as you go."
                   : "Premium mock exams come with Deutli Pro. Tell us you are interested and we will contact you."}
