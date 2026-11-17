@@ -15,9 +15,9 @@ export default async function ReviewsPage() {
         <h1 className="text-3xl font-extrabold">Writing reviews</h1>
         <p className="text-muted-foreground">Check your students&apos; emails. Your score is the final one.</p>
       </div>
-      <ToCheckCard rows={data.mine.filter((r) => r.status === "requested")} names={data.names} />
-      <OpenRequestsCard rows={data.open} names={data.names} />
-      <CheckedCard rows={data.mine.filter((r) => r.status === "done")} names={data.names} />
+      <ToCheckCard timeZone={user.timeZone} rows={data.mine.filter((r) => r.status === "requested")} names={data.names} />
+      <OpenRequestsCard timeZone={user.timeZone} rows={data.open} names={data.names} />
+      <CheckedCard timeZone={user.timeZone} rows={data.mine.filter((r) => r.status === "done")} names={data.names} />
     </main>
   );
 }

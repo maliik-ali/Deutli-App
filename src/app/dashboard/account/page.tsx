@@ -19,7 +19,7 @@ export default async function AccountPage() {
     <main className="mx-auto grid max-w-[1240px] gap-6 px-4 py-6 sm:px-6 md:px-8 md:py-8">
       <header className="grid gap-2">
         <h1 className="text-[28px] leading-tight font-extrabold sm:text-[32px]">Account</h1>
-        <p className="text-[15px] text-muted-foreground">Your photo, name, contact details, password and languages.</p>
+        <p className="text-[15px] text-muted-foreground">Your photo, name, contact details, password, languages and time zone.</p>
       </header>
       <div className="max-w-[960px]">
         <AccountSettings
@@ -29,6 +29,7 @@ export default async function AccountPage() {
             phone: profile?.phone ?? "",
             languages: user.languages,
             avatarUrl,
+            timeZone: user.timeZone,
           }}
         />
       </div>

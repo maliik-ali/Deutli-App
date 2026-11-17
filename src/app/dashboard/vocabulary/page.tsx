@@ -242,7 +242,7 @@ export default async function VocabularyPage(props: PageProps<"/dashboard/vocabu
     );
   const pages = Math.max(1, Math.ceil(filtered.length / MY_PAGE));
   const page = Math.min(pages, Math.max(1, pageParam));
-  const date = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "Asia/Karachi" });
+  const date = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: user.timeZone });
   const rows: TableRow[] = filtered.slice((page - 1) * MY_PAGE, page * MY_PAGE).map((w) => {
     const head = w.dictionaryForm ?? w.word;
     const showSaved = w.dictionaryForm && w.dictionaryForm.toLowerCase().split(" ").pop() !== w.word.toLowerCase();

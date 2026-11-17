@@ -6,7 +6,7 @@ import { shortDate, sourceLabel, type ReviewRow } from "@/lib/teachers/data";
 
 type Names = Map<string, string>;
 
-export function ToCheckCard({ rows, names, limit }: { rows: ReviewRow[]; names: Names; limit?: number }) {
+export function ToCheckCard({ rows, names, limit, timeZone }: { rows: ReviewRow[]; names: Names; limit?: number; timeZone: string }) {
   const shown = limit ? rows.slice(0, limit) : rows;
   return (
     <Card className="grid gap-2 p-6">
@@ -21,7 +21,7 @@ export function ToCheckCard({ rows, names, limit }: { rows: ReviewRow[]; names: 
                 <span>
                   <span className="font-semibold">{names.get(r.student_id) ?? "Student"}</span>
                   <span className="block text-[13px] text-muted-foreground">
-                    {sourceLabel(r.source)} · {shortDate(r.created_at)}
+                    {sourceLabel(r.source)} · {shortDate(r.created_at, timeZone)}
                   </span>
                 </span>
                 <span className="text-[14px] font-medium text-gold-ink">Check</span>
@@ -39,7 +39,7 @@ export function ToCheckCard({ rows, names, limit }: { rows: ReviewRow[]; names: 
   );
 }
 
-export function OpenRequestsCard({ rows, names }: { rows: ReviewRow[]; names: Names }) {
+export function OpenRequestsCard({ rows, names, timeZone }: { rows: ReviewRow[]; names: Names; timeZone: string }) {
   return (
     <Card className="grid gap-2 p-6">
       <CardTitle>Open requests ({rows.length})</CardTitle>
@@ -50,7 +50,7 @@ export function OpenRequestsCard({ rows, names }: { rows: ReviewRow[]; names: Na
             <li key={r.id} className="flex items-center justify-between gap-3 py-3">
               <span>
                 <span className="font-semibold">{names.get(r.student_id) ?? "Student"}</span>
-                <span className="block text-[13px] text-muted-foreground">{shortDate(r.created_at)}</span>
+                <span className="block text-[13px] text-muted-foreground">{shortDate(r.created_at, timeZone)}</span>
               </span>
               <TakeButton reviewId={r.id} />
             </li>
@@ -61,7 +61,7 @@ export function OpenRequestsCard({ rows, names }: { rows: ReviewRow[]; names: Na
   );
 }
 
-export function CheckedCard({ rows, names, limit }: { rows: ReviewRow[]; names: Names; limit?: number }) {
+export function CheckedCard({ rows, names, limit, timeZone }: { rows: ReviewRow[]; names: Names; limit?: number; timeZone: string }) {
   if (rows.length === 0) return null;
   return (
     <Card className="grid gap-2 p-6">
@@ -72,7 +72,7 @@ export function CheckedCard({ rows, names, limit }: { rows: ReviewRow[]; names: 
             <Link href={`/teacher/review/${r.id}`} className="flex min-h-12 items-center justify-between gap-3 py-2 text-[14px] hover:underline">
               <span>{names.get(r.student_id) ?? "Student"}</span>
               <span className="text-muted-foreground">
-                {r.total} / 45 · {shortDate(r.created_at)}
+                {r.total} / 45 · {shortDate(r.created_at, timeZone)}
               </span>
             </Link>
           </li>

@@ -27,4 +27,4 @@ export function certScores(opts: { name: string | null; title: string; structure
   };
 }
 
-export const certDate = (iso: string) => new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Asia/Karachi" });
+export const certDate = (iso: string, timeZone: string) => new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone });

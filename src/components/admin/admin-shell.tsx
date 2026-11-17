@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
+import { TimeZoneSync } from "@/components/account/time-zone-sync";
 import { Logo } from "@/components/logo";
 import { SignOutButton } from "@/components/sign-out-button";
 
@@ -20,6 +21,8 @@ export function AdminShell({
 }) {
   return (
     <div className="min-h-dvh">
+      {/* Saves the admin's device time zone once (the server skips it when already saved). */}
+      <TimeZoneSync />
       <header className="flex items-center justify-between border-b border-border bg-card px-4 py-3 sm:px-8">
         <Logo href="/admin" />
         <SignOutButton compact />

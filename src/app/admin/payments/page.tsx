@@ -10,10 +10,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = { title: "Payments" };
 
-const when = (d: string) => new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "Asia/Karachi" });
+const when = (d: string, timeZone: string) => new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone });
 
 export default async function PaymentsPage() {
-  await requireUser(["academy_admin", "super_admin"]);
+  const user = await requireUser(["academy_admin", "super_admin"]);
   const admin = createAdminClient();
   let plans: Plan[] = [];
   let accounts: PayAccount[] = [];
@@ -56,7 +56,7 @@ export default async function PaymentsPage() {
                   <Badge variant={o.status === "awaiting_review" ? "gold" : "outline"}>{o.status === "awaiting_review" ? "Student says paid" : "Not paid yet"}</Badge>
                 </div>
                 <p className="text-[13px] text-muted-foreground">
-                  Reference {o.reference} · {when(o.created_at)} · {o.method === "card" ? "Card" : "Bank / wallet"}
+                  Reference {o.reference} · {when(o.created_at, user.timeZone)} · {o.method === "card" ? "Card" : "Bank / wallet"}
                   {o.txn_id ? ` · Transaction ID: ${o.txn_id}` : ""}
                   {o.payer_note ? ` · ${o.payer_note}` : ""}
                 </p>

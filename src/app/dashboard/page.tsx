@@ -12,16 +12,17 @@ import { requireUser } from "@/lib/auth/dal";
 import { getReadiness } from "@/lib/papers/readiness";
 import { getFinishedAttempts, getLastResult, getPaperById, getPapers } from "@/lib/papers/data";
 import { getPracticeSets, getSavedWords } from "@/lib/practice/data";
-import { practiceStreak, todayPKT } from "@/lib/practice/plan";
+import { practiceStreak } from "@/lib/practice/plan";
+import { todayIn } from "@/lib/time";
 import { examLabel } from "@/lib/exam/choice";
 import { getWritingFeedback } from "@/lib/writing/data";
 import { getReviewForStudent } from "@/lib/writing/teacher";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
-function greetingPKT(now: Date) {
+function greeting(now: Date, timeZone: string) {
   const hour = Number(
-    new Intl.DateTimeFormat("en-GB", { hour: "numeric", hourCycle: "h23", timeZone: "Asia/Karachi" }).format(now),
+    new Intl.DateTimeFormat("en-GB", { hour: "numeric", hourCycle: "h23", timeZone }).format(now),
   );
   if (hour < 12) return "Guten Morgen";
   if (hour < 18) return "Guten Tag";
@@ -38,7 +39,7 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
     getPapers(),
     getFinishedAttempts(user.id, 1),
   ]);
-  const streak = practiceStreak(practice.sets.flatMap((x) => x.tracks), todayPKT());
+  const streak = practiceStreak(practice.sets.flatMap((x) => x.tracks), todayIn(user.timeZone));
 
   // Next mock exam: the first free paper (or the first one), with the last score if taken.
   const paper = papers.find((p) => p.is_free) ?? papers[0] ?? null;
@@ -57,14 +58,17 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
   const now = new Date();
   // The student's own exam (from onboarding). No date given = no countdown.
   const examName = examLabel(user.exam);
-  const examDate = user.examDate ? new Date(`${user.examDate}T09:00:00+05:00`) : null;
-  const daysLeft = examDate ? Math.max(0, Math.ceil((examDate.getTime() - now.getTime()) / 86_400_000)) : null;
+  // Calendar days from today (in the student's own time zone) to the exam day.
+  const examDate = user.examDate ? new Date(`${user.examDate}T00:00:00Z`) : null;
+  const daysLeft = examDate
+    ? Math.max(0, Math.round((examDate.getTime() - Date.parse(`${todayIn(user.timeZone, now)}T00:00:00Z`)) / 86_400_000))
+    : null;
   const examDay = examDate
     ? new Intl.DateTimeFormat("en-GB", {
         day: "numeric",
         month: "short",
         year: "numeric",
-        timeZone: "Asia/Karachi",
+        timeZone: "UTC",
       }).format(examDate)
     : null;
 
@@ -76,7 +80,7 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
       <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="grid gap-2">
           <h1 className="text-[28px] leading-tight font-extrabold sm:text-[32px]">
-            {greetingPKT(now)}, {firstName}
+            {greeting(now, user.timeZone)}, {firstName}
           </h1>
           <p className="flex items-center gap-2 text-[15px] text-muted-foreground">
             <CalendarDays className="size-4 shrink-0" aria-hidden />

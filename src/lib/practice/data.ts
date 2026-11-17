@@ -3,7 +3,8 @@ import "server-only";
 import { dictionaryKeys } from "@/lib/dictionary/keys";
 import { createClient } from "@/lib/supabase/server";
 import type { LanguageCode } from "@/lib/languages";
-import { SAVED_WORD_COLUMNS, todayPKT, type SavedWord, type TrackSummary } from "./plan";
+import { todayForUser } from "@/lib/auth/dal";
+import { SAVED_WORD_COLUMNS, type SavedWord, type TrackSummary } from "./plan";
 
 export const AUDIO_BUCKET = "practice-audio";
 export { LEVELS } from "./levels";
@@ -105,7 +106,7 @@ export async function getPracticeTrack(
   } | null;
   if (!set) return null;
 
-  const today = todayPKT();
+  const today = await todayForUser();
   const [siblingsRes, logRes, audioRes, words] = await Promise.all([
     supabase.from("practice_tracks").select("id, title, position").eq("set_id", track.set_id).order("position"),
     supabase.from("practice_log").select("track_id").eq("user_id", userId).eq("practised_on", today),

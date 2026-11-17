@@ -5,6 +5,7 @@ import { MobileNav } from "@/components/dashboard/mobile-nav";
 import { NavLinks } from "@/components/dashboard/nav-links";
 import { UserMenu } from "@/components/dashboard/user-menu";
 import { getAvatarUrl } from "@/lib/account/avatar";
+import { TimeZoneSync } from "@/components/account/time-zone-sync";
 import { requireUser } from "@/lib/auth/dal";
 // import { myExamTitle } from "@/lib/exam/choice"; // MVP: switched off, B1 only
 
@@ -22,6 +23,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
 
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[264px_minmax(0,1fr)]">
+      {!user.timeZoneSaved && <TimeZoneSync />}
       <aside className="hidden border-r border-border bg-card md:block">
         <div className="sticky top-0 flex h-dvh flex-col gap-8 px-4 py-6">
           <Logo href="/dashboard" className="px-2" />

@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { DEFAULT_TIME_ZONE, todayIn } from "@/lib/time";
 
 const addMonths = (iso: string, months: number) => {
   const d = new Date(`${iso}T00:00:00Z`);
@@ -22,8 +23,9 @@ export async function fulfilOrder(admin: SupabaseClient, orderId: string): Promi
   const { data: closed } = await admin.from("orders").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", o.id).in("status", ["pending", "awaiting_review"]).select("id");
   if (!closed?.length) return { ok: true };
 
-  const { data: prof } = await admin.from("profiles").select("pro_until").eq("id", o.user_id).maybeSingle();
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Karachi" }).format(new Date());
+  const { data: prof } = await admin.from("profiles").select("pro_until, time_zone").eq("id", o.user_id).maybeSingle();
+  // "Today" in the buyer's own time zone.
+  const today = todayIn(prof?.time_zone ?? DEFAULT_TIME_ZONE);
   const start = prof?.pro_until && prof.pro_until > today ? prof.pro_until : today;
   const { error } = await admin.from("profiles").update({ pro_until: addMonths(start, o.months) }).eq("id", o.user_id);
   if (error) {

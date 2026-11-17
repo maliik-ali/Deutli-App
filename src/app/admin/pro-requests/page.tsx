@@ -8,7 +8,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export const metadata: Metadata = { title: "Pro requests" };
 
 export default async function ProRequestsPage() {
-  await requireUser(["academy_admin", "super_admin"]);
+  const user = await requireUser(["academy_admin", "super_admin"]);
   const admin = createAdminClient();
   const { data } = admin ? await admin.from("pro_requests").select("user_id, note, created_at").order("created_at", { ascending: false }).limit(200) : { data: [] };
   const rows = (data ?? []) as { user_id: string; note: string | null; created_at: string }[];
@@ -60,7 +60,7 @@ export default async function ProRequestsPage() {
                   )}
                 </span>
                 <span className="text-[13px] text-muted-foreground">
-                  {new Date(r.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "Asia/Karachi" })}
+                  {new Date(r.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: user.timeZone })}
                   {r.note ? ` · ${r.note}` : ""}
                 </span>
               </li>

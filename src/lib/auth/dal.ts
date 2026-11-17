@@ -7,6 +7,7 @@ import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 import { cleanLanguages, type LanguageCode } from "@/lib/languages";
+import { cleanTimeZone, DEFAULT_TIME_ZONE, isTimeZone, todayIn } from "@/lib/time";
 import { homeForRole, isRole, type Role } from "./roles";
 
 export type CurrentUser = {
@@ -25,6 +26,10 @@ export type CurrentUser = {
   examDate: string | null;
   /** What worries the student about the exam (onboarding), e.g. ["lesen", "sprechen"]. */
   focusSkills: string[];
+  /** The user's time zone (e.g. "Europe/Berlin"); Pakistan time until the device's is detected. */
+  timeZone: string;
+  /** False until the device's time zone was saved (or the user chose one). */
+  timeZoneSaved: boolean;
   /** The student's own teacher (profiles.teacher_id), or null for a standalone student. */
   teacherId: string | null;
   /** Deutli Pro runs until this date (YYYY-MM-DD), or null. */
@@ -48,7 +53,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role, languages, avatar_path, onboarded_at, exam, exam_date, focus_skills, teacher_id, pro_until")
+    .select("full_name, role, languages, avatar_path, onboarded_at, exam, exam_date, focus_skills, time_zone, teacher_id, pro_until")
     .eq("id", claims.sub)
     .maybeSingle();
 
@@ -64,6 +69,8 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     exam: profile?.exam ?? null,
     examDate: profile?.exam_date ?? null,
     focusSkills: Array.isArray(profile?.focus_skills) ? (profile.focus_skills as string[]) : [],
+    timeZone: cleanTimeZone(profile?.time_zone),
+    timeZoneSaved: isTimeZone(profile?.time_zone),
     teacherId: profile?.teacher_id ?? null,
     proUntil: profile?.pro_until ?? null,
   };
@@ -84,9 +91,15 @@ export async function redirectIfLoggedIn() {
 }
 
 /** Pro students (and admins, who can test everything) may open premium papers. */
-export function hasPro(user: Pick<CurrentUser, "proUntil" | "role">): boolean {
+export function hasPro(user: Pick<CurrentUser, "proUntil" | "role"> & { timeZone?: string }): boolean {
   if (user.role !== "student") return true;
   if (!user.proUntil) return false;
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Karachi" }).format(new Date());
+  const today = todayIn(user.timeZone ?? DEFAULT_TIME_ZONE);
   return user.proUntil >= today;
+}
+
+/** Today's date (YYYY-MM-DD) in the signed-in user's time zone (Pakistan time if nobody is signed in). */
+export async function todayForUser(): Promise<string> {
+  const user = await getCurrentUser();
+  return todayIn(user?.timeZone ?? DEFAULT_TIME_ZONE);
 }

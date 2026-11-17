@@ -48,4 +48,4 @@ export async function getTeacherData(teacherId: string, isAdmin: boolean): Promi
 }
 
 export const sourceLabel = (s: ReviewRow["source"]) => (s === "offer" ? "asked for a teacher" : s === "code" ? "sent with your code" : "your student");
-export const shortDate = (d: string) => new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "Asia/Karachi" });
+export const shortDate = (d: string, timeZone: string) => new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone });

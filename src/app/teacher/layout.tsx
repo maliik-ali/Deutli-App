@@ -1,6 +1,7 @@
 import { Logo } from "@/components/logo";
 import { TeacherMobileNav, TeacherSidebar } from "@/components/teacher/teacher-nav";
 import { getAvatarUrl } from "@/lib/account/avatar";
+import { TimeZoneSync } from "@/components/account/time-zone-sync";
 import { requireUser } from "@/lib/auth/dal";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -22,6 +23,7 @@ export default async function TeacherLayout({ children }: LayoutProps<"/teacher"
 
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[264px_minmax(0,1fr)]">
+      {!user.timeZoneSaved && <TimeZoneSync />}
       <aside className="hidden border-r border-border bg-card md:block">
         <TeacherSidebar {...props} />
       </aside>

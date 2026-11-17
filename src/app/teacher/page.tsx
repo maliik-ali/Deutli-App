@@ -52,8 +52,8 @@ export default async function TeacherPage() {
       )}
 
       <div className="grid items-start gap-6 lg:grid-cols-2">
-        <ToCheckCard rows={todo} names={data.names} limit={5} />
-        <CheckedCard rows={done} names={data.names} limit={5} />
+        <ToCheckCard timeZone={user.timeZone} rows={todo} names={data.names} limit={5} />
+        <CheckedCard timeZone={user.timeZone} rows={done} names={data.names} limit={5} />
       </div>
     </main>
   );

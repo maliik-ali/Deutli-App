@@ -1,7 +1,8 @@
 import "server-only";
 
 import { fillFromDictionary } from "@/lib/practice/data";
-import { todayPKT, type SavedWord } from "@/lib/practice/plan";
+import { todayForUser } from "@/lib/auth/dal";
+import { type SavedWord } from "@/lib/practice/plan";
 import { createClient } from "@/lib/supabase/server";
 import { LEARNED_BOX } from "./srs";
 
@@ -25,7 +26,7 @@ const COLUMNS =
 
 /** All of the student's saved words (newest first), with meanings filled from the dictionary. */
 export async function getVocabulary(userId: string): Promise<{ words: VocabWord[]; today: string; failed: boolean }> {
-  const today = todayPKT();
+  const today = await todayForUser();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("vocabulary_words")

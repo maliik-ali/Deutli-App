@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { AVATAR_BUCKET, getAvatarUrl } from "@/lib/account/avatar";
 import { requireUser } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
+import { isTimeZone } from "@/lib/time";
 import { changePasswordSchema, fullNameRules, phoneRules } from "@/lib/validation/auth";
 
 export type AccountResult = { error: string } | { ok: true };
@@ -121,5 +122,35 @@ export async function changePassword(input: unknown): Promise<AccountResult> {
     if (error.code === "same_password") return { error: "Your new password must be different from your current one." };
     return { error: SAVE_ERROR };
   }
+  return { ok: true };
+}
+
+/**
+ * Save the time zone the device reports, the first time only. A time zone the user chose
+ * on the Account page is never overwritten. Works for every role.
+ */
+export async function saveDetectedTimeZone(value: unknown): Promise<{ error: string } | { changed: boolean }> {
+  const user = await requireUser();
+  if (!isTimeZone(value)) return { error: SAVE_ERROR };
+  if (user.timeZoneSaved) return { changed: false };
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ time_zone: value })
+    .eq("id", user.id)
+    .is("time_zone", null);
+  if (error) return { error: SAVE_ERROR };
+  revalidatePath("/", "layout");
+  return { changed: true };
+}
+
+/** The user picks their time zone on the Account page. */
+export async function setMyTimeZone(value: unknown): Promise<AccountResult> {
+  const user = await requireUser();
+  if (!isTimeZone(value)) return { error: "Choose a time zone from the list." };
+  const supabase = await createClient();
+  const { error } = await supabase.from("profiles").update({ time_zone: value }).eq("id", user.id);
+  if (error) return { error: SAVE_ERROR };
+  revalidatePath("/", "layout");
   return { ok: true };
 }

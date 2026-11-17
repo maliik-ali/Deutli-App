@@ -24,11 +24,6 @@ export type PlanSlot = {
   doneToday: boolean;
 };
 
-/** Today's date in Pakistan time (the pilot students' time zone), as YYYY-MM-DD. */
-export function todayPKT(now: Date = new Date()): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Karachi" }).format(now);
-}
-
 function daysBetween(from: string, to: string): number {
   return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
 }

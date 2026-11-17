@@ -46,7 +46,7 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
   const answeredCount = questions.filter((q) => q.given).length;
   const skipped = questions.length > 0 && answeredCount / questions.length < 0.5;
 
-  const scores = certScores({ name: user.fullName, title: paper.title, structure: paper.structure, result: r, date: certDate(attempt.submitted_at ?? attempt.started_at), review, feedback });
+  const scores = certScores({ name: user.fullName, title: paper.title, structure: paper.structure, result: r, date: certDate(attempt.submitted_at ?? attempt.started_at, user.timeZone), review, feedback });
   const skills = [
     { label: "Lesen", ...scores.lesen },
     { label: "Sprachbausteine", ...scores.sprach },

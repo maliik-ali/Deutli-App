@@ -12,6 +12,7 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import {
   changePassword,
   removeAvatar,
+  setMyTimeZone,
   updateFullName,
   updatePhone,
   uploadAvatar,
@@ -19,8 +20,10 @@ import {
 } from "@/lib/account/actions";
 import { getLanguage, MAX_LANGUAGES, type LanguageCode } from "@/lib/languages";
 import { setMyLanguages } from "@/lib/practice/actions";
+import { timeZoneLabel } from "@/lib/time";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-type Row = "photo" | "name" | "phone" | "password" | "languages";
+type Row = "photo" | "name" | "phone" | "password" | "languages" | "timezone";
 
 export type AccountInfo = {
   fullName: string;
@@ -28,9 +31,22 @@ export type AccountInfo = {
   phone: string;
   languages: LanguageCode[];
   avatarUrl: string | null;
+  /** IANA time zone, e.g. "Europe/Berlin". */
+  timeZone: string;
 };
 
 const PHOTO_SIZE = 256;
+
+/** All time zones the browser knows, with the current one always included. */
+function timeZoneOptions(current: string): string[] {
+  let list: string[] = [];
+  try {
+    list = (Intl as unknown as { supportedValuesOf: (k: string) => string[] }).supportedValuesOf("timeZone");
+  } catch {
+    list = [];
+  }
+  return list.includes(current) ? list : [current, ...list];
+}
 
 /** Crops the picked image to a centred square and shrinks it to 256×256 JPEG (about 20–40 KB). */
 async function squarePhoto(file: File): Promise<Blob> {
@@ -134,6 +150,8 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
   const [languages, setLanguages] = useState(info.languages);
   const [draftLanguages, setDraftLanguages] = useState(info.languages);
   const [newPassword, setNewPassword] = useState("");
+  const [timeZone, setTimeZone] = useState(info.timeZone);
+  const [draftTimeZone, setDraftTimeZone] = useState(info.timeZone);
   const [avatarUrl, setAvatarUrl] = useState(info.avatarUrl);
   const [photo, setPhoto] = useState<{ blob: Blob; preview: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -143,6 +161,7 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
     setError(null);
     setNotice(null);
     setDraftLanguages(languages);
+    setDraftTimeZone(timeZone);
     setNewPassword("");
   }
   function close() {
@@ -459,11 +478,54 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
           label="Time zone"
           value={
             <span className="grid gap-0.5">
-              <span className="text-foreground">Pakistan time (PKT, GMT+5)</span>
-              <span className="text-[13px]">Classes, exams and your streak use this time.</span>
+              <span className="text-foreground">{timeZoneLabel(timeZone)}</span>
+              <span className="text-[13px]">Your day, streak, words due and dates use this time.</span>
             </span>
           }
-        />
+          editing={editing === "timezone"}
+          onEdit={() => open("timezone")}
+          editLabel="Edit time zone"
+        >
+          <form
+            className="grid gap-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              submit(async () => {
+                const r = await setMyTimeZone(draftTimeZone);
+                if ("ok" in r) setTimeZone(draftTimeZone);
+                return r;
+              }, "Your time zone is saved.");
+            }}
+          >
+            <div className="grid gap-2">
+              <label htmlFor="time-zone" className="text-sm font-semibold">
+                Time zone
+              </label>
+              <Select value={draftTimeZone} onValueChange={setDraftTimeZone}>
+                <SelectTrigger id="time-zone" className="sm:max-w-md">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="max-h-80">
+                  {timeZoneOptions(draftTimeZone).map((tz) => (
+                    <SelectItem key={tz} value={tz} textValue={tz}>
+                      {timeZoneLabel(tz)}
+                      <span className="ml-2 text-[12px] text-subtle-foreground">{tz.split("/")[0]}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <button
+                type="button"
+                onClick={() => setDraftTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone)}
+                className="inline-flex min-h-11 w-fit items-center text-sm font-semibold text-gold-ink underline-offset-4 hover:underline"
+              >
+                Use this device&apos;s time zone
+              </button>
+            </div>
+            {errorText}
+            <FormButtons busy={busy} onCancel={close} />
+          </form>
+        </SettingRow>
       </Section>
     </div>
   );

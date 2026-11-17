@@ -11,7 +11,8 @@ import { LANGUAGE_CODES, MAX_LANGUAGES, type LanguageCode } from "@/lib/language
 import { dictionaryKeys } from "@/lib/dictionary/keys";
 import { translateWord } from "@/lib/translate/word";
 import { LEVELS } from "./levels";
-import { SAVED_WORD_COLUMNS, todayPKT, type SavedWord } from "./plan";
+import { todayIn } from "@/lib/time";
+import { SAVED_WORD_COLUMNS, type SavedWord } from "./plan";
 
 export type PracticeActionResult = { error: string } | undefined;
 
@@ -35,7 +36,7 @@ export async function setPractisedToday(trackId: unknown, done: unknown): Promis
   if (!id.success) return { error: GENERIC };
 
   const supabase = await createClient();
-  const today = todayPKT();
+  const today = todayIn(user.timeZone);
   const { error } = done
     ? await supabase
         .from("practice_log")
@@ -80,7 +81,7 @@ export async function saveVocabularyWord(input: unknown): Promise<{ error: strin
   return { word: data as SavedWord };
 }
 
-// AI translations per student per Pakistan day. Words already in the shared dictionary are free and don't count.
+// AI translations per student per day (in their own time zone). Words already in the shared dictionary are free and don't count.
 const DAILY_TRANSLATIONS = 10;
 const LIMIT_REACHED =
   "You've used today's 10 automatic translations. Type the meaning yourself, or try again tomorrow.";
@@ -133,7 +134,7 @@ export async function translateVocabularyWord(
   if (missing.length > 0) {
     const { data: allowed, error: usageError } = await admin.rpc("use_translation", {
       p_user: user.id,
-      p_day: todayPKT(),
+      p_day: todayIn(user.timeZone),
       p_limit: DAILY_TRANSLATIONS,
     });
     if (usageError) error = NO_TRANSLATION;

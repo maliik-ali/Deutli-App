@@ -3,8 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { requireUser } from "@/lib/auth/dal";
-import { todayPKT } from "@/lib/practice/plan";
+import { requireUser, todayForUser } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { nextReview } from "./srs";
 
@@ -51,7 +50,7 @@ async function saveAnswer(
     .maybeSingle();
   if (!row) return { error: ERROR };
 
-  const next = nextReview(row.box ?? 0, right, todayPKT());
+  const next = nextReview(row.box ?? 0, right, await todayForUser());
   const { error } = await supabase
     .from("vocabulary_words")
     .update({
@@ -98,7 +97,7 @@ async function levelWordRow(supabase: Supabase, userId: string, levelWordId: str
       translations: lw.translations ?? {},
       context: examples.de?.slice(0, 500) || null,
       source: "level",
-      due_on: todayPKT(),
+      due_on: await todayForUser(),
     })
     .select("id")
     .single();
@@ -169,7 +168,7 @@ export async function recordArticleAnswer(input: unknown, right: unknown): Promi
     .update(
       right
         ? { right_count: (row.right_count ?? 0) + 1 }
-        : { wrong_count: (row.wrong_count ?? 0) + 1, due_on: todayPKT() },
+        : { wrong_count: (row.wrong_count ?? 0) + 1, due_on: await todayForUser() },
     )
     .eq("id", rowId);
   if (error) return { error: ERROR };
