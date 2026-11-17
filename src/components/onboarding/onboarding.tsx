@@ -333,16 +333,6 @@ export function Onboarding({
               title={firstName ? `Welcome to Deutli, ${firstName}!` : "Welcome to Deutli!"}
               text="Which languages do you speak? We'll show the meaning of new German words in them."
             />
-            {/* Rare escape hatch (wrong account): small, only here, like Google's "Not you?". */}
-            <form action={signOut} className="-mt-6">
-              <button
-                type="submit"
-                title={email ? `Signed in as ${email}` : undefined}
-                className="inline-flex min-h-11 items-center px-2 text-[13px] text-subtle-foreground underline-offset-4 hover:text-foreground hover:underline"
-              >
-                Not you? Log out
-              </button>
-            </form>
             <div className="grid gap-6 text-left">
               <LanguageSelect
                 id="first-language"
@@ -579,9 +569,23 @@ export function Onboarding({
           )}
         >
           {step < STEP_COUNT - 1 ? (
-            <Button className={cn("h-12 text-base", actionWidth)} disabled={!canContinue} onClick={() => go(step + 1)}>
-              Continue <ArrowRight aria-hidden />
-            </Button>
+            <>
+              <Button className={cn("h-12 text-base", actionWidth)} disabled={!canContinue} onClick={() => go(step + 1)}>
+                Continue <ArrowRight aria-hidden />
+              </Button>
+              {/* Rare escape hatch (wrong account): small, under the button, first step only. */}
+              {step === 0 && (
+                <form action={signOut}>
+                  <button
+                    type="submit"
+                    title={email ? `Signed in as ${email}` : undefined}
+                    className="inline-flex min-h-11 items-center px-2 text-[13px] text-subtle-foreground underline-offset-4 hover:text-foreground hover:underline"
+                  >
+                    Not you? Log out
+                  </button>
+                </form>
+              )}
+            </>
           ) : (
             <Button
               className={cn("h-12 text-base", actionWidth)}
