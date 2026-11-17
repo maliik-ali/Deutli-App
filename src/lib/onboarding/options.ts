@@ -6,13 +6,11 @@
 export const GOALS = [
   { id: "citizenship", label: "Becoming a German citizen", de: "Einbürgerung" },
   { id: "residence", label: "Permanent residence", de: "Niederlassungserlaubnis" },
-  { id: "family", label: "Family reunion visa", de: "Familiennachzug" },
-  { id: "ausbildung", label: "Vocational training", de: "Ausbildung" },
   { id: "university", label: "University", de: "Studienkolleg" },
   { id: "job", label: "Job or recognition", de: "Anerkennung" },
-  { id: "integration", label: "Integration course", de: "Integrationskurs" },
 ] as const;
 export const IMPROVE_GOAL = { id: "improve", label: "Just improving my German" } as const;
+// Old answers ("family", "ausbildung", "integration") may still be saved in profiles.goals.
 export type GoalId = (typeof GOALS)[number]["id"] | typeof IMPROVE_GOAL.id;
 
 export const EXAMS = [
