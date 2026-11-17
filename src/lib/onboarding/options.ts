@@ -44,6 +44,8 @@ export const SKILLS: {
   about: string;
   parts: { title: string; text: string }[];
   help: string;
+  /** One short next step, shown on the dashboard "Your focus" card. */
+  next: string;
   start: { href: string; label: string; detail: string };
 }[] = [
   {
@@ -58,6 +60,7 @@ export const SKILLS: {
       { title: "Find details fast", text: "Scan for names, dates, prices and the words from the question." },
     ],
     help: "Improve Accent gives you a short text every day: listen, read along and save every word you don't know. Your words come back in Vocabulary until you know them.",
+    next: "Read one short text a day and save the words you don't know.",
     start: { href: "/dashboard/daily-practice", label: "Improve Accent", detail: "about 10 min" },
   },
   {
@@ -73,6 +76,7 @@ export const SKILLS: {
       { title: "Word gaps", text: "Pick the word that fits the meaning, like freuen auf or freuen über." },
     ],
     help: "Save the small words that trip you up while reading, then practise them in Vocabulary every day until they stick.",
+    next: "Practise the small words (prepositions, linking words, articles) a few minutes a day.",
     start: { href: "/dashboard/vocabulary", label: "Vocabulary", detail: "about 5 min" },
   },
   {
@@ -87,6 +91,7 @@ export const SKILLS: {
       { title: "Listen for key words", text: "Times, places, reasons and opinions: the rest is background." },
     ],
     help: "Improve Accent trains your ears in three rounds: listen only, listen and read, then speak along. You can slow the audio down to 0.75× while you get used to the speed.",
+    next: "Listen first, then read along. Slow the audio to 0.75× while you get used to the speed.",
     start: { href: "/dashboard/daily-practice", label: "Improve Accent", detail: "about 10 min" },
   },
   {
@@ -104,7 +109,8 @@ export const SKILLS: {
       },
     ],
     help: "Homework with instant AI feedback, confirmed by your teacher, is coming to Deutli soon. Until then, Improve Accent builds the words and phrases you need for clear emails.",
-    start: { href: "/dashboard/daily-practice", label: "Improve Accent", detail: "about 10 min" },
+    next: "Write the email in a mock exam and get feedback on structure, tone and mistakes.",
+    start: { href: "/dashboard/exam", label: "My B1 Exam", detail: "mock exam" },
   },
   {
     id: "sprechen",
@@ -118,6 +124,7 @@ export const SKILLS: {
       { title: "Present a topic", text: "Talk about your experience and give your opinion with reasons." },
     ],
     help: "Speak along in Improve Accent every day to build fluency. A Speaking club to practise with other students is coming soon.",
+    next: "Speak along with the recordings every day to build fluency.",
     start: { href: "/dashboard/daily-practice", label: "Improve Accent", detail: "speak-along round" },
   },
   {
@@ -132,6 +139,7 @@ export const SKILLS: {
       { title: "Schreiben and Sprechen", text: "Write emails, give your opinion and talk with a partner." },
     ],
     help: "Start with Improve Accent: one short text a day. It trains reading, listening and speaking together, and builds your vocabulary as you go.",
+    next: "Start with one short text a day: it trains reading, listening and speaking together.",
     start: { href: "/dashboard/daily-practice", label: "Improve Accent", detail: "about 10 min" },
   },
 ];

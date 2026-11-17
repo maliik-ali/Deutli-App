@@ -5,18 +5,12 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
-  BookOpen,
   CalendarDays,
   Check,
   CircleHelp,
-  Headphones,
   Layers,
-  Mic,
-  PenLine,
-  Puzzle,
   TrendingUp,
   Zap,
-  type LucideIcon,
 } from "lucide-react";
 
 import { Logo } from "@/components/logo";
@@ -26,6 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { signOut } from "@/app/(auth)/actions";
 import { LanguageFlag } from "@/components/language-flag";
+import { SKILL_ICONS } from "./skill-icons";
 import { LANGUAGES, getLanguage, type LanguageCode } from "@/lib/languages";
 import { completeOnboarding } from "@/lib/onboarding/actions";
 import {
@@ -34,7 +29,6 @@ import {
   IMPROVE_GOAL,
   SKILLS,
   TIMELINES,
-  skillById,
   type ExamId,
   type GoalId,
   type SkillId,
@@ -42,15 +36,7 @@ import {
 } from "@/lib/onboarding/options";
 import { cn } from "@/lib/utils";
 
-const STEP_COUNT = 5;
-const SKILL_ICONS: Record<SkillId, LucideIcon> = {
-  lesen: BookOpen,
-  sprachbausteine: Puzzle,
-  hoeren: Headphones,
-  schreiben: PenLine,
-  sprechen: Mic,
-  unsure: CircleHelp,
-};
+const STEP_COUNT = 4;
 const TIMELINE_ICONS = { zap: Zap, trend: TrendingUp, layers: Layers, help: CircleHelp } as const;
 
 /** A selectable card. "radio" = pick one, "check" = pick several. */
@@ -239,10 +225,8 @@ export function Onboarding({
   const [busy, startBusy] = useTransition();
 
   const skills = SKILLS.filter((s) => !s.onlyFor || !exam || s.onlyFor.includes(exam));
-  // Plans for the chosen worries, in the order they appear on the list ("not sure" only on its own).
+  // The chosen worries, in list order. The plan for them is the "Your focus" card on the dashboard.
   const chosen = skills.filter((s) => focus.includes(s.id));
-  const plans = chosen.length ? chosen : [skillById("unsure")!];
-  const start = plans[0].start;
 
   // Native language first, then the second one, then English (if there is room).
   function finalLanguages(): LanguageCode[] {
@@ -529,7 +513,7 @@ export function Onboarding({
           <>
             <Heading
               title="What worries you most about the exam?"
-              text="Pick everything that applies. We'll show you how to tackle it."
+              text="Pick everything that applies. Your dashboard will show you where to start for each."
             />
             <div className="grid gap-3">
               {skills.map((s) => {
@@ -554,72 +538,17 @@ export function Onboarding({
                 );
               })}
             </div>
-          </>
-        )}
 
-        {step === 4 && (
-          <>
-            <Heading
-              title={
-                plans[0].id === "unsure"
-                  ? "Your B1 exam at a glance"
-                  : plans.length === 1
-                    ? "Here's how to tackle it"
-                    : `Here's how to tackle these ${plans.length}`
-              }
-              text={
-                plans[0].id === "unsure"
-                  ? "Four skills, one certificate."
-                  : "A few tips for each, and how Deutli helps you practise."
-              }
-            />
-            <div className="grid gap-4">
-              {plans.map((plan) => {
-                const Icon = SKILL_ICONS[plan.id];
-                return (
-                  <section key={plan.id} className="grid gap-4 rounded-2xl border border-border bg-card p-5 sm:p-6">
-                    <div className="flex items-center gap-4">
-                      <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-gold-soft text-gold-ink">
-                        <Icon className="size-6" aria-hidden />
-                      </span>
-                      <h2 className="flex flex-wrap items-baseline gap-x-2">
-                        <span lang={plan.id === "unsure" ? undefined : "de"} className="text-xl font-extrabold">
-                          {plan.id === "unsure" ? "The four skills" : plan.name}
-                        </span>
-                        {plan.id !== "unsure" && <span className="text-muted-foreground">{plan.english}</span>}
-                      </h2>
-                    </div>
-                    <p className="text-[15px] leading-relaxed text-muted-foreground">{plan.about}</p>
-                    <ol className="grid gap-3 sm:grid-cols-2">
-                      {plan.parts.map((p, i) => (
-                        <li key={p.title} className="flex gap-3 rounded-xl bg-background/60 p-4">
-                          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-ink text-sm font-bold text-gold-ink">
-                            {i + 1}
-                          </span>
-                          <span className="grid gap-0.5">
-                            <span className="font-semibold">{p.title}</span>
-                            <span className="text-sm text-muted-foreground">{p.text}</span>
-                          </span>
-                        </li>
-                      ))}
-                    </ol>
-                    <p className="text-[15px] leading-relaxed">
-                      <span className="font-semibold">How Deutli helps: </span>
-                      {plan.help}
-                    </p>
-                  </section>
-                );
-              })}
-            </div>
-
-            <Choice kind="check" selected={emailTips} onClick={() => setEmailTips((v) => !v)}>
-              <span className="grid gap-0.5">
-                <span className="font-semibold">Study tips and reminders</span>
-                <span className="text-[15px] text-muted-foreground">
-                  An occasional email with exam tips and new features. Unsubscribe anytime.
-                </span>
-              </span>
-            </Choice>
+            {/* Clear consent: unticked unless the student ticks it. */}
+            <label className="flex min-h-11 cursor-pointer items-start gap-3 px-1 text-[15px] text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={emailTips}
+                onChange={(e) => setEmailTips(e.target.checked)}
+                className="mt-1 size-5 shrink-0 accent-[var(--color-gold)]"
+              />
+              <span>Email me occasional exam tips and new features. Unsubscribe anytime.</span>
+            </label>
 
             {error && (
               <p className="rounded-xl bg-destructive-soft px-4 py-3 text-sm text-destructive" role="alert">
@@ -636,17 +565,13 @@ export function Onboarding({
               Continue <ArrowRight aria-hidden />
             </Button>
           ) : (
-            <>
-              <Button className={cn("h-12 text-base", actionWidth)} disabled={busy} onClick={() => finish(start.href)}>
-                {busy ? "Saving…" : "Start practising now"} <ArrowRight aria-hidden />
-              </Button>
-              <p className="text-sm text-muted-foreground">
-                {start.label} · {start.detail}
-              </p>
-              <Button variant="ghost" size="sm" onClick={() => finish(home)} disabled={busy}>
-                Go to my dashboard
-              </Button>
-            </>
+            <Button
+              className={cn("h-12 text-base", actionWidth)}
+              disabled={busy || !canContinue}
+              onClick={() => finish(home)}
+            >
+              {busy ? "Saving…" : "See my plan"} <ArrowRight aria-hidden />
+            </Button>
           )}
         </div>
       </main>

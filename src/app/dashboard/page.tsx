@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CalendarDays, Flame, Sparkles } from "lucide-react";
 
 import { FormNotice } from "@/components/auth/form-error";
+import { FocusCard } from "@/components/dashboard/focus-card";
 import { BlurFade } from "@/components/magicui/blur-fade";
 import { MotionProvider } from "@/components/magicui/motion-provider";
 import { NumberTicker } from "@/components/magicui/number-ticker";
@@ -102,6 +103,12 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
           </Link>
         </div>
       </header>
+
+      {user.focusSkills.length > 0 && (
+        <BlurFade delay={0.02}>
+          <FocusCard focusSkills={user.focusSkills} exam={user.exam} />
+        </BlurFade>
+      )}
 
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         <BlurFade delay={0.05} className="[&>*]:h-full">

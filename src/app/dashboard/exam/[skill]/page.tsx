@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Clock, Layers, ListChecks, Target, type LucideIcon } from "lucide-react";
+import { Clock, Layers, Lightbulb, ListChecks, Target, type LucideIcon } from "lucide-react";
 
 import { SKILL_ICONS } from "@/components/exam/skill-icons";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
 import { MOCK_EXAMS, SKILL_SLUGS, getExamFormat, type ExamPart } from "@/lib/exam/catalog";
+import { SKILLS } from "@/lib/onboarding/options";
+
+// Study tips for each exam page (Sprachbausteine sits on the reading page, as in telc).
+const TIP_SKILLS: Record<string, string[]> = {
+  reading: ["lesen", "sprachbausteine"],
+  listening: ["hoeren"],
+  writing: ["schreiben"],
+  speaking: ["sprechen"],
+};
 
 const TITLES: Record<string, string> = {
   reading: "Reading",
@@ -36,6 +45,14 @@ export default async function SkillPage(props: PageProps<"/dashboard/exam/[skill
   if (!skill) notFound();
 
   const Icon = SKILL_ICONS[skill.slug];
+  // Tips from the onboarding plans; Sprachbausteine only for exams that have it.
+  const tipSkills = SKILLS.filter(
+    (t) =>
+      (TIP_SKILLS[skill.slug] ?? []).includes(t.id) && (t.id !== "sprachbausteine" || Boolean(skill.extra)),
+  );
+  const tips = tipSkills.flatMap((t) =>
+    t.parts.map((p) => ({ ...p, skill: tipSkills.length > 1 ? t.name : null })),
+  );
   const freeMock = MOCK_EXAMS.find((e) => e.free);
   const questions = questionCount(skill.parts);
   const partsLabel = skill.parts.length === 1 ? "1 task" : `${skill.parts.length} parts`;
@@ -90,6 +107,29 @@ export default async function SkillPage(props: PageProps<"/dashboard/exam/[skill
           </div>
           <PartList parts={skill.extra.parts} />
         </section>
+      )}
+
+      {tips.length > 0 && (
+        <Card className="gap-4">
+          <h2 className="flex items-center gap-2 text-lg font-bold">
+            <Lightbulb className="size-5 text-gold-ink" aria-hidden /> How to tackle it
+          </h2>
+          <ul className="grid gap-3 md:grid-cols-2">
+            {tips.map((t) => (
+              <li key={t.title} className="grid gap-0.5 rounded-xl bg-background/60 p-4">
+                <span className="font-semibold">
+                  {t.title}
+                  {t.skill && (
+                    <span lang="de" className="ml-2 text-[13px] font-normal text-subtle-foreground">
+                      {t.skill}
+                    </span>
+                  )}
+                </span>
+                <span className="text-[15px] text-muted-foreground">{t.text}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
       )}
 
       <Card className="gap-4">

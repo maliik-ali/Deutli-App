@@ -23,6 +23,8 @@ export type CurrentUser = {
   exam: string | null;
   /** Exam day (YYYY-MM-DD) if the student gave one. */
   examDate: string | null;
+  /** What worries the student about the exam (onboarding), e.g. ["lesen", "sprechen"]. */
+  focusSkills: string[];
   /** The student's own teacher (profiles.teacher_id), or null for a standalone student. */
   teacherId: string | null;
   /** Deutli Pro runs until this date (YYYY-MM-DD), or null. */
@@ -46,7 +48,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role, languages, avatar_path, onboarded_at, exam, exam_date, teacher_id, pro_until")
+    .select("full_name, role, languages, avatar_path, onboarded_at, exam, exam_date, focus_skills, teacher_id, pro_until")
     .eq("id", claims.sub)
     .maybeSingle();
 
@@ -61,6 +63,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     onboardedAt: profile?.onboarded_at ?? null,
     exam: profile?.exam ?? null,
     examDate: profile?.exam_date ?? null,
+    focusSkills: Array.isArray(profile?.focus_skills) ? (profile.focus_skills as string[]) : [],
     teacherId: profile?.teacher_id ?? null,
     proUntil: profile?.pro_until ?? null,
   };
