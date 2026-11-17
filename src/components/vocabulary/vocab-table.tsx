@@ -7,10 +7,11 @@ import { Check, Columns3, Star, Trash2, Volume2 } from "lucide-react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { removeVocabularyWord } from "@/lib/practice/actions";
-import { getLanguage, textProps, type LanguageCode } from "@/lib/languages";
+import { textProps, type LanguageCode } from "@/lib/languages";
 import { cn } from "@/lib/utils";
 import { setLevelWordStarred, setWordStarred } from "@/lib/vocabulary/actions";
 import { MAX_BOX, statusOf } from "@/lib/vocabulary/srs";
+import type { Column, ColumnId } from "./columns";
 import { Meaning } from "./meanings";
 import { speakGerman } from "./speak";
 
@@ -35,25 +36,7 @@ export type TableRow = {
   removable: boolean;
 };
 
-export type ColumnId = `meaning:${string}` | `example:${string}` | "from" | "progress";
-export type Column = { id: ColumnId; label: string };
-
-/** Columns a list can show, from the languages and examples it has. */
-export function buildColumns(opts: {
-  languages: LanguageCode[];
-  exampleLanguages: string[];
-  fromLabel: string;
-}): Column[] {
-  return [
-    ...opts.languages.map((c) => ({ id: `meaning:${c}` as ColumnId, label: `${getLanguage(c)?.name ?? c} meaning` })),
-    ...opts.exampleLanguages.map((c) => ({
-      id: `example:${c}` as ColumnId,
-      label: c === "de" ? "German sentence" : `${getLanguage(c)?.name ?? c} sentence`,
-    })),
-    { id: "from", label: opts.fromLabel },
-    { id: "progress", label: "Progress" },
-  ];
-}
+export type { Column, ColumnId } from "./columns";
 
 const STATUS_LABEL = { new: "New", learning: "Learning", learned: "Learned" } as const;
 

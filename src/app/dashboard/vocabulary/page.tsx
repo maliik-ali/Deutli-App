@@ -5,7 +5,8 @@ import { BookOpenCheck, ChevronLeft, ChevronRight, GraduationCap, Search, Sparkl
 import { BorderBeam } from "@/components/magicui/border-beam";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { buildColumns, VocabTableWithColumns, type ColumnId, type TableRow } from "@/components/vocabulary/vocab-table";
+import { buildColumns, type ColumnId } from "@/components/vocabulary/columns";
+import { VocabTableWithColumns, type TableRow } from "@/components/vocabulary/vocab-table";
 import { requireUser } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
