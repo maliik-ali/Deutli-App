@@ -14,8 +14,8 @@ export const metadata: Metadata = { title: "Skills" };
 const BORDERS: Record<string, string> = {
   reading: "border-gold/50 group-hover:border-gold",
   listening: "border-brand-cyan/50 group-hover:border-brand-cyan",
-  writing: "border-brand-magenta/50 group-hover:border-brand-magenta",
-  speaking: "border-success/50 group-hover:border-success",
+  writing: "border-gold-ink/35 group-hover:border-gold-ink/80",
+  speaking: "border-cover-plum group-hover:border-brand-magenta/70",
 };
 
 export default async function SkillsPage() {
