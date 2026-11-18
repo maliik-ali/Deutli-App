@@ -170,6 +170,11 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
   const [draftTimeZone, setDraftTimeZone] = useState(info.timeZone);
   const [avatarUrl, setAvatarUrl] = useState(info.avatarUrl);
   const [confirmText, setConfirmText] = useState("");
+  // Offer the Google name with one tap when it differs from the saved name.
+  const googleName =
+    info.signIn.google?.name && info.signIn.google.name.toLowerCase() !== name.trim().toLowerCase()
+      ? info.signIn.google.name
+      : null;
   const [photo, setPhoto] = useState<{ blob: Blob; preview: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -329,7 +334,30 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
 
         <SettingRow
           label="Name"
-          value={<span className="text-foreground">{name || "No name yet"}</span>}
+          value={
+            <span className="grid justify-items-start gap-0.5">
+              <span className="text-foreground">{name || "No name yet"}</span>
+              {googleName && editing !== "name" && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() =>
+                    submit(async () => {
+                      const r = await updateFullName(googleName);
+                      if ("ok" in r) setName(googleName);
+                      return r;
+                    }, "Your name is saved.")
+                  }
+                  className="inline-flex min-h-11 items-center gap-1.5 text-[13px] font-semibold text-gold-ink underline-offset-4 hover:underline disabled:opacity-60 sm:min-h-8"
+                >
+                  <span className="[&_svg]:size-3.5" aria-hidden>
+                    <GoogleMark />
+                  </span>
+                  Use &ldquo;{googleName}&rdquo; from Google
+                </button>
+              )}
+            </span>
+          }
           editing={editing === "name"}
           onEdit={() => open("name")}
           editLabel="Edit name"
@@ -395,7 +423,8 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
                       <CheckCircle2 className="size-3.5" aria-hidden /> Connected
                     </span>
                   </span>
-                  {info.signIn.google.email && (
+                  {info.signIn.google.email &&
+                    info.signIn.google.email.toLowerCase() !== info.email.toLowerCase() && (
                     <span className="truncate text-[13px]">{info.signIn.google.email}</span>
                   )}
                 </span>
