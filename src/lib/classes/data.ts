@@ -372,3 +372,18 @@ export async function getOwnTeacherProfile(userId: string) {
     isPublic: detail ? (detail.is_public as boolean) : true,
   };
 }
+
+/** For the dashboard card: the student's next registered class, or whether any class is coming up at all. */
+export async function getDashboardClass(userId: string): Promise<{ next: ClassCard | null; anyUpcoming: boolean } | null> {
+  const mine = await listMyClasses(userId);
+  if (mine === null) return null;
+  if (mine.upcoming[0]) return { next: mine.upcoming[0], anyUpcoming: true };
+  const admin = createAdminClient();
+  if (!admin) return null;
+  const { count } = await admin
+    .from("live_classes")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "scheduled")
+    .gt("starts_at", new Date().toISOString());
+  return { next: null, anyUpcoming: (count ?? 0) > 0 };
+}

@@ -7,8 +7,10 @@ import { FocusCard } from "@/components/dashboard/focus-card";
 import { BlurFade } from "@/components/magicui/blur-fade";
 import { MotionProvider } from "@/components/magicui/motion-provider";
 import { NumberTicker } from "@/components/magicui/number-ticker";
+import { NextClassCard } from "@/components/classes/next-class-card";
 import { MockExamCard, ReadinessCard, TodaysWordsCard, WritingFeedbackCard, type LatestWriting } from "@/components/dashboard/cards";
 import { requireUser } from "@/lib/auth/dal";
+import { getDashboardClass } from "@/lib/classes/data";
 import { getReadiness } from "@/lib/papers/readiness";
 import { getFinishedAttempts, getLastResult, getPaperById, getPapers } from "@/lib/papers/data";
 import { getPracticeSets, getSavedWords } from "@/lib/practice/data";
@@ -32,12 +34,13 @@ function greeting(now: Date, timeZone: string) {
 export default async function DashboardPage(props: PageProps<"/dashboard">) {
   const user = await requireUser(["student"]);
   const sp = await props.searchParams;
-  const [savedWords, readiness, practice, papers, finished] = await Promise.all([
+  const [savedWords, readiness, practice, papers, finished, liveClass] = await Promise.all([
     getSavedWords(user.id, 5),
     getReadiness(user.id),
     getPracticeSets(user.id),
     getPapers(),
     getFinishedAttempts(user.id, 1),
+    getDashboardClass(user.id),
   ]);
   const streak = practiceStreak(practice.sets.flatMap((x) => x.tracks), todayIn(user.timeZone));
 
@@ -107,6 +110,12 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
           </Link>
         </div>
       </header>
+
+      {liveClass && (liveClass.next || liveClass.anyUpcoming) && (
+        <BlurFade delay={0.01}>
+          <NextClassCard next={liveClass.next} tz={user.timeZone} serverNow={now.getTime()} />
+        </BlurFade>
+      )}
 
       {user.focusSkills.length > 0 && (
         <BlurFade delay={0.02}>
