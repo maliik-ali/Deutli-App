@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, LogOut, Menu, PenLine, ShieldCheck, Users } from "lucide-react";
+import { LayoutDashboard, LogOut, Menu, PenLine, ShieldCheck, UserRound, Users, Video } from "lucide-react";
 
 import { signOut } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/avatar";
@@ -16,6 +16,8 @@ const ITEMS = [
   { href: "/teacher", label: "Overview", icon: LayoutDashboard },
   { href: "/teacher/reviews", label: "Writing reviews", icon: PenLine, badge: true },
   { href: "/teacher/students", label: "My students", icon: Users },
+  { href: "/teacher/classes", label: "My classes", icon: Video },
+  { href: "/teacher/profile", label: "My profile", icon: UserRound },
 ] as const;
 
 function Links({ todo, isAdmin, onNavigate }: { todo: number; isAdmin: boolean; onNavigate?: () => void }) {

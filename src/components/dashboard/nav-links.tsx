@@ -14,6 +14,7 @@ import {
   PenLine,
   Speech,
   Timer,
+  Video,
   type LucideIcon,
 } from "lucide-react";
 
@@ -25,6 +26,7 @@ const ICONS: Record<NavIcon, LucideIcon> = {
   speech: Speech,
   pen: PenLine,
   timer: Timer,
+  video: Video,
   languages: Languages,
   mic: Mic,
   message: MessageCircleQuestion,
@@ -54,7 +56,7 @@ export function NavLinks({ onNavigate, examTitle }: { onNavigate?: () => void; e
             <NavGroup key={item.href} item={item} items={item.children} pathname={pathname} onNavigate={onNavigate} />
           ) : (
             <li key={item.href}>
-              <NavLink item={item} active={pathname === item.href || (item.href === "/dashboard/exam" && pathname.startsWith("/dashboard/exam/mock"))} onNavigate={onNavigate} />
+              <NavLink item={item} active={pathname === item.href || (item.href === "/dashboard/exam" && pathname.startsWith("/dashboard/exam/mock")) || (item.href === "/dashboard/classes" && (pathname.startsWith("/dashboard/classes/") || pathname.startsWith("/dashboard/teachers/")))} onNavigate={onNavigate} />
             </li>
           ));
         })}

@@ -7,6 +7,7 @@ export const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: "home" },
   { href: "/dashboard/daily-practice", label: "Improve Accent", icon: "speech" },
   { href: "/dashboard/exam", label: "My B1 Exam", icon: "timer" },
+  { href: "/dashboard/classes", label: "Classes", icon: "video" },
   { href: "/dashboard/vocabulary", label: "Vocabulary", icon: "languages" },
   {
     href: "/dashboard/skills",

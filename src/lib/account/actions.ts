@@ -14,11 +14,12 @@ import { changePasswordSchema, emailRules, fullNameRules, phoneRules } from "@/l
 export type AccountResult = { error: string } | { ok: true };
 
 const SAVE_ERROR = "We couldn't save this. Check your internet and try again.";
-const ROLES = ["student", "academy_admin", "super_admin"] as const;
+const ROLES = ["student", "teacher", "academy_admin", "super_admin"] as const;
 
 function refresh() {
   // The name also shows in the sidebar and the dashboard greeting.
   revalidatePath("/dashboard", "layout");
+  revalidatePath("/teacher", "layout");
 }
 
 const MAX_AVATAR_BYTES = 512 * 1024;
