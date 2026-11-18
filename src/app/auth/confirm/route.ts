@@ -1,6 +1,7 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { importGooglePhoto } from "@/lib/account/google-photo";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -31,8 +32,10 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
     ok = !error;
   } else if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     ok = !error;
+    // Google sign-in: use their Google photo as their profile photo (once, only if they have none).
+    if (data?.user) await importGooglePhoto(data.user);
   }
 
   if (!ok) return fail;
