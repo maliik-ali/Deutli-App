@@ -78,7 +78,7 @@ export function CheckoutForm({ planId, cardReady }: { planId: string; cardReady:
           <a href="https://www.deutli.com/terms" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-foreground">Terms</a>{" "}
           and ask Deutli to start Pro as soon as my payment is confirmed. I know that if I withdraw within 14 days, I pay for the time already used (
           <a href="https://www.deutli.com/terms#withdrawal" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-foreground">right of withdrawal</a>).
-          {method === "card" ? " Card plans renew automatically until I cancel." : " Bank and wallet payments cover one month and do not renew."}
+           This is a one-time payment and does not renew automatically.
         </span>
       </label>
       {error && (
