@@ -24,7 +24,7 @@ export function Avatar({ name, url, className }: { name: string; url?: string | 
       {url ? (
         // Signed links from a private bucket: a plain <img> avoids Next's image optimiser caching them.
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt="" className="size-full object-cover" />
+        <img src={url} alt="" referrerPolicy="no-referrer" className="size-full object-cover" />
       ) : (
         initialsOf(name)
       )}

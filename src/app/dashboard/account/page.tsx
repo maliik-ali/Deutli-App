@@ -15,7 +15,17 @@ export default async function AccountPage() {
     getAvatarUrl(user.avatarPath),
     supabase.auth.getUser(),
   ]);
-  const providers = new Set((auth.user?.identities ?? []).map((i) => i.provider));
+  const identities = auth.user?.identities ?? [];
+  const providers = new Set(identities.map((i) => i.provider));
+  const googleData = identities.find((i) => i.provider === "google")?.identity_data ?? null;
+  const text = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
+  const google = googleData
+    ? {
+        name: text(googleData.full_name) ?? text(googleData.name),
+        email: text(googleData.email),
+        avatarUrl: text(googleData.avatar_url) ?? text(googleData.picture),
+      }
+    : null;
 
   return (
     <main className="mx-auto grid max-w-[1240px] gap-6 px-4 py-6 sm:px-6 md:px-8 md:py-8">
@@ -33,7 +43,7 @@ export default async function AccountPage() {
             avatarUrl,
             timeZone: user.timeZone,
             // Older accounts may have no identities list; they signed up with email and password.
-            signIn: { google: providers.has("google"), password: providers.has("email") || providers.size === 0 },
+            signIn: { google, password: providers.has("email") || providers.size === 0 },
             canDelete: user.role === "student",
           }}
         />

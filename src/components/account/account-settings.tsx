@@ -36,7 +36,11 @@ export type AccountInfo = {
   /** IANA time zone, e.g. "Europe/Berlin". */
   timeZone: string;
   /** How this person can log in. */
-  signIn: { google: boolean; password: boolean };
+  signIn: {
+    /** The connected Google account (from Google's sign-in details), or null. */
+    google: { name: string | null; email: string | null; avatarUrl: string | null } | null;
+    password: boolean;
+  };
   /** Only students can delete their own account; staff accounts are removed by an admin. */
   canDelete: boolean;
 };
@@ -371,14 +375,30 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
           <SettingRow
             label="Google"
             value={
-              <span className="grid gap-0.5">
-                <span className="flex flex-wrap items-center gap-2 text-foreground">
-                  <GoogleMark /> Google account
-                  <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-0.5 text-[12px] font-semibold text-success">
-                    <CheckCircle2 className="size-3.5" aria-hidden /> Connected
+              <span className="flex items-center gap-3">
+                <span className="relative shrink-0">
+                  <Avatar
+                    name={info.signIn.google.name ?? name}
+                    url={info.signIn.google.avatarUrl}
+                    className="size-11 text-[15px]"
+                  />
+                  <span className="absolute -right-1 -bottom-1 grid size-5 place-items-center rounded-full border-2 border-card bg-white [&_svg]:size-3">
+                    <GoogleMark />
                   </span>
                 </span>
-                <span className="text-[13px]">You can log in with &ldquo;Continue with Google&rdquo;.</span>
+                <span className="grid min-w-0 gap-0.5">
+                  <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="truncate font-semibold text-foreground">
+                      {info.signIn.google.name ?? "Google account"}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-0.5 text-[12px] font-semibold text-success">
+                      <CheckCircle2 className="size-3.5" aria-hidden /> Connected
+                    </span>
+                  </span>
+                  {info.signIn.google.email && (
+                    <span className="truncate text-[13px]">{info.signIn.google.email}</span>
+                  )}
+                </span>
               </span>
             }
           />
