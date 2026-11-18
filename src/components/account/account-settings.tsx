@@ -23,7 +23,6 @@ import {
 import { getLanguage, MAX_LANGUAGES, type LanguageCode } from "@/lib/languages";
 import { setMyLanguages } from "@/lib/practice/actions";
 import { timeZoneLabel } from "@/lib/time";
-import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Row = "photo" | "name" | "phone" | "password" | "languages" | "timezone" | "delete";
@@ -107,8 +106,6 @@ function SettingRow({
   editing,
   onEdit,
   editLabel,
-  editText = "Edit",
-  danger,
   children,
 }: {
   label: string;
@@ -116,8 +113,6 @@ function SettingRow({
   editing?: boolean;
   onEdit?: () => void;
   editLabel?: string;
-  editText?: string;
-  danger?: boolean;
   children?: React.ReactNode;
 }) {
   return (
@@ -130,14 +125,11 @@ function SettingRow({
         <Button
           variant="outline"
           size="sm"
-          className={cn(
-            "col-start-2 row-start-1 h-11 justify-self-end sm:col-start-auto sm:row-start-auto sm:h-9",
-            danger && "border-destructive/50 text-destructive hover:bg-destructive-soft hover:text-destructive",
-          )}
+          className="col-start-2 row-start-1 h-11 justify-self-end sm:col-start-auto sm:row-start-auto sm:h-9"
           onClick={onEdit}
           aria-label={editLabel}
         >
-          {editText}
+          Edit
         </Button>
       ) : (
         <span className="col-start-2 row-start-1 sm:col-start-auto sm:row-start-auto" aria-hidden />
@@ -173,6 +165,7 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
   const [timeZone, setTimeZone] = useState(info.timeZone);
   const [draftTimeZone, setDraftTimeZone] = useState(info.timeZone);
   const [avatarUrl, setAvatarUrl] = useState(info.avatarUrl);
+  const [confirmText, setConfirmText] = useState("");
   const [photo, setPhoto] = useState<{ blob: Blob; preview: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -572,65 +565,82 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
       </Section>
 
       {info.canDelete && (
-        <Section title="Delete account" description="Remove your Deutli account and your data.">
-          <SettingRow
-            label="Delete account"
-            value={
-              <span className="text-[13px]">
-                Your profile, progress, saved words and exam results are deleted for good.
-              </span>
-            }
-            editing={editing === "delete"}
-            onEdit={() => open("delete")}
-            editLabel="Delete account"
-            editText="Delete"
-            danger
-          >
-            <form
-              className="grid max-w-md gap-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const value = String(new FormData(e.currentTarget).get("confirmDelete") ?? "");
-                setError(null);
-                startBusy(async () => {
-                  const r = await deleteMyAccount(value);
-                  if (r && "error" in r) setError(r.error);
-                });
-              }}
-            >
-              <div className="grid gap-2 rounded-xl bg-destructive-soft px-4 py-3 text-sm text-foreground">
-                <p className="font-semibold">This can&apos;t be undone.</p>
-                <p className="text-muted-foreground">
+        <form
+          aria-labelledby="delete-account-title"
+          className="overflow-hidden rounded-2xl border border-destructive/40 bg-card"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setError(null);
+            startBusy(async () => {
+              const r = await deleteMyAccount(confirmText);
+              if (r && "error" in r) setError(r.error);
+            });
+          }}
+        >
+          <div className="grid gap-5 p-6">
+            <div className="grid gap-1">
+              <CardTitle id="delete-account-title" className="text-lg">
+                Delete account
+              </CardTitle>
+              <CardDescription>
+                Permanently delete your Deutli account with your profile, progress, saved words and exam results.
+              </CardDescription>
+            </div>
+            {editing === "delete" && (
+              <div className="grid max-w-md gap-4 border-t border-border pt-5">
+                <p className="text-sm text-muted-foreground">
                   You&apos;ll be logged out and can&apos;t get your data back. Payment records are kept without your
                   name, because the law requires it.
                 </p>
+                <FormField
+                  id="confirmDelete"
+                  name="confirmDelete"
+                  label="Type DELETE to confirm"
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                  autoFocus
+                  required
+                />
+                {errorText}
               </div>
-              <FormField
-                id="confirmDelete"
-                name="confirmDelete"
-                label="Type DELETE to confirm"
-                autoComplete="off"
-                autoCapitalize="characters"
-                spellCheck={false}
-                required
-              />
-              {errorText}
-              <div className="flex flex-wrap gap-2">
+            )}
+          </div>
+          <div className="flex flex-wrap items-center justify-end gap-3 border-t border-destructive/30 bg-destructive-soft/60 px-6 py-4">
+            {editing === "delete" ? (
+              <>
+                <Button type="button" variant="ghost" onClick={close} disabled={busy}>
+                  Cancel
+                </Button>
                 <Button
                   type="submit"
                   variant="ink"
-                  disabled={busy}
+                  disabled={busy || confirmText.trim().toUpperCase() !== "DELETE"}
                   className="bg-destructive font-semibold text-background hover:bg-destructive/90"
                 >
                   {busy ? "Deleting…" : "Delete my account"}
                 </Button>
-                <Button type="button" variant="ghost" onClick={close} disabled={busy}>
-                  Cancel
+              </>
+            ) : (
+              <>
+                <p className="mr-auto text-[13px] text-muted-foreground">This can&apos;t be undone.</p>
+                <Button
+                  type="button"
+                  variant="ink"
+                  onClick={() => {
+                    setConfirmText("");
+                    open("delete");
+                  }}
+                  className="bg-destructive font-semibold text-background hover:bg-destructive/90"
+                >
+                  Delete account
                 </Button>
-              </div>
-            </form>
-          </SettingRow>
-        </Section>
+              </>
+            )}
+          </div>
+        </form>
       )}
 
       <nav aria-label="Legal" className="flex flex-wrap gap-x-5 px-1 text-[13px] text-subtle-foreground">
