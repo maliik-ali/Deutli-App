@@ -8,7 +8,7 @@ import { BlurFade } from "@/components/magicui/blur-fade";
 import { MotionProvider } from "@/components/magicui/motion-provider";
 import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
-import { classPhase, SKILLS, type SkillId } from "@/lib/classes/constants";
+import { classPhase, LEVELS, SKILLS, type LevelId, type SkillId } from "@/lib/classes/constants";
 import { listClassesBetween, listMyClasses } from "@/lib/classes/data";
 import { addDays, dayKeyIn, formatDayLong, timeZoneLabel, zonedToUtc } from "@/lib/time";
 import { cn } from "@/lib/utils";
@@ -17,12 +17,13 @@ export const metadata: Metadata = { title: "Classes" };
 
 const DAYS_SHOWN = 14;
 
-type View = { tab: "all" | "mine"; skill: SkillId | "all"; day?: string };
+type View = { tab: "all" | "mine"; skill: SkillId | "all"; level: LevelId; day?: string };
 
-function href({ tab, skill, day }: View) {
+function href({ tab, skill, level, day }: View) {
   const q = new URLSearchParams();
   if (tab === "mine") q.set("tab", "mine");
   if (tab === "all" && skill !== "all") q.set("skill", skill);
+  if (tab === "all" && level !== "all") q.set("level", level);
   if (tab === "all" && day) q.set("day", day);
   const s = q.toString();
   return `/dashboard/classes${s ? `?${s}` : ""}`;
@@ -43,6 +44,7 @@ export default async function ClassesPage(props: PageProps<"/dashboard/classes">
 
   const tab: View["tab"] = sp.tab === "mine" ? "mine" : "all";
   const skill: View["skill"] = SKILLS.some((s) => s.id === sp.skill) ? (sp.skill as SkillId) : "all";
+  const level: View["level"] = LEVELS.some((l) => l.id === sp.level) ? (sp.level as LevelId) : "all";
 
   const header = (
     <header className="grid gap-2">
@@ -73,10 +75,10 @@ export default async function ClassesPage(props: PageProps<"/dashboard/classes">
   const myCount = mine.upcoming.length;
   const tabs = (
     <div className="flex flex-wrap gap-2" role="tablist" aria-label="Classes">
-      <Link role="tab" aria-selected={tab === "all"} href={href({ tab: "all", skill: "all" })} className={pill(tab === "all")}>
+      <Link role="tab" aria-selected={tab === "all"} href={href({ tab: "all", skill: "all", level: "all" })} className={pill(tab === "all")}>
         All classes
       </Link>
-      <Link role="tab" aria-selected={tab === "mine"} href={href({ tab: "mine", skill: "all" })} className={pill(tab === "mine")}>
+      <Link role="tab" aria-selected={tab === "mine"} href={href({ tab: "mine", skill: "all", level: "all" })} className={pill(tab === "mine")}>
         My classes
         {myCount > 0 && (
           <span className="grid h-5 min-w-5 place-items-center rounded-full bg-ink px-1.5 text-[11px] font-semibold text-ink-foreground">
@@ -131,7 +133,10 @@ export default async function ClassesPage(props: PageProps<"/dashboard/classes">
   }
 
   // ---------------------------------------------------------------- All classes
-  const visible = window.filter((c) => skill === "all" || c.skill === skill);
+  // A class for "All levels" suits every level, so it stays visible under A1–B2.
+  const visible = window.filter(
+    (c) => (skill === "all" || c.skill === skill) && (level === "all" || c.level === level || c.level === "all"),
+  );
   const byDay = new Map<string, typeof visible>();
   for (const c of visible) {
     const key = dayKeyIn(tz, c.startsAt);
@@ -156,11 +161,28 @@ export default async function ClassesPage(props: PageProps<"/dashboard/classes">
         <div className="grid max-w-[960px] gap-5">
           {tabs}
 
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by level">
+            {LEVELS.map((l) => (
+              <Link
+                key={l.id}
+                href={href({ tab: "all", skill, level: l.id, day: selected })}
+                scroll={false}
+                aria-pressed={level === l.id}
+                className={cn(
+                  "inline-flex h-11 items-center rounded-full border px-4 text-[13px] font-medium transition-colors sm:h-9",
+                  level === l.id ? "border-gold-ink bg-gold/30 text-foreground" : "border-border text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {l.label}
+              </Link>
+            ))}
+          </div>
+
           <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by skill">
             {[{ id: "all", label: "All" }, ...SKILLS.filter((s) => s.id !== "general")].map((s) => (
               <Link
                 key={s.id}
-                href={href({ tab: "all", skill: s.id as View["skill"], day: selected })}
+                href={href({ tab: "all", skill: s.id as View["skill"], level, day: selected })}
                 scroll={false}
                 aria-pressed={skill === s.id}
                 className={cn(
@@ -173,7 +195,7 @@ export default async function ClassesPage(props: PageProps<"/dashboard/classes">
             ))}
           </div>
 
-          <DayStrip days={days} selected={selected} today={today} hrefFor={(day) => href({ tab: "all", skill, day })} />
+          <DayStrip days={days} selected={selected} today={today} hrefFor={(day) => href({ tab: "all", skill, level, day })} />
 
           <section className="grid gap-3" aria-labelledby="day-title">
             <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
@@ -188,7 +210,7 @@ export default async function ClassesPage(props: PageProps<"/dashboard/classes">
                 </Link>
               </p>
             </div>
-            <BlurFade key={`${selected}-${skill}`}>
+            <BlurFade key={`${selected}-${skill}-${level}`}>
               <Card className="gap-0 overflow-hidden p-0">
                 {list.length === 0 ? (
                   <ClassesEmpty
@@ -198,7 +220,7 @@ export default async function ClassesPage(props: PageProps<"/dashboard/classes">
                         ? "Try another day. The dots show when classes are scheduled."
                         : "No classes are scheduled yet. New ones will appear here."
                     }
-                    action={nextDay ? { href: href({ tab: "all", skill, day: nextDay.key }), label: `Next: ${formatDayLong(nextDay.key)}` } : undefined}
+                    action={nextDay ? { href: href({ tab: "all", skill, level, day: nextDay.key }), label: `Next: ${formatDayLong(nextDay.key)}` } : undefined}
                   />
                 ) : (
                   <ul className="divide-y divide-border">
