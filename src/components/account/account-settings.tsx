@@ -6,11 +6,13 @@ import { Camera, CheckCircle2 } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { FormField } from "@/components/auth/form-field";
 import { PasswordStrength } from "@/components/auth/password-strength";
+import { GoogleMark } from "@/components/auth/social-buttons";
 import { LanguageChips } from "@/components/language-chips";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import {
   changePassword,
+  deleteMyAccount,
   removeAvatar,
   setMyTimeZone,
   updateFullName,
@@ -21,9 +23,10 @@ import {
 import { getLanguage, MAX_LANGUAGES, type LanguageCode } from "@/lib/languages";
 import { setMyLanguages } from "@/lib/practice/actions";
 import { timeZoneLabel } from "@/lib/time";
+import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-type Row = "photo" | "name" | "phone" | "password" | "languages" | "timezone";
+type Row = "photo" | "name" | "phone" | "password" | "languages" | "timezone" | "delete";
 
 export type AccountInfo = {
   fullName: string;
@@ -33,7 +36,17 @@ export type AccountInfo = {
   avatarUrl: string | null;
   /** IANA time zone, e.g. "Europe/Berlin". */
   timeZone: string;
+  /** How this person can log in. */
+  signIn: { google: boolean; password: boolean };
+  /** Only students can delete their own account; staff accounts are removed by an admin. */
+  canDelete: boolean;
 };
+
+const LEGAL_LINKS = [
+  { label: "Terms", href: "https://www.deutli.com/terms" },
+  { label: "Privacy", href: "https://www.deutli.com/privacy" },
+  { label: "Impressum", href: "https://www.deutli.com/impressum" },
+];
 
 const PHOTO_SIZE = 256;
 
@@ -94,6 +107,8 @@ function SettingRow({
   editing,
   onEdit,
   editLabel,
+  editText = "Edit",
+  danger,
   children,
 }: {
   label: string;
@@ -101,6 +116,8 @@ function SettingRow({
   editing?: boolean;
   onEdit?: () => void;
   editLabel?: string;
+  editText?: string;
+  danger?: boolean;
   children?: React.ReactNode;
 }) {
   return (
@@ -113,11 +130,14 @@ function SettingRow({
         <Button
           variant="outline"
           size="sm"
-          className="col-start-2 row-start-1 h-11 justify-self-end sm:col-start-auto sm:row-start-auto sm:h-9"
+          className={cn(
+            "col-start-2 row-start-1 h-11 justify-self-end sm:col-start-auto sm:row-start-auto sm:h-9",
+            danger && "border-destructive/50 text-destructive hover:bg-destructive-soft hover:text-destructive",
+          )}
           onClick={onEdit}
           aria-label={editLabel}
         >
-          Edit
+          {editText}
         </Button>
       ) : (
         <span className="col-start-2 row-start-1 sm:col-start-auto sm:row-start-auto" aria-hidden />
@@ -354,6 +374,23 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
           }
         />
 
+        {info.signIn.google && (
+          <SettingRow
+            label="Google"
+            value={
+              <span className="grid gap-0.5">
+                <span className="flex flex-wrap items-center gap-2 text-foreground">
+                  <GoogleMark /> Google account
+                  <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-0.5 text-[12px] font-semibold text-success">
+                    <CheckCircle2 className="size-3.5" aria-hidden /> Connected
+                  </span>
+                </span>
+                <span className="text-[13px]">You can log in with &ldquo;Continue with Google&rdquo;.</span>
+              </span>
+            }
+          />
+        )}
+
         <SettingRow
           label="Phone"
           value={phone ? <span className="text-foreground">{phone}</span> : "No number added"}
@@ -390,9 +427,15 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
 
         <SettingRow
           label="Password"
-          value={<span aria-label="Password hidden">••••••••</span>}
+          value={
+            info.signIn.password ? (
+              <span aria-label="Password hidden">••••••••</span>
+            ) : (
+              "No password set. You log in with Google."
+            )
+          }
           editing={editing === "password"}
-          onEdit={() => open("password")}
+          onEdit={info.signIn.password ? () => open("password") : undefined}
           editLabel="Change password"
         >
           <form
@@ -527,6 +570,82 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
           </form>
         </SettingRow>
       </Section>
+
+      {info.canDelete && (
+        <Section title="Delete account" description="Remove your Deutli account and your data.">
+          <SettingRow
+            label="Delete account"
+            value={
+              <span className="text-[13px]">
+                Your profile, progress, saved words and exam results are deleted for good.
+              </span>
+            }
+            editing={editing === "delete"}
+            onEdit={() => open("delete")}
+            editLabel="Delete account"
+            editText="Delete"
+            danger
+          >
+            <form
+              className="grid max-w-md gap-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const value = String(new FormData(e.currentTarget).get("confirmDelete") ?? "");
+                setError(null);
+                startBusy(async () => {
+                  const r = await deleteMyAccount(value);
+                  if (r && "error" in r) setError(r.error);
+                });
+              }}
+            >
+              <div className="grid gap-2 rounded-xl bg-destructive-soft px-4 py-3 text-sm text-foreground">
+                <p className="font-semibold">This can&apos;t be undone.</p>
+                <p className="text-muted-foreground">
+                  You&apos;ll be logged out and can&apos;t get your data back. Payment records are kept without your
+                  name, because the law requires it.
+                </p>
+              </div>
+              <FormField
+                id="confirmDelete"
+                name="confirmDelete"
+                label="Type DELETE to confirm"
+                autoComplete="off"
+                autoCapitalize="characters"
+                spellCheck={false}
+                required
+              />
+              {errorText}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="submit"
+                  variant="ink"
+                  disabled={busy}
+                  className="bg-destructive font-semibold text-background hover:bg-destructive/90"
+                >
+                  {busy ? "Deleting…" : "Delete my account"}
+                </Button>
+                <Button type="button" variant="ghost" onClick={close} disabled={busy}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </SettingRow>
+        </Section>
+      )}
+
+      <nav aria-label="Legal" className="flex flex-wrap gap-x-5 px-1 text-[13px] text-subtle-foreground">
+        {LEGAL_LINKS.map((l) => (
+          <a
+            key={l.label}
+            href={l.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 items-center underline-offset-4 hover:text-foreground hover:underline"
+          >
+            {l.label}
+          </a>
+        ))}
+      </nav>
     </div>
   );
 }

@@ -15,12 +15,13 @@ const MESSAGES: Record<string, { kind: "error" | "notice"; text: string }> = {
   },
   oauth: { kind: "error", text: "Sign-in was cancelled or didn't finish. Please try again, or use your email and password." },
   signed_out: { kind: "notice", text: "You've been logged out." },
+  deleted: { kind: "notice", text: "Your account is deleted. Thank you for learning with Deutli." },
 };
 
 export default async function LoginPage(props: PageProps<"/login">) {
   await redirectIfLoggedIn();
   const sp = await props.searchParams;
-  const message = sp.error === "link" ? MESSAGES.link : sp.error === "oauth" ? MESSAGES.oauth : sp.signed_out ? MESSAGES.signed_out : null;
+  const message = sp.error === "link" ? MESSAGES.link : sp.error === "oauth" ? MESSAGES.oauth : sp.signed_out ? MESSAGES.signed_out : sp.deleted ? MESSAGES.deleted : null;
 
   return (
     <div className="grid gap-8">

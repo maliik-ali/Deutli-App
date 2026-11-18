@@ -70,12 +70,6 @@ export function UserMenu({ name, email, avatarUrl }: { name: string; email: stri
               <LogOut className="size-[18px]" aria-hidden /> Log out
             </button>
           </form>
-          {/* Legal links (Impressum must be reachable from every page). */}
-          <div className="flex flex-wrap gap-x-3 gap-y-1 border-t border-border px-3 pt-2 pb-1 text-[12px] text-subtle-foreground">
-            <a href="https://www.deutli.com/terms" target="_blank" rel="noopener noreferrer" className="py-1 hover:text-foreground">Terms</a>
-            <a href="https://www.deutli.com/privacy" target="_blank" rel="noopener noreferrer" className="py-1 hover:text-foreground">Privacy</a>
-            <a href="https://www.deutli.com/impressum" target="_blank" rel="noopener noreferrer" className="py-1 hover:text-foreground">Impressum</a>
-          </div>
         </div>
       )}
       <button

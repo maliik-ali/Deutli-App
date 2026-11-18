@@ -10,10 +10,12 @@ export const metadata: Metadata = { title: "Account" };
 export default async function AccountPage() {
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
   const supabase = await createClient();
-  const [{ data: profile }, avatarUrl] = await Promise.all([
+  const [{ data: profile }, avatarUrl, { data: auth }] = await Promise.all([
     supabase.from("profiles").select("phone").eq("id", user.id).maybeSingle(),
     getAvatarUrl(user.avatarPath),
+    supabase.auth.getUser(),
   ]);
+  const providers = new Set((auth.user?.identities ?? []).map((i) => i.provider));
 
   return (
     <main className="mx-auto grid max-w-[1240px] gap-6 px-4 py-6 sm:px-6 md:px-8 md:py-8">
@@ -30,6 +32,9 @@ export default async function AccountPage() {
             languages: user.languages,
             avatarUrl,
             timeZone: user.timeZone,
+            // Older accounts may have no identities list; they signed up with email and password.
+            signIn: { google: providers.has("google"), password: providers.has("email") || providers.size === 0 },
+            canDelete: user.role === "student",
           }}
         />
       </div>

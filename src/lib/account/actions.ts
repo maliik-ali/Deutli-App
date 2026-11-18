@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { AVATAR_BUCKET, getAvatarUrl } from "@/lib/account/avatar";
 import { requireUser } from "@/lib/auth/dal";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { isTimeZone } from "@/lib/time";
 import { changePasswordSchema, fullNameRules, phoneRules } from "@/lib/validation/auth";
@@ -153,4 +155,34 @@ export async function setMyTimeZone(value: unknown): Promise<AccountResult> {
   if (error) return { error: SAVE_ERROR };
   revalidatePath("/", "layout");
   return { ok: true };
+}
+
+const DELETE_WORD = "DELETE";
+
+/**
+ * Delete your own account for good (students only; staff accounts are removed by an admin).
+ * Removes the profile photo, unpaid orders, then the login; everything linked to the user
+ * is deleted by the database. Paid orders are kept without the link to the person,
+ * because payment records must be kept by law (see migration 27).
+ */
+export async function deleteMyAccount(confirmation: unknown): Promise<{ error: string }> {
+  const user = await requireUser(["student"]);
+  if (typeof confirmation !== "string" || confirmation.trim().toUpperCase() !== DELETE_WORD) {
+    return { error: `Type ${DELETE_WORD} to confirm.` };
+  }
+  const admin = createAdminClient();
+  if (!admin) return { error: "We couldn't delete your account right now. Please try again later." };
+
+  const { data: files } = await admin.storage.from(AVATAR_BUCKET).list(user.id);
+  if (files?.length) {
+    await admin.storage.from(AVATAR_BUCKET).remove(files.map((f) => `${user.id}/${f.name}`));
+  }
+  await admin.from("orders").delete().eq("user_id", user.id).neq("status", "paid");
+
+  const { error } = await admin.auth.admin.deleteUser(user.id);
+  if (error) return { error: "We couldn't delete your account. Please try again, or contact us." };
+
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/login?deleted=1");
 }
