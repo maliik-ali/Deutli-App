@@ -414,19 +414,17 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
                     <GoogleMark />
                   </span>
                 </span>
-                <span className="grid min-w-0 gap-0.5">
-                  <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span className="truncate font-semibold text-foreground">
-                      {info.signIn.google.name ?? "Google account"}
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-0.5 text-[12px] font-semibold text-success">
-                      <CheckCircle2 className="size-3.5" aria-hidden /> Connected
-                    </span>
+                <span className="grid min-w-0 justify-items-start gap-1">
+                  <span className="max-w-full truncate font-semibold text-foreground">
+                    {info.signIn.google.name ?? "Google account"}
                   </span>
                   {info.signIn.google.email &&
                     info.signIn.google.email.toLowerCase() !== info.email.toLowerCase() && (
-                    <span className="truncate text-[13px]">{info.signIn.google.email}</span>
+                    <span className="max-w-full truncate text-[13px]">{info.signIn.google.email}</span>
                   )}
+                  <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-0.5 text-[12px] font-semibold text-success">
+                    <CheckCircle2 className="size-3.5" aria-hidden /> Connected
+                  </span>
                 </span>
               </span>
             }
