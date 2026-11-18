@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CreditCard, Landmark, Loader2 } from "lucide-react";
+import { Check, CreditCard, Landmark, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -61,9 +61,25 @@ export function CheckoutForm({ planId, cardReady }: { planId: string; cardReady:
           );
         })}
       </div>
-      <label className="flex items-start gap-3 text-[14px]">
-        <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 size-5 accent-[var(--gold)]" />
-        <span>I understand that Pro starts after my payment is confirmed.</span>
+      {/* Required by German/EU consumer law: agree to the terms and ask for Pro to start within the 14-day withdrawal period. */}
+      <label className="flex min-h-11 cursor-pointer items-start gap-3 text-[14px] text-muted-foreground hover:text-foreground">
+        <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="peer sr-only" />
+        <span
+          aria-hidden
+          className={cn(
+            "mt-0.5 grid size-6 shrink-0 place-items-center rounded-md border-2 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-gold-ink peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background",
+            agreed ? "border-gold bg-gold text-white" : "border-border",
+          )}
+        >
+          {agreed && <Check className="size-3.5" strokeWidth={3} />}
+        </span>
+        <span>
+          I agree to the{" "}
+          <a href="https://www.deutli.com/terms" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-foreground">Terms</a>{" "}
+          and ask Deutli to start Pro as soon as my payment is confirmed. I know that if I withdraw within 14 days, I pay for the time already used (
+          <a href="https://www.deutli.com/terms#withdrawal" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-foreground">right of withdrawal</a>).
+          {method === "card" ? " Card plans renew automatically until I cancel." : " Bank and wallet payments cover one month and do not renew."}
+        </span>
       </label>
       {error && (
         <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-[14px] text-destructive">
@@ -84,7 +100,7 @@ export function CheckoutForm({ planId, cardReady }: { planId: string; cardReady:
             });
           }}
         >
-          {busy ? <Loader2 className="animate-spin" aria-hidden /> : null} Submit order
+          {busy ? <Loader2 className="animate-spin" aria-hidden /> : null} Buy now
         </Button>
       </div>
     </Card>
