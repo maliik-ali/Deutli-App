@@ -95,6 +95,8 @@ The HTML for these emails lives in `supabase/templates/`. Supabase sends them; y
 2. **Templates:** Supabase → Authentication → Emails → Templates.
    - Confirm signup: subject `Confirm your Deutli account`, body = `supabase/templates/confirm-signup.html`
    - Reset password: subject `Reset your Deutli password`, body = `supabase/templates/reset-password.html`
+   - Change email address: subject `Confirm your new Deutli email`, body = `supabase/templates/change-email.html`
+     (Account page → Email → Edit. Keep "Secure email change" on: then both the old and the new address get a link.)
 3. The links use `{{ .SiteURL }}/auth/confirm?token_hash=…`, which works on any device
    (Supabase's default link only works in the browser where the student signed up).
    Site URL must be `https://app.deutli.com`.

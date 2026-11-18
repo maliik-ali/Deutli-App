@@ -5,7 +5,7 @@ import { importGooglePhoto } from "@/lib/account/google-photo";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
-const ALLOWED_NEXT = new Set(["/dashboard", "/onboarding", "/reset-password", "/"]);
+const ALLOWED_NEXT = new Set(["/dashboard", "/dashboard/account", "/onboarding", "/reset-password", "/"]);
 
 /**
  * Email links (confirm signup, reset password) land here.

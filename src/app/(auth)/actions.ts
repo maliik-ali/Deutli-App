@@ -1,25 +1,16 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { homeForRole, isRole } from "@/lib/auth/roles";
 import { NOT_CONFIGURED_MESSAGE, getSupabaseEnv } from "@/lib/supabase/env";
+import { siteUrl } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
 import { forgotPasswordSchema, loginSchema, resetPasswordSchema, signupSchema } from "@/lib/validation/auth";
 
 export type ActionResult = { error: string } | undefined;
 
 const GENERIC_ERROR = "Something went wrong on our side. Please wait a moment and try again.";
-
-async function siteUrl() {
-  const configured = process.env.SITE_URL?.replace(/\/$/, "");
-  if (configured) return configured;
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  return `${proto}://${host}`;
-}
 
 function friendlyAuthError(message: string, code?: string): string {
   const m = message.toLowerCase();

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const email = z
+export const emailRules = z
   .string()
   .trim()
   .min(1, "Enter your email address.")
@@ -14,7 +14,7 @@ export const passwordRules = z
   .regex(/[0-9]/, "Add at least one number.");
 
 export const loginSchema = z.object({
-  email,
+  email: emailRules,
   password: z.string().min(1, "Enter your password."),
 });
 
@@ -34,7 +34,7 @@ export const phoneRules = z
 
 export const signupSchema = z.object({
   fullName: fullNameRules,
-  email,
+  email: emailRules,
   phone: phoneRules,
   password: passwordRules,
 });
@@ -54,7 +54,7 @@ export const changePasswordSchema = z
     message: "Your new password must be different from your current one.",
   });
 
-export const forgotPasswordSchema = z.object({ email });
+export const forgotPasswordSchema = z.object({ email: emailRules });
 
 export const resetPasswordSchema = z
   .object({

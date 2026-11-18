@@ -37,7 +37,8 @@ export default async function AccountPage() {
         <AccountSettings
           info={{
             fullName: user.fullName ?? "",
-            email: user.email ?? "",
+            email: auth.user?.email ?? user.email ?? "",
+            pendingEmail: auth.user?.new_email ?? null,
             phone: profile?.phone ?? "",
             languages: user.languages,
             avatarUrl,

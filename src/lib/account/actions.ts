@@ -6,9 +6,10 @@ import { redirect } from "next/navigation";
 import { AVATAR_BUCKET, getAvatarUrl } from "@/lib/account/avatar";
 import { requireUser } from "@/lib/auth/dal";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { siteUrl } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
 import { isTimeZone } from "@/lib/time";
-import { changePasswordSchema, fullNameRules, phoneRules } from "@/lib/validation/auth";
+import { changePasswordSchema, emailRules, fullNameRules, phoneRules } from "@/lib/validation/auth";
 
 export type AccountResult = { error: string } | { ok: true };
 
@@ -185,4 +186,30 @@ export async function deleteMyAccount(confirmation: unknown): Promise<{ error: s
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/login?deleted=1");
+}
+
+/**
+ * Start changing your email. Supabase sends a confirmation link (to the new address, and to the
+ * current one too when "secure email change" is on). The email only changes after the link is opened.
+ */
+export async function requestEmailChange(value: unknown): Promise<{ error: string } | { sentTo: string }> {
+  const user = await requireUser(ROLES);
+  const parsed = emailRules.safeParse(value);
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const email = parsed.data.toLowerCase();
+  if (email === user.email?.toLowerCase()) return { error: "That's already your email." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser(
+    { email },
+    { emailRedirectTo: `${await siteUrl()}/auth/confirm?next=/dashboard/account` },
+  );
+  if (error) {
+    if (error.code === "email_exists") return { error: "Another account already uses that email." };
+    if (error.code === "email_address_invalid") return { error: "That email address can't be used. Try another one." };
+    if (error.status === 429 || error.code?.includes("rate_limit"))
+      return { error: "Too many emails sent. Please wait a few minutes and try again." };
+    return { error: SAVE_ERROR };
+  }
+  return { sentTo: email };
 }

@@ -13,6 +13,7 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import {
   changePassword,
   deleteMyAccount,
+  requestEmailChange,
   removeAvatar,
   setMyTimeZone,
   updateFullName,
@@ -25,11 +26,13 @@ import { setMyLanguages } from "@/lib/practice/actions";
 import { timeZoneLabel } from "@/lib/time";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-type Row = "photo" | "name" | "phone" | "password" | "languages" | "timezone" | "delete";
+type Row = "photo" | "name" | "email" | "phone" | "password" | "languages" | "timezone" | "delete";
 
 export type AccountInfo = {
   fullName: string;
   email: string;
+  /** New email waiting for the user to open the confirmation link, or null. */
+  pendingEmail: string | null;
   phone: string;
   languages: LanguageCode[];
   avatarUrl: string | null;
@@ -163,6 +166,7 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
   const [busy, startBusy] = useTransition();
   const [name, setName] = useState(info.fullName);
   const [phone, setPhone] = useState(info.phone);
+  const [pendingEmail, setPendingEmail] = useState(info.pendingEmail);
   const [languages, setLanguages] = useState(info.languages);
   const [draftLanguages, setDraftLanguages] = useState(info.languages);
   const [newPassword, setNewPassword] = useState("");
@@ -394,10 +398,50 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
           value={
             <span className="grid gap-0.5">
               <span className="break-all text-foreground">{info.email}</span>
-              <span className="text-[13px]">To change your email, ask your academy.</span>
+              {pendingEmail && (
+                <span className="text-[13px]">
+                  Waiting for you to confirm <span className="break-all text-foreground">{pendingEmail}</span>. Open
+                  the link we emailed you (and the one sent to your current email, if you got one).
+                </span>
+              )}
             </span>
           }
-        />
+          editing={editing === "email"}
+          onEdit={() => open("email")}
+          editLabel="Change email"
+        >
+          <form
+            className="grid max-w-md gap-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const value = String(new FormData(e.currentTarget).get("newEmail") ?? "");
+              setError(null);
+              startBusy(async () => {
+                const r = await requestEmailChange(value);
+                if ("error" in r) {
+                  setError(r.error);
+                  return;
+                }
+                setPendingEmail(r.sentTo);
+                setEditing(null);
+                setNotice(`We sent a link to ${r.sentTo}. Your email changes once you open it.`);
+              });
+            }}
+          >
+            <FormField
+              id="newEmail"
+              name="newEmail"
+              type="email"
+              label="New email"
+              autoComplete="email"
+              defaultValue={pendingEmail ?? ""}
+              hint="We'll send a link to this address. Your email only changes after you open it."
+              required
+            />
+            {errorText}
+            <FormButtons busy={busy} onCancel={close} label="Send link" />
+          </form>
+        </SettingRow>
 
         {info.signIn.google && (
           <SettingRow
