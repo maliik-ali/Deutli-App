@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import Link from "next/link";
 
 import { ClassRow } from "@/components/classes/class-row";
 import { ClassesEmpty } from "@/components/classes/classes-empty";
+import { RememberFilters } from "@/components/classes/remember-filters";
 import { DayStrip } from "@/components/classes/day-strip";
 import { BlurFade } from "@/components/magicui/blur-fade";
 import { MotionProvider } from "@/components/magicui/motion-provider";
 import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
 import { classPhase, LEVELS, SKILLS, type LevelId, type SkillId } from "@/lib/classes/constants";
+import { parseExamId } from "@/lib/exam/choice";
 import { listClassesBetween, listMyClasses } from "@/lib/classes/data";
 import { addDays, dayKeyIn, formatDayLong, timeZoneLabel, zonedToUtc } from "@/lib/time";
 import { cn } from "@/lib/utils";
@@ -22,8 +25,10 @@ type View = { tab: "all" | "mine"; skill: SkillId | "all"; level: LevelId; day?:
 function href({ tab, skill, level, day }: View) {
   const q = new URLSearchParams();
   if (tab === "mine") q.set("tab", "mine");
-  if (tab === "all" && skill !== "all") q.set("skill", skill);
-  if (tab === "all" && level !== "all") q.set("level", level);
+  if (tab === "all") {
+    q.set("skill", skill);
+    q.set("level", level);
+  }
   if (tab === "all" && day) q.set("day", day);
   const s = q.toString();
   return `/dashboard/classes${s ? `?${s}` : ""}`;
@@ -43,8 +48,14 @@ export default async function ClassesPage(props: PageProps<"/dashboard/classes">
   const today = dayKeyIn(tz, new Date(serverNow));
 
   const tab: View["tab"] = sp.tab === "mine" ? "mine" : "all";
-  const skill: View["skill"] = SKILLS.some((s) => s.id === sp.skill) ? (sp.skill as SkillId) : "all";
-  const level: View["level"] = LEVELS.some((l) => l.id === sp.level) ? (sp.level as LevelId) : "all";
+  // Level + skill: the link wins, then what the student chose last time, then their exam level.
+  const examLevel = parseExamId(user.exam).level?.toLowerCase();
+  const suggested: LevelId | null = LEVELS.some((l) => l.id === examLevel && l.id !== "all") ? (examLevel as LevelId) : null;
+  const saved = (await cookies()).get("classes_filter")?.value.split(".") ?? [];
+  const pick = <T extends string>(param: unknown, fromCookie: string | undefined, valid: (v: string) => boolean, fallback: T): T =>
+    (typeof param === "string" && valid(param) ? param : fromCookie && valid(fromCookie) ? fromCookie : fallback) as T;
+  const skill = pick<View["skill"]>(sp.skill, saved[1], (v) => v === "all" || SKILLS.some((s) => s.id === v), "all");
+  const level = pick<View["level"]>(sp.level, saved[0], (v) => LEVELS.some((l) => l.id === v), suggested ?? "all");
 
   const header = (
     <header className="grid gap-2">
@@ -75,7 +86,7 @@ export default async function ClassesPage(props: PageProps<"/dashboard/classes">
   const myCount = mine.upcoming.length;
   const tabs = (
     <div className="flex flex-wrap gap-2" role="tablist" aria-label="Classes">
-      <Link role="tab" aria-selected={tab === "all"} href={href({ tab: "all", skill: "all", level: "all" })} className={pill(tab === "all")}>
+      <Link role="tab" aria-selected={tab === "all"} href="/dashboard/classes" className={pill(tab === "all")}>
         All classes
       </Link>
       <Link role="tab" aria-selected={tab === "mine"} href={href({ tab: "mine", skill: "all", level: "all" })} className={pill(tab === "mine")}>
@@ -161,7 +172,9 @@ export default async function ClassesPage(props: PageProps<"/dashboard/classes">
         <div className="grid max-w-[960px] gap-5">
           {tabs}
 
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by level">
+          <RememberFilters level={level} skill={skill} />
+          <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Filter by level">
+            <span className="w-full text-[12px] font-semibold tracking-wide text-subtle-foreground uppercase sm:w-12">Level</span>
             {LEVELS.map((l) => (
               <Link
                 key={l.id}
@@ -178,7 +191,21 @@ export default async function ClassesPage(props: PageProps<"/dashboard/classes">
             ))}
           </div>
 
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by skill">
+          {suggested && level !== suggested && (
+            <p className="-mt-2 text-[13px] text-subtle-foreground">
+              Your exam level is {suggested.toUpperCase()}.{" "}
+              <Link
+                href={href({ tab: "all", skill, level: suggested, day: selected })}
+                scroll={false}
+                className="underline underline-offset-4 hover:text-foreground"
+              >
+                Show {suggested.toUpperCase()} classes
+              </Link>
+            </p>
+          )}
+
+          <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Filter by skill">
+            <span className="w-full text-[12px] font-semibold tracking-wide text-subtle-foreground uppercase sm:w-12">Skill</span>
             {[{ id: "all", label: "All" }, ...SKILLS.filter((s) => s.id !== "general")].map((s) => (
               <Link
                 key={s.id}
