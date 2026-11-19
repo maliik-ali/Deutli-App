@@ -7,12 +7,13 @@ import { AnswersTable, type PartDots } from "@/components/exam/answers-table";
 import { DifficultySurvey } from "@/components/exam/difficulty-survey";
 import { Celebration } from "@/components/exam/celebration";
 import { CertificateCard } from "@/components/exam/certificate-card";
+import { ProNudgeCard } from "@/components/exam/pro-nudge-card";
 import { ScoreHero } from "@/components/exam/score-hero";
 import { TeacherCheckCard } from "@/components/exam/teacher-check-card";
 import { WritingResult } from "@/components/exam/writing-feedback";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { requireUser } from "@/lib/auth/dal";
+import { hasPro, requireUser } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { certDate, certScores } from "@/lib/papers/certificate";
 import { getAttempt, getPaperById } from "@/lib/papers/data";
@@ -102,6 +103,8 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
         teacher={<TeacherCheckCard attemptId={attempt.id} words={r.writingWords} hasTeacher={hasTeacher} teacherName={teacherName} review={review} />}
         certificate={<CertificateCard attemptId={attempt.id} scores={scores} />}
       />
+
+      {user.role === "student" && !hasPro(user) && !skipped && paper.is_free && <ProNudgeCard skills={skills} />}
 
       <AnswersTable attemptId={attempt.id} parts={dots} />
 
