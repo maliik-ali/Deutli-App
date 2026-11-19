@@ -22,7 +22,7 @@ export default async function SectionPage(props: PageProps<"/dashboard/[section]
         <div className="grid gap-2">
           <h2 className="text-lg font-bold">Coming soon</h2>
           <p className="max-w-sm text-muted-foreground">
-            We&apos;re building this part of your B1 course. For now, keep your streak going from the dashboard.
+            We&apos;re building this part of Deutli. Pro members get it the moment it goes live. For now, keep your streak going from the dashboard.
           </p>
         </div>
         <Button asChild>
