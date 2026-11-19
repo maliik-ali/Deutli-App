@@ -371,6 +371,18 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
           value={
             <span className="grid gap-0.5">
               <span className="break-all text-foreground">{info.email}</span>
+              {info.signIn.google ? (
+                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-success-soft px-2.5 py-0.5 text-[12px] font-semibold text-success">
+                  <span className="grid size-4 place-items-center rounded-full bg-white [&_svg]:size-3">
+                    <GoogleMark />
+                  </span>
+                  Google connected
+                </span>
+              ) : (
+                <span className="inline-flex w-fit items-center rounded-full bg-muted px-2.5 py-0.5 text-[12px] font-semibold text-muted-foreground">
+                  Manual
+                </span>
+              )}
               {pendingEmail && (
                 <span className="text-[13px]">
                   Waiting for you to confirm <span className="break-all text-foreground">{pendingEmail}</span>. Open
@@ -415,38 +427,6 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
             <FormButtons busy={busy} onCancel={close} label="Send link" />
           </form>
         </SettingRow>
-
-        {info.signIn.google && (
-          <SettingRow
-            label="Google"
-            value={
-              <span className="flex items-center gap-3">
-                <span className="relative shrink-0">
-                  <Avatar
-                    name={info.signIn.google.name ?? name}
-                    url={info.signIn.google.avatarUrl}
-                    className="size-11 text-[15px]"
-                  />
-                  <span className="absolute -right-1 -bottom-1 grid size-5 place-items-center rounded-full border-2 border-card bg-white [&_svg]:size-3">
-                    <GoogleMark />
-                  </span>
-                </span>
-                <span className="grid min-w-0 justify-items-start gap-1">
-                  <span className="max-w-full truncate font-semibold text-foreground">
-                    {info.signIn.google.name ?? "Google account"}
-                  </span>
-                  {info.signIn.google.email &&
-                    info.signIn.google.email.toLowerCase() !== info.email.toLowerCase() && (
-                    <span className="max-w-full truncate text-[13px]">{info.signIn.google.email}</span>
-                  )}
-                  <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-0.5 text-[12px] font-semibold text-success">
-                    <CheckCircle2 className="size-3.5" aria-hidden /> Connected
-                  </span>
-                </span>
-              </span>
-            }
-          />
-        )}
 
         <SettingRow
           label="Phone"
