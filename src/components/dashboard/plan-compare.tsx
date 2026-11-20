@@ -24,7 +24,7 @@ export type PlanView = {
 
 const pkr = (n: number) => `PKR ${n.toLocaleString("en-PK")}`;
 
-/** Same layout as the pricing section on deutli.com. Only things that exist are ticked; what is coming carries "Soon". */
+/** Same layout as the pricing section on deutli.com. Only things that exist are listed. Add a line here (and on deutli.com) the day a new feature goes live: A2/B1/B2 vocabulary lists, grammar lessons, speaking practice in small groups. */
 const FREE_YES = [
   "1 free telc B1 mock exam",
   "Marked on screen with answer review",
@@ -33,13 +33,10 @@ const FREE_YES = [
   "A1 vocabulary list and word games",
   "Improve Accent: speak along",
 ];
-const FREE_NO = ["More mock exams", "A2, B1 and B2 vocabulary lists", "Grammar lessons and exercises"];
-const PRO: { t: string; soon?: boolean }[] = [
+const FREE_NO = ["More mock exams"];
+const PRO: { t: string }[] = [
   { t: "Every mock exam, new ones as we publish them" },
   { t: "Certificate for every exam" },
-  { t: "A2, B1 and B2 vocabulary lists", soon: true },
-  { t: "Grammar lessons and exercises", soon: true },
-  { t: "Speaking practice in small groups", soon: true },
 ];
 
 const TICK = "mt-0.5 size-4 shrink-0 text-[#39ffac]";
@@ -152,14 +149,10 @@ export function PlanCompare({ plans, isPro, requested, cardReady }: { plans: Pla
               {PRO.map((f) => (
                 <li key={f.t} className="flex items-start gap-2.5">
                   <Check className={TICK} aria-label="Included" />
-                  <span>
-                    {f.t}
-                    {f.soon && <span className="ml-2 rounded-full bg-gold-soft px-2 py-0.5 align-middle text-[11px] font-semibold text-gold-ink">Soon</span>}
-                  </span>
+                  <span>{f.t}</span>
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-[13px] text-muted-foreground">Features marked Soon are included in Pro the day they go live.</p>
 
             <div className="mt-6 grid gap-3">
               {plan && cardReady ? (
