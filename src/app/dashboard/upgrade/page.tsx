@@ -5,7 +5,7 @@ import { PlanCompare, type PlanView } from "@/components/dashboard/plan-compare"
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { hasPro, requireUser } from "@/lib/auth/dal";
-import { getActivePlans, getMyOrders, pkr } from "@/lib/pro/data";
+import { cardReady, getActivePlans, getMyOrders, pkr } from "@/lib/pro/data";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Deutli Pro" };
@@ -61,7 +61,7 @@ export default async function UpgradePage() {
         </Card>
       )}
 
-      <PlanCompare plans={views} isPro={pro} requested={!!req} />
+      <PlanCompare plans={views} isPro={pro} requested={!!req} cardReady={cardReady()} />
     </main>
   );
 }

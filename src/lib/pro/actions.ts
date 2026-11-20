@@ -30,26 +30,43 @@ const GENERIC = "That didn't work. Please wait a moment and try again.";
 const REF_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const newReference = () => "DT-" + Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => REF_ALPHABET[b % REF_ALPHABET.length]).join("");
 
-/** Step 2 -> 3: create the order. The price always comes from the plan in the database, never from the browser. */
-export async function createOrder(input: unknown): Promise<{ error: string } | undefined> {
-  const user = await requireUser(LEARNERS);
-  const p = z.object({ planId: z.string().uuid(), method: z.enum(["card", "bank_wallet"]), agreed: z.literal(true, { error: "Please tick the box to continue." }) }).safeParse(input);
-  if (!p.success) return { error: p.error.issues[0].message };
-  if (p.data.method === "card" && !cardReady()) return { error: "Card payments are not open yet. Please pay with a bank or wallet." };
+/** Creates the order. The price always comes from the plan in the database, never from the browser. */
+async function makeOrder(userId: string, planId: string, method: "card" | "bank_wallet"): Promise<{ error: string } | { id: string }> {
+  if (method === "card" && !cardReady()) return { error: "Card payments are not open yet. Please pay with a bank or wallet." };
 
   const supabase = await createClient();
-  const { data: plan } = await supabase.from("plans").select("id, name, months, price_pkr").eq("id", p.data.planId).eq("active", true).maybeSingle();
+  const { data: plan } = await supabase.from("plans").select("id, name, months, price_pkr").eq("id", planId).eq("active", true).maybeSingle();
   if (!plan) return { error: "This plan is no longer available. Please choose again." };
 
   const admin = createAdminClient();
   if (!admin) return { error: GENERIC };
   const { data, error } = await admin
     .from("orders")
-    .insert({ user_id: user.id, plan_id: plan.id, plan_name: plan.name, months: plan.months, amount_pkr: plan.price_pkr, method: p.data.method, reference: newReference() })
+    .insert({ user_id: userId, plan_id: plan.id, plan_name: plan.name, months: plan.months, amount_pkr: plan.price_pkr, method, reference: newReference() })
     .select("id")
     .single();
   if (error || !data) return { error: GENERIC };
-  redirect(`/dashboard/upgrade/order/${data.id}`);
+  return { id: data.id };
+}
+
+/** Step 2 -> 3: create the order, then show its page (bank details or card button). */
+export async function createOrder(input: unknown): Promise<{ error: string } | undefined> {
+  const user = await requireUser(LEARNERS);
+  const p = z.object({ planId: z.string().uuid(), method: z.enum(["card", "bank_wallet"]), agreed: z.literal(true, { error: "Please tick the box to continue." }) }).safeParse(input);
+  if (!p.success) return { error: p.error.issues[0].message };
+  const order = await makeOrder(user.id, p.data.planId, p.data.method);
+  if ("error" in order) return order;
+  redirect(`/dashboard/upgrade/order/${order.id}`);
+}
+
+/** "Get Pro" on the plans page: create the card order and go straight to Stripe's payment page. */
+export async function buyProWithCard(input: unknown): Promise<{ error: string } | { url: string }> {
+  const user = await requireUser(LEARNERS);
+  const p = z.object({ planId: z.string().uuid(), agreed: z.literal(true, { error: "Please tick the box to continue." }) }).safeParse(input);
+  if (!p.success) return { error: p.error.issues[0].message };
+  const order = await makeOrder(user.id, p.data.planId, "card");
+  if ("error" in order) return order;
+  return startCardPayment(order.id);
 }
 
 /** The student tells us they paid: transaction ID and an optional note. The admin then checks it. */
