@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, Lock } from "lucide-react";
+import { ArrowUpRight, Check, Lock } from "lucide-react";
 
 import type { CoverTone, MockExam } from "@/lib/exam/catalog";
 import { cn } from "@/lib/utils";
@@ -115,7 +115,7 @@ function Stamp({ className }: { className?: string }) {
 }
 
 /** Cover + the text under it; the whole card opens the exam. */
-export function ExamCard({ exam, examName }: { exam: MockExam; examName: string }) {
+export function ExamCard({ exam, examName, pro = false, ready = true }: { exam: MockExam; examName: string; /** The student has Pro: premium exams are unlocked for them. */ pro?: boolean; /** The paper is uploaded. Sample covers without a paper cannot be opened yet. */ ready?: boolean }) {
   return (
     <Link
       href={`/dashboard/exam/mock/${exam.id}`}
@@ -127,6 +127,13 @@ export function ExamCard({ exam, examName }: { exam: MockExam; examName: string 
           {examName} ·<span className="max-sm:hidden">B1 ·</span>
           {exam.free ? (
             <span className="text-success">Free</span>
+          ) : pro && !ready ? (
+            <span className="text-muted-foreground">Coming soon</span>
+          ) : pro ? (
+            <span className="inline-flex items-center gap-1 text-success">
+              <Check className="size-3" aria-hidden />
+              Included in Pro
+            </span>
           ) : (
             <span className="inline-flex items-center gap-1 text-gold-ink">
               <Lock className="size-3" aria-hidden />

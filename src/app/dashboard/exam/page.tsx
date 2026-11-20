@@ -15,7 +15,7 @@ export const metadata: Metadata = { title: "My B1 Exam" };
 export default async function ExamPage() {
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
   const examName = examShortName(user.exam);
-  const { mocks } = await listMocks();
+  const { mocks, ready } = await listMocks();
   const freeMocks = mocks.filter((m) => m.free);
   const premiumMocks = mocks.filter((m) => !m.free);
   const pro = hasPro(user) && user.role === "student";
@@ -26,8 +26,7 @@ export default async function ExamPage() {
       <header className="grid gap-2">
         <h1 className="text-[28px] font-extrabold sm:text-[32px]">My B1 Exam{/* later: {myExamTitle(user.exam)} */}</h1>
         <p className="max-w-2xl text-muted-foreground">
-          Full mock exams with all four parts, timed like the real day. Free exams you can start right now. Premium
-          exams unlock with Deutli Pro. To train one skill at a time, open Skills in the menu.
+          Full mock exams with all four parts, timed like the real day. Free exams you can start right now. {pro ? "Your Pro opens the premium exams as we publish them." : "Premium exams unlock with Deutli Pro."} To train one skill at a time, open Skills in the menu.
         </p>
       </header>
 
@@ -53,7 +52,7 @@ export default async function ExamPage() {
             {[...freeMocks, ...premiumMocks].map((exam, i) => (
               <li key={exam.id}>
                 <BlurFade delay={Math.min(i, 8) * 0.05}>
-                  <ExamCard exam={exam} examName={examName} />
+                  <ExamCard exam={exam} examName={examName} pro={pro} ready={ready.has(exam.id)} />
                 </BlurFade>
               </li>
             ))}
