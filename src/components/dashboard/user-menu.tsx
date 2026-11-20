@@ -3,14 +3,14 @@
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronUp, LifeBuoy, LogOut, SlidersHorizontal, Sparkles, UserRound } from "lucide-react";
+import { ChevronUp, LifeBuoy, LogOut, ShieldCheck, SlidersHorizontal, Sparkles, UserRound } from "lucide-react";
 
 import { signOut } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/avatar";
 import { cn } from "@/lib/utils";
 
 /** Name card at the bottom of the sidebar. Opens a small menu: Account, Advanced settings, Plans, Support, Log out. */
-export function UserMenu({ name, email, avatarUrl }: { name: string; email: string | null; avatarUrl: string | null }) {
+export function UserMenu({ name, email, avatarUrl, isAdmin = false }: { name: string; email: string | null; avatarUrl: string | null; /** Admins get a way back to the admin panel. */ isAdmin?: boolean }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const menuId = useId();
@@ -83,6 +83,11 @@ export function UserMenu({ name, email, avatarUrl }: { name: string; email: stri
           >
             <LifeBuoy className={cn("size-[18px]", onSupport && "text-gold-ink")} aria-hidden /> Support
           </Link>
+          {isAdmin && (
+            <Link href="/admin" onClick={() => setOpen(false)} className={itemClass}>
+              <ShieldCheck className="size-[18px]" aria-hidden /> Admin panel
+            </Link>
+          )}
           <form action={signOut}>
             <button type="submit" className={itemClass}>
               <LogOut className="size-[18px]" aria-hidden /> Log out

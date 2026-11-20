@@ -34,7 +34,7 @@ function greeting(now: Date, timeZone: string) {
 }
 
 export default async function DashboardPage(props: PageProps<"/dashboard">) {
-  const user = await requireUser(["student"]);
+  const user = await requireUser(["student", "academy_admin", "super_admin"]);
   const sp = await props.searchParams;
   const [savedWords, readiness, practice, papers, finished, liveClass] = await Promise.all([
     getSavedWords(user.id, 5),

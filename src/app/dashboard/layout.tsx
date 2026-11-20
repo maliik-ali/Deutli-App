@@ -11,7 +11,7 @@ import { requireUser } from "@/lib/auth/dal";
 
 export default async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
   // Server-side check on every request: must be logged in. Students live here;
-  // admins may also open it to use Daily Practice (the dashboard page itself stays student-only).
+  // admins may also open it, to see the app as a student does (they get an "Admin panel" link in the user menu).
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
   // New students answer a few questions first (asked once; they can skip them).
   if (user.role === "student" && !user.onboardedAt) redirect("/onboarding");
@@ -19,7 +19,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
   const avatarUrl = await getAvatarUrl(user.avatarPath);
   // MVP: the menu always says "My B1 Exam". Later: const examTitle = myExamTitle(user.exam); (follows the chosen exam level)
   const examTitle = undefined;
-  const footer = <UserMenu name={name} email={user.email} avatarUrl={avatarUrl} />;
+  const footer = <UserMenu name={name} email={user.email} avatarUrl={avatarUrl} isAdmin={user.role !== "student"} />;
 
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[264px_minmax(0,1fr)]">

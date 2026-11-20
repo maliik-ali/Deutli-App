@@ -1,11 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
-import { TimeZoneSync } from "@/components/account/time-zone-sync";
-import { Logo } from "@/components/logo";
-import { SignOutButton } from "@/components/sign-out-button";
-
-/** Simple page frame for admin screens: top bar, optional back link, title. */
+/** Page frame for admin screens: optional back link, title and actions. The menu comes from the admin layout. */
 export function AdminShell({
   title,
   description,
@@ -20,16 +16,10 @@ export function AdminShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-dvh">
-      {/* Saves the admin's device time zone once (the server skips it when already saved). */}
-      <TimeZoneSync />
-      <header className="flex items-center justify-between border-b border-border bg-card px-4 py-3 sm:px-8">
-        <Logo href="/admin" />
-        <SignOutButton compact />
-      </header>
+    <>
       <main className="mx-auto grid max-w-[960px] gap-6 px-4 py-8 sm:px-8">
         <div className="grid gap-3">
-          {back && (
+          {back && back.href !== "/admin" && (
             <Link
               href={back.href}
               className="inline-flex h-9 w-fit items-center gap-1 rounded-full pr-3 text-sm font-medium text-muted-foreground hover:text-foreground"
@@ -47,6 +37,6 @@ export function AdminShell({
         </div>
         {children}
       </main>
-    </div>
+    </>
   );
 }
