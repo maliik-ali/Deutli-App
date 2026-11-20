@@ -1,4 +1,5 @@
 import { longDay } from "@/lib/pro/reminder";
+import { formatClock, formatShortDate } from "@/lib/time";
 import { SUPPORT } from "@/lib/support/contact";
 
 const APP = "https://app.deutli.com";
@@ -66,4 +67,35 @@ export function adminNewFeedbackEmail(p: { kind: string; name: string | null; em
     small: "Reply to the student by email or WhatsApp, then mark the message Done.",
   });
   return { subject: `Support: new ${p.kind} message`, html, text };
+}
+
+/** To the student: Pro ends soon (7 days or 1 day before). `days` = days left. */
+export function proEndingEmail(p: { name: string | null; until: string; days: number }) {
+  const when = p.days <= 1 ? "tomorrow" : `in ${p.days} days`;
+  const { html, text } = layout({
+    heading: p.days <= 1 ? "Your Deutli Pro ends tomorrow" : `Your Deutli Pro ends in ${p.days} days`,
+    lines: [
+      `Hi ${first(p.name)},`,
+      `Your Deutli Pro runs until ${longDay(p.until)}, which is ${when}. After that, only the free mock exam stays open.`,
+      "If you are still preparing, renew now and the new time is added after your current Pro, so you lose nothing.",
+    ],
+    button: { label: "Renew Pro", href: `${APP}/dashboard/upgrade` },
+  });
+  return { subject: p.days <= 1 ? "Your Deutli Pro ends tomorrow" : `Your Deutli Pro ends in ${p.days} days`, html, text };
+}
+
+/** To the student: a class they registered for starts within the hour. Times are in the student's own time zone. */
+export function classReminderEmail(p: { name: string | null; title: string; teacher: string | null; startsAt: string; timeZone: string; classId: string }) {
+  const at = `${formatShortDate(p.startsAt, p.timeZone)}, ${formatClock(p.startsAt, p.timeZone)}`;
+  const { html, text } = layout({
+    heading: "Your class starts soon",
+    lines: [
+      `Hi ${first(p.name)},`,
+      `${p.title}${p.teacher ? ` with ${p.teacher}` : ""} starts at ${at} (your time).`,
+      "The Join button opens 10 minutes before the start. Open the class page a little early.",
+    ],
+    button: { label: "Open the class", href: `${APP}/dashboard/classes/${p.classId}` },
+    small: "You get this because you registered for the class. Can't make it? Cancel your seat on the class page so someone else can join.",
+  });
+  return { subject: `Starting soon: ${p.title}`, html, text };
 }
