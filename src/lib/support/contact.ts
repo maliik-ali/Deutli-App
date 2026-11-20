@@ -5,6 +5,7 @@ export const SUPPORT = {
   whatsappNumber: "4915215126840",
   instagram: "https://www.instagram.com/deutli0/",
   facebook: "https://www.facebook.com/deutli",
+  youtube: "https://www.youtube.com/@Deutli0",
 } as const;
 
 /** A WhatsApp chat link with a ready first line. */

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 
-import { ExternalLink, Mail, MessageCircle } from "lucide-react";
+import { Mail, MessageCircle } from "lucide-react";
 
+import { SocialLinks } from "@/components/support/social-links";
 import { SupportForm } from "@/components/support/support-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -82,16 +83,7 @@ export default async function SupportPage(props: PageProps<"/dashboard/support">
                 <Mail aria-hidden /> {SUPPORT.email}
               </a>
             </Button>
-            <p className="flex flex-wrap gap-x-5 gap-y-1 text-[14px]">
-              {[
-                { label: "Instagram", href: SUPPORT.instagram },
-                { label: "Facebook", href: SUPPORT.facebook },
-              ].map((l) => (
-                <a key={l.label} href={l.href} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-1.5 text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
-                  {l.label} <ExternalLink className="size-3.5" aria-hidden />
-                </a>
-              ))}
-            </p>
+            <SocialLinks />
           </Card>
 
           <Card className="gap-2">
