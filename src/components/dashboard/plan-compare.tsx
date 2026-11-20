@@ -33,12 +33,13 @@ const FREE_YES = [
   "A1 vocabulary list and word games",
   "Improve Accent: speak along",
 ];
-const FREE_NO = ["More mock exams"];
+const FREE_NO = ["More mock exams", "A2, B1 and B2 vocabulary lists"];
 const PRO: { t: string }[] = [
   { t: "Every mock exam, new ones as we publish them" },
   { t: "Certificate for every exam" },
   { t: "Real exam conditions: timer per section, audio and answer sheet" },
   { t: "Readiness score from all your mock results" },
+  { t: "A2, B1 and B2 vocabulary lists" },
 ];
 
 const TICK = "mt-0.5 size-4 shrink-0 text-[#39ffac]";
