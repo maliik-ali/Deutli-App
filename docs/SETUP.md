@@ -101,6 +101,15 @@ The HTML for these emails lives in `supabase/templates/`. Supabase sends them; y
    (Supabase's default link only works in the browser where the student signed up).
    Site URL must be `https://app.deutli.com`.
 
+## Emails from the app (Resend)
+
+Besides the login emails above, the app itself sends a few emails: "Your Deutli Pro is active" and "We received your payment details" to the student, and alerts to `help@deutli.com` for a new payment to check or a new support message. They go through Resend's API and need one key.
+
+1. In Resend, add and verify the domain `deutli.com` (the same domain as step 1 above; one verification serves both).
+2. Resend → API Keys → create a key with **Sending access** only. Copy it.
+3. Vercel → Environment Variables: `RESEND_API_KEY` = that key (Production). Optional: `EMAIL_FROM` = `Deutli <help@deutli.com>` (the default).
+4. Redeploy. Without the key nothing is sent and the app works as before; a failed email never stops a payment.
+
 ## F. Sign in with Google
 
 The "Continue with Google" button is already in the app (login and signup pages). It works after you switch Google on. Until then the button shows a friendly "isn't available yet" message.

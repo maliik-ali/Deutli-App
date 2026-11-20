@@ -5,6 +5,9 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { requireUser } from "@/lib/auth/dal";
+import { sendEmail } from "@/lib/email/send";
+import { adminPaymentToCheckEmail, paymentDetailsEmail } from "@/lib/email/templates";
+import { SUPPORT } from "@/lib/support/contact";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { cardReady } from "./data";
@@ -94,11 +97,14 @@ export async function submitPaymentProof(orderId: unknown, txnId: unknown, note:
   if (!p.success) return { error: p.error.issues[0].message };
   const admin = createAdminClient();
   if (!admin) return { error: GENERIC };
-  const { data: order } = await admin.from("orders").select("id, status, method").eq("id", p.data.id).eq("user_id", user.id).maybeSingle();
+  const { data: order } = await admin.from("orders").select("id, status, method, plan_name, amount_pkr, reference").eq("id", p.data.id).eq("user_id", user.id).maybeSingle();
   if (!order || order.method !== "bank_wallet" || !["pending", "awaiting_review"].includes(order.status)) return { error: GENERIC };
   const { error } = await admin.from("orders").update({ txn_id: p.data.txn, payer_note: p.data.note || null, status: "awaiting_review" }).eq("id", order.id);
   if (error) return { error: GENERIC };
   revalidatePath(`/dashboard/upgrade/order/${order.id}`);
+  // Emails (best effort): the student gets a receipt, the Deutli inbox gets a "please check" note.
+  if (user.email) await sendEmail({ to: user.email, ...paymentDetailsEmail({ name: user.fullName, planName: order.plan_name, amount: order.amount_pkr, reference: order.reference }) });
+  await sendEmail({ to: SUPPORT.email, replyTo: user.email ?? undefined, ...adminPaymentToCheckEmail({ name: user.fullName, email: user.email, planName: order.plan_name, amount: order.amount_pkr, reference: order.reference, txn: p.data.txn }) });
   return { ok: true };
 }
 

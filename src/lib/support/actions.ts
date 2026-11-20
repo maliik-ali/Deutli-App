@@ -4,9 +4,11 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { requireUser } from "@/lib/auth/dal";
+import { sendEmail } from "@/lib/email/send";
+import { adminNewFeedbackEmail } from "@/lib/email/templates";
 import { allow } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { MAX_FEEDBACK, MIN_FEEDBACK } from "./contact";
+import { MAX_FEEDBACK, MIN_FEEDBACK, SUPPORT } from "./contact";
 
 const LEARNERS = ["student", "academy_admin", "super_admin"] as const;
 const ADMINS = ["academy_admin", "super_admin"] as const;
@@ -32,6 +34,8 @@ export async function sendFeedback(raw: unknown): Promise<Result> {
   if (error) return { error: GENERIC };
   revalidatePath("/dashboard/support");
   revalidatePath("/admin/feedback");
+  // Tell the Deutli inbox (best effort), so nobody has to keep checking the admin page.
+  await sendEmail({ to: SUPPORT.email, replyTo: user.email ?? undefined, ...adminNewFeedbackEmail({ kind: p.data.kind, name: user.fullName, email: user.email, message: p.data.message, page: p.data.page ?? null }) });
   return { ok: true };
 }
 
