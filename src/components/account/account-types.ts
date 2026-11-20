@@ -18,6 +18,16 @@ export type AccountInfo = {
     google: { name: string | null; email: string | null; avatarUrl: string | null } | null;
     password: boolean;
   };
+  /** The student's plan, worked out on the server. */
+  plan: {
+    kind: "free" | "pro" | "staff";
+    /** "14 February 2027", when Pro ends (kind "pro"). */
+    until: string | null;
+    /** Whole days left, 0 = ends today. */
+    daysLeft: number | null;
+    /** A payment still being sorted out, or null. */
+    openOrder: { id: string; reference: string; status: "pending" | "awaiting_review" } | null;
+  };
   /** Only students can delete their own account; staff accounts are removed by an admin. */
   canDelete: boolean;
 };

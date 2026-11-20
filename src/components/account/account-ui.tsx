@@ -40,6 +40,7 @@ export function SettingRow({
   editing,
   onEdit,
   editLabel,
+  action,
   children,
 }: {
   label: string;
@@ -47,6 +48,8 @@ export function SettingRow({
   editing?: boolean;
   onEdit?: () => void;
   editLabel?: string;
+  /** A button or link shown at the right instead of Edit. */
+  action?: React.ReactNode;
   children?: React.ReactNode;
 }) {
   return (
@@ -65,6 +68,8 @@ export function SettingRow({
         >
           Edit
         </Button>
+      ) : action ? (
+        <div className="col-start-2 row-start-1 justify-self-end sm:col-start-auto sm:row-start-auto">{action}</div>
       ) : (
         <span className="col-start-2 row-start-1 sm:col-start-auto sm:row-start-auto" aria-hidden />
       )}

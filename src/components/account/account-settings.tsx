@@ -6,6 +6,7 @@ import type { AccountInfo } from "./account-types";
 import { LEGAL_LINKS } from "./account-ui";
 import { DeleteAccountSection } from "./delete-section";
 import { LearningSection } from "./learning-section";
+import { PlanSection } from "./plan-section";
 import { ProfileSection } from "./profile-section";
 import { SignInSection } from "./sign-in-section";
 import { useAccountState } from "./use-account-state";
@@ -28,6 +29,7 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
       )}
 
       <ProfileSection st={st} />
+      <PlanSection info={info} />
       <SignInSection info={info} st={st} />
       <LearningSection st={st} />
       <DeleteAccountSection info={info} st={st} />
