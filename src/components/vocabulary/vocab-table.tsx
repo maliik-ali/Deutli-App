@@ -3,7 +3,7 @@
 import { useState, useSyncExternalStore, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, ListFilter, Star, Trash2, Volume2 } from "lucide-react";
+import { Check, ListFilter, Printer, Star, Trash2, Volume2 } from "lucide-react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { removeVocabularyWord } from "@/lib/practice/actions";
@@ -277,7 +277,7 @@ export function VocabTable({ rows, columns }: { rows: TableRow[]; columns: Colum
       )}
       <div
         style={{ "--cols": template } as React.CSSProperties}
-        className="hidden gap-4 border-b border-border bg-ink/40 px-6 py-3 text-[13px] font-semibold text-subtle-foreground lg:grid lg:[grid-template-columns:var(--cols)]"
+        className="hidden gap-4 border-b border-border bg-ink/40 px-6 py-3 text-[13px] font-semibold text-subtle-foreground lg:grid lg:[grid-template-columns:var(--cols)] print:grid print:[grid-template-columns:var(--cols)]"
       >
         <span>German</span>
         {columns.map((c) => (
@@ -294,7 +294,7 @@ export function VocabTable({ rows, columns }: { rows: TableRow[]; columns: Colum
             <li
               key={r.key}
               style={{ "--cols": template } as React.CSSProperties}
-              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-4 py-4 transition-colors hover:bg-muted/40 sm:px-6 lg:gap-4 lg:py-3 lg:[grid-template-columns:var(--cols)]"
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-4 py-4 transition-colors hover:bg-muted/40 sm:px-6 lg:gap-4 lg:py-3 lg:[grid-template-columns:var(--cols)] print:gap-4 print:px-6 print:py-2 print:[grid-template-columns:var(--cols)]"
             >
               <div className="min-w-0">
                 <p lang="de" className="truncate text-[15px] font-semibold">
@@ -316,12 +316,12 @@ export function VocabTable({ rows, columns }: { rows: TableRow[]; columns: Colum
                     key={c.id}
                     className={cn(
                       // Phones and tablets: one labelled line per column. Wide screens: a table cell.
-                      "col-span-2 grid min-w-0 grid-cols-[96px_minmax(0,1fr)] items-baseline gap-3 lg:col-span-1 lg:block",
+                      "col-span-2 grid min-w-0 grid-cols-[96px_minmax(0,1fr)] items-baseline gap-3 lg:col-span-1 lg:block print:col-span-1 print:block",
                       kind === "meaning" && "text-[15px] text-muted-foreground",
                       (kind === "example" || kind === "from") && "text-sm text-muted-foreground",
                     )}
                   >
-                    <span className="text-[12px] font-semibold text-subtle-foreground lg:hidden">
+                    <span className="text-[12px] font-semibold text-subtle-foreground lg:hidden print:hidden">
                       {c.label.replace(/ meaning$/, "")}
                     </span>
                     {kind === "meaning" ? (
@@ -351,7 +351,7 @@ export function VocabTable({ rows, columns }: { rows: TableRow[]; columns: Colum
                 );
               })}
 
-              <div className="col-start-2 row-start-1 flex justify-end lg:col-start-auto lg:row-start-auto lg:w-[120px]">
+              <div className="col-start-2 row-start-1 flex justify-end lg:col-start-auto lg:row-start-auto lg:w-[120px] print:hidden">
                 <IconButton label={`Listen to ${r.head}`} onClick={() => speakGerman(r.head)}>
                   <Volume2 className="size-[18px]" aria-hidden />
                 </IconButton>
@@ -374,6 +374,43 @@ export function VocabTable({ rows, columns }: { rows: TableRow[]; columns: Colum
       </ul>
     </div>
   );
+}
+
+/** Prints only the words shown now (the current page), not the whole list: copies the table into a hidden frame and prints that. */
+async function printTable() {
+  const area = document.getElementById("vocab-print-area");
+  if (!area) return;
+  const frame = document.createElement("iframe");
+  frame.setAttribute("aria-hidden", "true");
+  frame.style.cssText = "position:fixed;left:-9999px;top:0;width:1100px;height:800px;border:0;";
+  document.body.appendChild(frame);
+  const doc = frame.contentDocument;
+  if (!doc) return frame.remove();
+  const styles = Array.from(document.querySelectorAll("link[rel=stylesheet], style"));
+  doc.open();
+  doc.write(
+    `<!doctype html><html lang="en" class="${document.documentElement.className}"><head><meta charset="utf-8"><title>Deutli words</title>` +
+      styles.map((n) => n.outerHTML).join("") +
+      `<style>@page{margin:12mm}html,body{background:#fff!important}body{margin:0}` +
+      `*{color:#000!important;background:transparent!important;border-color:#bbb!important;box-shadow:none!important}</style>` +
+      `</head><body>${area.outerHTML}</body></html>`,
+  );
+  doc.close();
+  const links = Array.from(doc.querySelectorAll("link[rel=stylesheet]"));
+  await Promise.race([
+    Promise.all(
+      links.map((l) => new Promise((done) => { l.addEventListener("load", done); l.addEventListener("error", done); })),
+    ),
+    new Promise((done) => setTimeout(done, 3000)),
+  ]);
+  try {
+    await doc.fonts?.ready;
+  } catch {}
+  const win = frame.contentWindow;
+  if (!win) return frame.remove();
+  win.addEventListener("afterprint", () => frame.remove());
+  win.focus();
+  win.print();
 }
 
 /** Toolbar (tabs, search, Columns button) and the table, sharing the chosen columns. */
@@ -402,10 +439,27 @@ export function VocabTableWithColumns({
         {tabs}
         <div className="flex w-full gap-2 lg:w-auto">
           {search}
+          {rows.length > 0 && (
+            <button
+              type="button"
+              onClick={() => void printTable()}
+              aria-label="Print the words on this page"
+              title="Print this page"
+              className="grid size-11 shrink-0 place-items-center rounded-xl border border-input bg-background text-muted-foreground transition-colors hover:text-foreground focus-visible:border-gold-ink focus-visible:outline-none"
+            >
+              <Printer className="size-5" aria-hidden />
+            </button>
+          )}
           <ColumnPicker columns={columns} isShown={isShown} toggle={toggle} />
         </div>
       </div>
-      {rows.length === 0 ? empty : <VocabTable key={rows.map((r) => r.key).join()} rows={rows} columns={shown} />}
+      {rows.length === 0 ? (
+        empty
+      ) : (
+        <div id="vocab-print-area">
+          <VocabTable key={rows.map((r) => r.key).join()} rows={rows} columns={shown} />
+        </div>
+      )}
     </>
   );
 }
