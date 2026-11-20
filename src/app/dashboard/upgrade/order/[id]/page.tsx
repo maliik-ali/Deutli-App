@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CheckCircle2, ChevronLeft, Clock, XCircle } from "lucide-react";
 
+import { AutoRefresh } from "@/components/dashboard/auto-refresh";
 import { CardPayButton } from "@/components/dashboard/card-pay-button";
 import { CopyButton } from "@/components/dashboard/copy-button";
 import { ProofForm } from "@/components/dashboard/proof-form";
@@ -121,10 +122,11 @@ export default async function OrderPage(props: PageProps<"/dashboard/upgrade/ord
         <Card>
           {sp.card === "done" ? (
             <>
-              <p className="flex items-center gap-2 text-lg font-bold">
+              <AutoRefresh />
+              <p className="flex items-center gap-2 text-lg font-bold" role="status">
                 <Clock className="size-5 text-gold-ink" aria-hidden /> Payment received, confirming…
               </p>
-              <p className="text-[15px] text-muted-foreground">This takes a few seconds. Refresh this page. If Pro is still not on after a few minutes, contact us with your reference {order.reference}.</p>
+              <p className="text-[15px] text-muted-foreground">This takes a few seconds and the page updates by itself. If Pro is still not on after a few minutes, contact us with your reference {order.reference}.</p>
               <div>
                 <Button asChild variant="outline">
                   <Link href={`/dashboard/upgrade/order/${order.id}`}>Refresh</Link>
