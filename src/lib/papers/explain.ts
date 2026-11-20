@@ -3,6 +3,7 @@
 import { z } from "zod";
 
 import { generateJson, aiReady } from "@/lib/ai/provider";
+import { allow } from "@/lib/rate-limit";
 import { requireUser } from "@/lib/auth/dal";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -59,6 +60,8 @@ export async function explainAnswer(attemptId: unknown, question: unknown): Prom
 
   const cached = await admin.from("answer_explanations").select("en, ur").eq("paper_id", attempt.paper_id).eq("question", q.data).maybeSingle();
   if (cached.data) return { explanation: cached.data as Explanation };
+  // Only new explanations cost money, so only those are limited: 40 per student per day.
+  if (!(await allow(`explain:${user.id}`, 40, 86400))) return { error: "You have reached today's limit of AI explanations. Come back tomorrow." };
 
   const { data: paper } = await supabase.from("mock_papers").select("structure, page_text").eq("id", attempt.paper_id).maybeSingle();
   const parts = ((paper?.structure as { parts?: PaperPart[] } | null)?.parts ?? []) as PaperPart[];

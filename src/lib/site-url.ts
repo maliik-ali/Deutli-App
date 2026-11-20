@@ -6,6 +6,8 @@ import { headers } from "next/headers";
 export async function siteUrl(): Promise<string> {
   const configured = process.env.SITE_URL?.replace(/\/$/, "");
   if (configured) return configured;
+  // On the live site never guess the address from the request: a forged Host header could poison email links.
+  if (process.env.VERCEL_ENV === "production") throw new Error("SITE_URL is not set");
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
   const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");

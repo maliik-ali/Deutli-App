@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { requireUser } from "@/lib/auth/dal";
+import { allow } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { countWords } from "@/lib/papers/template";
 import { MIN_WORDS, type Criterion } from "./types";
@@ -44,6 +45,8 @@ export async function sendToTeacher(attemptId: unknown, code: unknown): Promise<
   const user = await requireUser(LEARNERS);
   const c = z.string().trim().toUpperCase().regex(/^[A-Z0-9]{6}$/).safeParse(code);
   if (!c.success) return { error: "That code isn't right. Ask your teacher for their 6-letter code." };
+  // Stops guessing teacher codes: 10 tries per hour per student.
+  if (!(await allow(`teacher-code:${user.id}`, 10, 3600))) return { error: "Too many tries. Please wait an hour or ask your teacher for the code again." };
   const a = await ownSubmittedAttempt(user.id, attemptId);
   if ("error" in a && a.error) return { error: a.error };
   if (!a.admin) return { error: GENERIC };
