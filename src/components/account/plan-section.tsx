@@ -8,7 +8,8 @@ import { Section, SettingRow } from "./account-ui";
 
 /** Which plan the student has, and the way to change it (the plans page has the choice and the payment). */
 export function PlanSection({ info }: { info: AccountInfo }) {
-  const { kind, until, daysLeft, openOrder } = info.plan;
+  const { kind, until, daysLeft, reminder, openOrder } = info.plan;
+  const renew = reminder != null;
   const left =
     daysLeft == null ? "" : daysLeft === 0 ? " (ends today)" : daysLeft === 1 ? " (1 day left)" : ` (${daysLeft} days left)`;
 
@@ -23,7 +24,9 @@ export function PlanSection({ info }: { info: AccountInfo }) {
                 <Badge variant="gold">Pro</Badge>
                 <span className="text-foreground">Active until {until}{left}</span>
               </span>
-              <span className="text-[13px]">Every mock exam, and new features the day they go live.</span>
+              <span className={renew ? "text-[13px] font-medium text-gold-ink" : "text-[13px]"}>
+                {renew ? "Pro ends soon. Renew to keep every mock exam." : "Every mock exam, and new features the day they go live."}
+              </span>
             </span>
           ) : kind === "staff" ? (
             <span className="grid gap-1">
@@ -36,16 +39,18 @@ export function PlanSection({ info }: { info: AccountInfo }) {
                 <Badge variant="outline">Free</Badge>
                 <span className="text-foreground">Free plan</span>
               </span>
-              <span className="text-[13px]">1 free mock exam, the A1 word list and AI writing checks.</span>
+              <span className={reminder ? "text-[13px] font-medium text-gold-ink" : "text-[13px]"}>
+                {reminder ? `Your Pro ended on ${reminder.until}. Renew to open the mock exams again.` : "1 free mock exam, the A1 word list and AI writing checks."}
+              </span>
             </span>
           )
         }
         action={
           kind === "staff" ? undefined : (
-            <Button asChild variant={kind === "free" ? "default" : "outline"} size="sm" className="h-11 sm:h-9">
+            <Button asChild variant={kind === "free" || renew ? "default" : "outline"} size="sm" className="h-11 sm:h-9">
               <Link href="/dashboard/upgrade">
                 {kind === "free" ? <Sparkles aria-hidden /> : null}
-                {kind === "free" ? "Upgrade to Pro" : "Extend Pro"}
+                {kind === "free" ? (reminder ? "Renew Pro" : "Upgrade to Pro") : renew ? "Renew Pro" : "Extend Pro"}
               </Link>
             </Button>
           )

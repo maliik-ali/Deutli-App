@@ -25,6 +25,8 @@ export type AccountInfo = {
     until: string | null;
     /** Whole days left, 0 = ends today. */
     daysLeft: number | null;
+    /** Pro is about to end or has just ended (see proReminder), or null. */
+    reminder: { kind: "ending" | "ended"; days: number; until: string } | null;
     /** A payment still being sorted out, or null. */
     openOrder: { id: string; reference: string; status: "pending" | "awaiting_review" } | null;
   };

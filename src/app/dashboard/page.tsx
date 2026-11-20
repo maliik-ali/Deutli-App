@@ -9,7 +9,9 @@ import { MotionProvider } from "@/components/magicui/motion-provider";
 import { NumberTicker } from "@/components/magicui/number-ticker";
 import { NextClassCard } from "@/components/classes/next-class-card";
 import { MockExamCard, ReadinessCard, TodaysWordsCard, WritingFeedbackCard, type LatestWriting } from "@/components/dashboard/cards";
+import { ProReminderBanner } from "@/components/dashboard/pro-reminder";
 import { requireUser } from "@/lib/auth/dal";
+import { proReminder } from "@/lib/pro/reminder";
 import { getDashboardClass } from "@/lib/classes/data";
 import { getReadiness } from "@/lib/papers/readiness";
 import { getFinishedAttempts, getLastResult, getPaperById, getPapers } from "@/lib/papers/data";
@@ -56,6 +58,7 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
     const [ap, fb, rv] = await Promise.all([getPaperById(att.paper_id), getWritingFeedback(att.id), getReviewForStudent(att.id, user.id)]);
     if (ap) latest = { slug: ap.slug, title: ap.title, attemptId: att.id, words: att.result.writingWords, aiTotal: fb?.total ?? null, teacherTotal: rv?.status === "done" ? rv.total : null, summary: fb?.summary ?? null };
   }
+  const reminder = proReminder(user.proUntil, todayIn(user.timeZone));
   const firstName = (user.fullName ?? "").trim().split(/\s+/)[0] || "there";
 
   const now = new Date();
@@ -110,6 +113,8 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
           </Link>
         </div>
       </header>
+
+      {reminder && user.proUntil && <ProReminderBanner reminder={reminder} proUntil={user.proUntil} />}
 
       {liveClass && (liveClass.next || liveClass.anyUpcoming) && (
         <BlurFade delay={0.01}>

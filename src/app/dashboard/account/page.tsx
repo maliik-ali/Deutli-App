@@ -4,6 +4,7 @@ import { AccountSettings } from "@/components/account/account-settings";
 import { getAvatarUrl } from "@/lib/account/avatar";
 import { hasPro, requireUser } from "@/lib/auth/dal";
 import { getMyOrders } from "@/lib/pro/data";
+import { longDay, proReminder } from "@/lib/pro/reminder";
 import { todayIn } from "@/lib/time";
 import { createClient } from "@/lib/supabase/server";
 
@@ -21,6 +22,7 @@ export default async function AccountPage() {
   const pro = user.role === "student" && hasPro(user);
   const today = todayIn(user.timeZone);
   const daysLeft = pro && user.proUntil ? Math.round((Date.parse(user.proUntil) - Date.parse(today)) / 86_400_000) : null;
+  const nudge = user.role === "student" ? proReminder(user.proUntil, today) : null;
   // A payment still open from the last week (older unpaid ones are just abandoned).
   const weekAgo = Date.parse(today) - 7 * 86_400_000;
   const open = orders.find((o) => (o.status === "pending" || o.status === "awaiting_review") && Date.parse(o.created_at) > weekAgo);
@@ -56,8 +58,9 @@ export default async function AccountPage() {
             signIn: { google, password: providers.has("email") || providers.size === 0 },
             plan: {
               kind: user.role !== "student" ? "staff" : pro ? "pro" : "free",
-              until: pro && user.proUntil ? new Date(`${user.proUntil}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }) : null,
+              until: pro && user.proUntil ? longDay(user.proUntil) : null,
               daysLeft,
+              reminder: nudge && user.proUntil ? { ...nudge, until: longDay(user.proUntil) } : null,
               openOrder: open ? { id: open.id, reference: open.reference, status: open.status as "pending" | "awaiting_review" } : null,
             },
             canDelete: user.role === "student",
