@@ -26,9 +26,9 @@ export default async function UpgradePage() {
     return {
       id: p.id,
       months: p.months,
-      total: pkr(p.price_pkr),
-      perMonth: pkr(Math.round(p.price_pkr / p.months)),
-      save: saved ? pkr(saved) : null,
+      total: p.price_pkr,
+      perMonth: Math.round(p.price_pkr / p.months),
+      save: saved || null,
       savePct: saved ? Math.round((saved / full) * 100) : null,
     };
   });
