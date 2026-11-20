@@ -3,13 +3,13 @@
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronUp, LogOut, SlidersHorizontal, UserRound } from "lucide-react";
+import { ChevronUp, LifeBuoy, LogOut, SlidersHorizontal, Sparkles, UserRound } from "lucide-react";
 
 import { signOut } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/avatar";
 import { cn } from "@/lib/utils";
 
-/** Name card at the bottom of the sidebar. Opens a small menu: Account, Log out. */
+/** Name card at the bottom of the sidebar. Opens a small menu: Account, Advanced settings, Plans, Support, Log out. */
 export function UserMenu({ name, email, avatarUrl }: { name: string; email: string | null; avatarUrl: string | null }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -17,6 +17,8 @@ export function UserMenu({ name, email, avatarUrl }: { name: string; email: stri
   const rootRef = useRef<HTMLDivElement>(null);
   const onAccount = pathname === "/dashboard/account";
   const onSettings = pathname === "/dashboard/settings";
+  const onPlans = pathname.startsWith("/dashboard/upgrade");
+  const onSupport = pathname === "/dashboard/support";
 
   // Close on Escape or a click outside.
   useEffect(() => {
@@ -65,6 +67,22 @@ export function UserMenu({ name, email, avatarUrl }: { name: string; email: stri
           >
             <SlidersHorizontal className={cn("size-[18px]", onSettings && "text-gold-ink")} aria-hidden /> Advanced settings
           </Link>
+          <Link
+            href="/dashboard/upgrade"
+            onClick={() => setOpen(false)}
+            aria-current={onPlans ? "page" : undefined}
+            className={cn(itemClass, onPlans && "bg-gold-soft font-semibold text-foreground")}
+          >
+            <Sparkles className={cn("size-[18px]", onPlans && "text-gold-ink")} aria-hidden /> Plans
+          </Link>
+          <Link
+            href="/dashboard/support"
+            onClick={() => setOpen(false)}
+            aria-current={onSupport ? "page" : undefined}
+            className={cn(itemClass, onSupport && "bg-gold-soft font-semibold text-foreground")}
+          >
+            <LifeBuoy className={cn("size-[18px]", onSupport && "text-gold-ink")} aria-hidden /> Support
+          </Link>
           <form action={signOut}>
             <button type="submit" className={itemClass}>
               <LogOut className="size-[18px]" aria-hidden /> Log out
@@ -79,7 +97,7 @@ export function UserMenu({ name, email, avatarUrl }: { name: string; email: stri
         aria-controls={open ? menuId : undefined}
         className={cn(
           "flex w-full items-center gap-3 rounded-2xl px-2 py-2 text-left transition-colors hover:bg-muted",
-          (open || onAccount || onSettings) && "bg-muted",
+          (open || onAccount || onSettings || onPlans || onSupport) && "bg-muted",
         )}
       >
         <Avatar name={name} url={avatarUrl} />

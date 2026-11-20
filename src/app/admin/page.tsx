@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
 
 import Link from "next/link";
-import { ArrowRight, BookA, FileText, Headphones, Sparkles, UserCheck, Video, Wallet } from "lucide-react";
+import { ArrowRight, BookA, FileText, Headphones, LifeBuoy, Sparkles, UserCheck, Video, Wallet } from "lucide-react";
 
 import { RolePlaceholder } from "@/components/role-placeholder";
 import { requireUser } from "@/lib/auth/dal";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = { title: "Admin" };
 
 export default async function AdminPage() {
   const user = await requireUser(["academy_admin", "super_admin"]);
+  const { count: newFeedback } = (await createAdminClient()?.from("feedback").select("id", { count: "exact", head: true }).eq("status", "new")) ?? { count: 0 };
   return (
     <RolePlaceholder
       title={user.role === "super_admin" ? "Platform admin" : "Academy admin"}
@@ -114,6 +116,21 @@ export default async function AdminPage() {
         <span className="grid flex-1 gap-0.5">
           <span className="text-base font-bold">Pro requests</span>
           <span className="text-sm text-muted-foreground">Students who asked for Deutli Pro. Contact them with the price.</span>
+        </span>
+        <ArrowRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+      </Link>
+      <Link
+        href="/admin/feedback"
+        className="flex items-center gap-4 rounded-2xl border border-border bg-card p-6 transition-colors hover:bg-muted"
+      >
+        <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-gold-soft text-gold-ink">
+          <LifeBuoy className="size-6" aria-hidden />
+        </span>
+        <span className="grid flex-1 gap-0.5">
+          <span className="text-base font-bold">
+            Feedback and support{newFeedback ? <span className="ml-2 rounded-full bg-brand-gradient px-2 py-0.5 text-xs font-bold text-white">{newFeedback} new</span> : null}
+          </span>
+          <span className="text-sm text-muted-foreground">Messages from students: problems, payment questions and ideas.</span>
         </span>
         <ArrowRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
       </Link>

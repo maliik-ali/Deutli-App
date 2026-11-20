@@ -155,6 +155,13 @@ export default async function OrderPage(props: PageProps<"/dashboard/upgrade/ord
           )}
         </Card>
       )}
+      <p className="text-[14px] text-muted-foreground">
+        Problem with this payment?{" "}
+        <Link href={`/dashboard/support?kind=payment&from=/dashboard/upgrade/order/${order.id}`} className="font-semibold text-foreground underline underline-offset-4">
+          Contact support
+        </Link>{" "}
+        and mention {order.reference}.
+      </p>
     </main>
   );
 }

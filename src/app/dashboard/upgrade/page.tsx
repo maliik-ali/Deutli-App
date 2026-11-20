@@ -62,6 +62,12 @@ export default async function UpgradePage() {
       )}
 
       <PlanCompare plans={views} isPro={pro} requested={!!req} cardReady={cardReady()} />
+      <p className="text-center text-[14px] text-muted-foreground">
+        Questions about Pro or paying?{" "}
+        <Link href="/dashboard/support?kind=payment&from=/dashboard/upgrade" className="font-semibold text-foreground underline underline-offset-4">
+          Contact support
+        </Link>
+      </p>
     </main>
   );
 }
