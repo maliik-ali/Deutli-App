@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { CancelOrderButton } from "@/components/dashboard/cancel-order-button";
 import { PlanCompare, type PlanView } from "@/components/dashboard/plan-compare";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { hasPro, requireUser } from "@/lib/auth/dal";
 import { cardReady, getActivePlans, getMyOrders, pkr } from "@/lib/pro/data";
 import { createClient } from "@/lib/supabase/server";
+import { todayIn } from "@/lib/time";
 
 export const metadata: Metadata = { title: "Deutli Pro" };
 
@@ -32,7 +34,9 @@ export default async function UpgradePage() {
       savePct: saved ? Math.round((saved / full) * 100) : null,
     };
   });
-  const open = orders.filter((o) => o.status === "pending" || o.status === "awaiting_review");
+  // Waiting orders from the last week (older unpaid ones are just abandoned and not worth listing).
+  const weekAgo = Date.parse(todayIn(user.timeZone)) - 7 * 86_400_000;
+  const open = orders.filter((o) => (o.status === "pending" || o.status === "awaiting_review") && Date.parse(o.created_at) > weekAgo);
 
   return (
     <main className="mx-auto grid max-w-[1240px] gap-6 px-4 py-6 sm:px-6 md:px-8 md:py-8">
@@ -50,11 +54,14 @@ export default async function UpgradePage() {
             {open.map((o) => (
               <li key={o.id} className="flex flex-wrap items-center justify-between gap-3">
                 <span className="text-[15px]">
-                  {o.plan_name} · {pkr(o.amount_pkr)} <span className="text-muted-foreground">· {STATUS[o.status]}</span>
+                  {o.plan_name} · {pkr(o.amount_pkr)} <span className="text-muted-foreground">· {o.method === "card" ? "Card" : "Bank or wallet"} · {STATUS[o.status]}</span>
                 </span>
-                <Button asChild size="sm" variant="outline">
-                  <Link href={`/dashboard/upgrade/order/${o.id}`}>Open</Link>
-                </Button>
+                <span className="flex items-center gap-1">
+                  {o.status === "pending" && <CancelOrderButton orderId={o.id} />}
+                  <Button asChild size="sm" variant="outline" className="h-11 sm:h-9">
+                    <Link href={`/dashboard/upgrade/order/${o.id}`}>Open</Link>
+                  </Button>
+                </span>
               </li>
             ))}
           </ul>

@@ -40,6 +40,24 @@ async function makeOrder(userId: string, planId: string, method: "card" | "bank_
 
   const admin = createAdminClient();
   if (!admin) return { error: GENERIC };
+
+  // Already started this payment (same plan, same way, still waiting, same price)? Carry on with that order
+  // instead of piling up duplicates every time the student taps the button again.
+  const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
+  const { data: waiting } = await admin
+    .from("orders")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("plan_id", plan.id)
+    .eq("method", method)
+    .eq("status", "pending")
+    .eq("amount_pkr", plan.price_pkr)
+    .gt("created_at", weekAgo)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (waiting) return { id: waiting.id as string };
+
   const { data, error } = await admin
     .from("orders")
     .insert({ user_id: userId, plan_id: plan.id, plan_name: plan.name, months: plan.months, amount_pkr: plan.price_pkr, method, reference: newReference() })
@@ -104,11 +122,18 @@ export async function startCardPayment(orderId: unknown): Promise<{ error: strin
   if (!id.success || !admin) return { error: GENERIC };
   if (!stripe) return { error: "Card payments are not open yet. Please pay with a bank or wallet." };
 
-  const { data: o } = await admin.from("orders").select("id, plan_name, months, amount_pkr, method, status, reference").eq("id", id.data).eq("user_id", user.id).maybeSingle();
+  const { data: o } = await admin.from("orders").select("id, plan_name, months, amount_pkr, method, status, reference, stripe_session_id").eq("id", id.data).eq("user_id", user.id).maybeSingle();
   if (!o || o.method !== "card" || o.status !== "pending") return { error: GENERIC };
 
   const site = (process.env.SITE_URL ?? "").replace(/\/$/, "") || "http://localhost:3000";
   try {
+    // Tapped again while Stripe's page for this order is still open: send them back to that same page. A second page
+    // would replace the first one on the order, and paying on the first would then not be recognised.
+    if (o.stripe_session_id) {
+      const prev = await stripe.checkout.sessions.retrieve(o.stripe_session_id).catch(() => null);
+      if (prev?.status === "open" && prev.url) return { url: prev.url };
+      if (prev?.status === "complete") return { error: "We already received your payment and are confirming it. Please refresh this page in a moment." };
+    }
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       client_reference_id: o.id,
