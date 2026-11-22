@@ -26,7 +26,7 @@ export async function setJoinCodeActive(active: unknown): Promise<Result> {
   const ws = await getMyWorkspace(user.id);
   const admin = createAdminClient();
   if (typeof active !== "boolean" || !ws || !admin) return { error: GENERIC };
-  const { data } = await admin.from("join_codes").select("id").eq("teacher_id", user.id).eq("academy_id", ws.workspace.id).order("created_at", { ascending: false }).limit(1);
+  const { data } = await admin.from("join_codes").select("id").eq("teacher_id", user.id).eq("academy_id", ws.workspace.id).is("batch_id", null).order("created_at", { ascending: false }).limit(1);
   if (!data?.[0]) return { error: GENERIC };
   const { error } = await admin.from("join_codes").update({ active }).eq("id", data[0].id);
   if (error) return { error: GENERIC };
@@ -40,7 +40,7 @@ export async function makeNewJoinCode(): Promise<Result> {
   const ws = await getMyWorkspace(user.id);
   const admin = createAdminClient();
   if (!ws || !admin) return { error: GENERIC };
-  await admin.from("join_codes").update({ active: false }).eq("teacher_id", user.id).eq("academy_id", ws.workspace.id);
+  await admin.from("join_codes").update({ active: false }).eq("teacher_id", user.id).eq("academy_id", ws.workspace.id).is("batch_id", null);
   for (let i = 0; i < 5; i++) {
     const { error } = await admin.from("join_codes").insert({ code: newCode(), academy_id: ws.workspace.id, teacher_id: user.id });
     if (!error) {

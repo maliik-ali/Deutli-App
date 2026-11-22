@@ -25,7 +25,7 @@ export type JoinCode = { code: string; active: boolean };
 export async function getOrCreateJoinCode(teacherId: string, academyId: string): Promise<JoinCode | null> {
   const admin = createAdminClient();
   if (!admin) return null;
-  const { data } = await admin.from("join_codes").select("code, active").eq("teacher_id", teacherId).eq("academy_id", academyId).order("created_at", { ascending: false }).limit(1);
+  const { data } = await admin.from("join_codes").select("code, active").eq("teacher_id", teacherId).eq("academy_id", academyId).is("batch_id", null).order("created_at", { ascending: false }).limit(1);
   if (data && data[0]) return data[0] as JoinCode;
   for (let i = 0; i < 5; i++) {
     const code = newCode();

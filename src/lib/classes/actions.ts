@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { getManagedBatch } from "@/lib/batches/data";
 import { requireUser } from "@/lib/auth/dal";
 import { JOIN_GRACE_MIN, JOIN_OPENS_MIN, LEVEL_IDS, SKILL_IDS, SPECIALTIES } from "@/lib/classes/constants";
 import { LANGUAGE_CODES } from "@/lib/languages";
@@ -49,6 +50,7 @@ const classSchema = z.object({
     .refine((v) => v === "" || /^https:\/\/\S+$/i.test(v), "The join link must start with https://"),
   passcode: text(40).default(""),
   repeatWeeks: z.number().int().min(1).max(12).default(1),
+  batchId: z.uuid().optional(),
 });
 export type ClassInput = z.input<typeof classSchema>;
 
@@ -100,13 +102,21 @@ export async function saveClass(input: unknown): Promise<{ error: string } | { o
     return { ok: true, id: v.id };
   }
 
+  // A class made from a batch page belongs to that batch (only a batch the teacher may manage).
+  let batchId: string | null = null;
+  if (v.batchId) {
+    const b = await getManagedBatch(v.batchId, user.id);
+    if (!b) return { error: SAVE_ERROR };
+    batchId = b.id;
+  }
+
   // Create (and repeat weekly). The same clock time is kept even when the clocks change.
   const rows: Record<string, unknown>[] = [];
   for (let i = 0; i < v.repeatWeeks; i++) {
     const startsAt = zonedToUtc(addDays(v.date, i * 7), v.time, user.timeZone);
     if (!startsAt) return { error: "Pick a valid date and time." };
     if (i === 0 && startsAt.getTime() < Date.now() - 5 * 60_000) return { error: "That time is in the past. Pick a later time." };
-    rows.push({ ...fields, teacher_id: teacherId, created_by: user.id, starts_at: startsAt.toISOString() });
+    rows.push({ ...fields, teacher_id: teacherId, created_by: user.id, starts_at: startsAt.toISOString(), ...(batchId ? { batch_id: batchId } : {}) });
   }
   const { data, error } = await supabase.from("live_classes").insert(rows).select("id");
   if (error || !data?.length) return { error: SAVE_ERROR };

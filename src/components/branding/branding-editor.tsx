@@ -111,7 +111,7 @@ export function BrandingEditor({ initial, features, workspaceName }: { initial: 
             {!canLogo && locked("A logo")}
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid items-start gap-4 sm:grid-cols-2">
             {([["primary", "Main colour", pProblem], ["accent", "Accent colour", aProblem]] as const).map(([key, label, problem]) => (
               <div key={key} className={field}>
                 <label htmlFor={`c-${key}`}>{label}</label>

@@ -36,6 +36,8 @@ export type ClassFormValues = {
   capacity: string;
   joinUrl: string;
   passcode: string;
+  /** Set when the class is created for a batch (from the batch page). */
+  batchId?: string;
 };
 
 const toIso = (d: Date) =>
@@ -116,6 +118,7 @@ export function ClassForm({
         joinUrl: v.joinUrl,
         passcode: v.passcode,
         repeatWeeks: mode === "create" ? repeat : 1,
+        batchId: mode === "create" ? v.batchId : undefined,
       });
       if ("error" in r) {
         setError(r.error);

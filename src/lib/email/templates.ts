@@ -99,3 +99,14 @@ export function classReminderEmail(p: { name: string | null; title: string; teac
   });
   return { subject: `Starting soon: ${p.title}`, html, text };
 }
+
+/** To a student: the teacher posted an announcement in their batch. */
+export function announcementEmail(p: { name: string | null; batchName: string; title: string; body: string; teacherName: string | null }) {
+  const { html, text } = layout({
+    heading: p.title,
+    lines: [`Hi ${first(p.name)},`, ...p.body.split(/\n+/).slice(0, 12), `${p.teacherName ?? "Your teacher"} posted this in ${p.batchName}.`],
+    button: { label: "Open in Deutli", href: `${APP}/dashboard/batches` },
+    small: "You get this email because you are a student in this batch.",
+  });
+  return { subject: `${p.batchName}: ${p.title}`, html, text };
+}
