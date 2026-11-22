@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { requireUser } from "@/lib/auth/dal";
+import { ensurePersonalAcademy } from "@/lib/academies/personal";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const ADMINS = ["academy_admin", "super_admin"] as const;
@@ -52,6 +53,8 @@ export async function setTeacherRole(userId: unknown, makeTeacher: unknown): Pro
   } else {
     // A teacher is not a student of someone else.
     await admin.from("profiles").update({ teacher_id: null }).eq("id", uid.data);
+    // Every teacher gets a personal workspace (an academy of one).
+    await ensurePersonalAcademy(admin, uid.data);
   }
   revalidatePath("/admin/teachers");
   return { ok: true };

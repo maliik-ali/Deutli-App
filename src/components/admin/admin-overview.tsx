@@ -10,6 +10,7 @@ const ABOUT: Record<string, string> = {
   "/admin/daily-practice": "Add texts and audio for students to listen, read and speak along.",
   "/admin/dictionary": "Upload word lists with meanings. Students get them free when they save a word.",
   "/admin/classes": "See every class, add classes for teachers, and check who registered.",
+  "/admin/academies": "Schools and teachers who use Deutli with their students. Set the plan, discount and see students against the limit.",
   "/admin/teachers": "Make someone a teacher and give students their teacher. Teachers check their students' writing.",
   "/admin/payments": "Set Pro plans and payment accounts. Check payments and turn Pro on.",
   "/admin/pro-requests": "Students who asked for Deutli Pro. Contact them with the price.",

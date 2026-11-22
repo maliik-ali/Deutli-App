@@ -21,11 +21,12 @@ export default async function PaymentsPage() {
   const names = new Map<string, string>();
   if (admin) {
     const [p, a, o] = await Promise.all([
-      admin.from("plans").select("id, name, months, price_pkr, active, sort").order("sort"),
+      admin.from("plans").select("*").order("sort"),
       admin.from("payment_accounts").select("id, label, account_title, account_number, note, active, sort").order("sort"),
       admin.from("orders").select(ORDER_COLUMNS).order("created_at", { ascending: false }).limit(100),
     ]);
-    plans = (p.data ?? []) as Plan[];
+    // Teacher and school plans are managed on /admin/academies, not here.
+    plans = ((p.data ?? []) as (Plan & { kind?: string })[]).filter((x) => !x.kind || x.kind === "student");
     accounts = (a.data ?? []) as PayAccount[];
     orders = (o.data ?? []) as Order[];
     const ids = [...new Set(orders.map((x) => x.user_id))];
