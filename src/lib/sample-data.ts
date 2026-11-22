@@ -9,6 +9,7 @@ export const NAV_ITEMS = [
   { href: "/dashboard/exam", label: "My B1 Exam", icon: "timer" },
   { href: "/dashboard/classes", label: "Classes", icon: "video" },
   { href: "/dashboard/batches", label: "My batches", icon: "layers" },
+  { href: "/dashboard/timetable", label: "Timetable", icon: "calendar" },
   { href: "/dashboard/vocabulary", label: "Vocabulary", icon: "languages" },
   {
     href: "/dashboard/skills",

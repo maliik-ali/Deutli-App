@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
 import { levelLabel, skillLabel } from "@/lib/classes/constants";
-import { getCoursesNow, getTeacherDetails, listTeacherUpcoming } from "@/lib/classes/data";
+import { getCoursesNow, getTeacherDetails, listMyTimetable, listTeacherUpcoming } from "@/lib/classes/data";
 import { getLanguage } from "@/lib/languages";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatClock, formatShortDate } from "@/lib/time";
@@ -29,7 +29,8 @@ export default async function TeacherProfilePage(props: PageProps<"/dashboard/te
 
   const teacher = await getTeacherDetails(admin, id);
   if (!teacher || (!teacher.isPublic && user.role === "student")) notFound();
-  const [courses, upcoming] = await Promise.all([getCoursesNow(admin, id), listTeacherUpcoming(id, user.id)]);
+  const [courses, upcoming, mine] = await Promise.all([getCoursesNow(admin, id), listTeacherUpcoming(id, user.id), listMyTimetable(user.id)]);
+  const mineWithTeacher = mine.filter((c) => c.teacher.id === id);
   const tz = user.timeZone;
   const serverNow = new Date().getTime();
 
@@ -100,6 +101,21 @@ export default async function TeacherProfilePage(props: PageProps<"/dashboard/te
             </ul>
           )}
         </section>
+
+        {mineWithTeacher.length > 0 && (
+          <section className="grid gap-3" aria-labelledby="mine">
+            <h2 id="mine" className="text-xl font-bold">
+              Your classes with this teacher
+            </h2>
+            <Card className="gap-0 overflow-hidden p-0">
+              <ul className="divide-y divide-border">
+                {mineWithTeacher.map((c) => (
+                  <ClassRow key={c.id} c={c} tz={tz} serverNow={serverNow} showDate />
+                ))}
+              </ul>
+            </Card>
+          </section>
+        )}
 
         {upcoming.length > 0 && (
           <section className="grid gap-3" aria-labelledby="upcoming">

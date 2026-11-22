@@ -417,3 +417,29 @@ export async function canWatchRecording(classId: string, userId: string): Promis
   const { data: m } = await admin.from("batch_members").select("batch_id").eq("batch_id", batchId).eq("student_id", userId).maybeSingle();
   return !!m;
 }
+
+/**
+ * The student's timetable: upcoming classes they registered for, plus upcoming classes of their batches.
+ * Grouped by the caller. Cancelled classes are left out.
+ */
+export async function listMyTimetable(userId: string): Promise<ClassCard[]> {
+  const admin = createAdminClient();
+  if (!admin) return [];
+  const [mine, { data: bm }] = await Promise.all([listMyClasses(userId), admin.from("batch_members").select("batch_id").eq("student_id", userId)]);
+  const batchIds = ((bm ?? []) as { batch_id: string }[]).map((r) => r.batch_id);
+  const out = new Map<string, ClassCard>((mine?.upcoming ?? []).map((c) => [c.id, c]));
+  if (batchIds.length) {
+    const { data } = await admin
+      .from("live_classes")
+      .select(CLASS_COLS)
+      .in("batch_id", batchIds)
+      .eq("status", "scheduled")
+      .gte("starts_at", new Date(Date.now() - MAX_CLASS_MS).toISOString())
+      .order("starts_at")
+      .limit(60);
+    const now = Date.now();
+    const rows = ((data ?? []) as ClassRow[]).filter((r) => endMs(r) > now && !out.has(r.id));
+    for (const c of await toCards(admin, rows, userId)) out.set(c.id, c);
+  }
+  return [...out.values()].filter((c) => c.status === "scheduled").sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+}

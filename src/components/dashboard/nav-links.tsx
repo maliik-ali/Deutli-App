@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Award,
+  CalendarDays,
   ChevronDown,
   GraduationCap,
   Home,
@@ -29,6 +30,7 @@ const ICONS: Record<NavIcon, LucideIcon> = {
   timer: Timer,
   video: Video,
   layers: Layers,
+  calendar: CalendarDays,
   languages: Languages,
   mic: Mic,
   message: MessageCircleQuestion,
