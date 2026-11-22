@@ -1,11 +1,13 @@
 import { redirect } from "next/navigation";
 
+import { BrandShell, PoweredBy } from "@/components/branding/brand-shell";
 import { Logo } from "@/components/logo";
 import { MobileNav } from "@/components/dashboard/mobile-nav";
 import { NavLinks } from "@/components/dashboard/nav-links";
 import { UserMenu } from "@/components/dashboard/user-menu";
 import { getAvatarUrl } from "@/lib/account/avatar";
 import { TimeZoneSync } from "@/components/account/time-zone-sync";
+import { getBrandForUser } from "@/lib/branding/data";
 import { requireUser } from "@/lib/auth/dal";
 // import { myExamTitle } from "@/lib/exam/choice"; // MVP: switched off, B1 only
 
@@ -15,6 +17,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
   // New students answer a few questions first (asked once; they can skip them).
   if (user.role === "student" && !user.onboardedAt) redirect("/onboarding");
+  const brand = await getBrandForUser(user.id);
   const name = user.fullName ?? "Student";
   const avatarUrl = await getAvatarUrl(user.avatarPath);
   // MVP: the menu always says "My B1 Exam". Later: const examTitle = myExamTitle(user.exam); (follows the chosen exam level)
@@ -22,6 +25,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
   const footer = <UserMenu name={name} email={user.email} avatarUrl={avatarUrl} isAdmin={user.role !== "student"} />;
 
   return (
+    <BrandShell brand={brand ? { name: brand.name, logoUrl: brand.logoUrl, showPoweredBy: brand.showPoweredBy } : null} vars={brand?.vars ?? {}}>
     <div className="min-h-dvh md:grid md:grid-cols-[264px_minmax(0,1fr)]">
       {!user.timeZoneSaved && <TimeZoneSync />}
       <aside className="hidden border-r border-border bg-card md:block">
@@ -31,6 +35,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
             <NavLinks examTitle={examTitle} />
           </div>
           {footer}
+          <PoweredBy />
         </div>
       </aside>
 
@@ -42,5 +47,6 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
 
       <div className="min-w-0 overflow-x-clip">{children}</div>
     </div>
+    </BrandShell>
   );
 }
