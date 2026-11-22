@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Award,
   CalendarDays,
+  ClipboardCheck,
   ChevronDown,
   GraduationCap,
   Home,
@@ -31,6 +32,7 @@ const ICONS: Record<NavIcon, LucideIcon> = {
   video: Video,
   layers: Layers,
   calendar: CalendarDays,
+  clipboard: ClipboardCheck,
   languages: Languages,
   mic: Mic,
   message: MessageCircleQuestion,
