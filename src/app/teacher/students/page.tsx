@@ -45,7 +45,7 @@ export default async function StudentsPage() {
             {rows.map((s) => (
               <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 px-3 py-3">
                 <span>
-                  <span className="font-semibold">{s.name}</span>
+                  <Link href={`/teacher/students/${s.id}`} className="font-semibold hover:text-gold-ink">{s.name}</Link>
                   <span className="block text-[13px] text-muted-foreground">
                     {s.checked} checked{s.last != null ? ` · last score ${s.last} / 45` : ""}
                   </span>

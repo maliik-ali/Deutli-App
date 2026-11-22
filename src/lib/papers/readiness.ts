@@ -1,5 +1,7 @@
 import "server-only";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { createClient } from "@/lib/supabase/server";
 import type { AttemptResult } from "./template";
 
@@ -23,8 +25,9 @@ const GROUPS = [
 ];
 
 /** Readiness from the student's finished mock exams (the 10 most recent). Writing and speaking are not marked yet. */
-export async function getReadiness(userId: string): Promise<Readiness> {
-  const supabase = await createClient();
+/** `client` lets a teacher page read a student's numbers with the secret-key client (after checking the teacher may see that student). */
+export async function getReadiness(userId: string, client?: SupabaseClient): Promise<Readiness> {
+  const supabase = client ?? (await createClient());
   const { data } = await supabase
     .from("mock_attempts")
     .select("result")
