@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 
-import { AccountForm, DeleteAccount, OrderActions, PlanForm, PlanToggle } from "@/components/admin/payments-admin";
+import { AccountForm, DeleteAccount, FxRateForm, NewFxRate, OrderActions, PlanEur, PlanForm, PlanToggle } from "@/components/admin/payments-admin";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
+import { orderLabel } from "@/lib/pro/money";
 import { pkr, type Order, type PayAccount, type Plan, ORDER_COLUMNS } from "@/lib/pro/data";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -18,6 +19,7 @@ export default async function PaymentsPage() {
   let plans: Plan[] = [];
   let accounts: PayAccount[] = [];
   let orders: Order[] = [];
+  let rates: { currency: string; per_eur: number }[] = [];
   const names = new Map<string, string>();
   if (admin) {
     const [p, a, o] = await Promise.all([
@@ -26,6 +28,8 @@ export default async function PaymentsPage() {
       admin.from("orders").select(ORDER_COLUMNS).order("created_at", { ascending: false }).limit(100),
     ]);
     // Teacher and school plans are managed on /admin/academies, not here.
+    const fx = await admin.from("fx_rates").select("currency, per_eur").order("currency");
+    rates = ((fx.data ?? []) as { currency: string; per_eur: number }[]).map((r) => ({ currency: r.currency, per_eur: Number(r.per_eur) }));
     plans = ((p.data ?? []) as (Plan & { kind?: string })[]).filter((x) => !x.kind || x.kind === "student");
     accounts = (a.data ?? []) as PayAccount[];
     orders = (o.data ?? []) as Order[];
@@ -52,7 +56,7 @@ export default async function PaymentsPage() {
               <li key={o.id} className="grid gap-2 py-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-semibold">
-                    {names.get(o.user_id)} <span className="font-normal text-muted-foreground">· {o.plan_name} · {pkr(o.amount_pkr)}</span>
+                    {names.get(o.user_id)} <span className="font-normal text-muted-foreground">· {o.plan_name} · {orderLabel(o)}</span>
                   </span>
                   <Badge variant={o.status === "awaiting_review" ? "gold" : "outline"}>{o.status === "awaiting_review" ? "Student says paid" : "Not paid yet"}</Badge>
                 </div>
@@ -77,14 +81,30 @@ export default async function PaymentsPage() {
           {plans.map((p) => (
             <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
               <span>
-                <span className="font-semibold">{p.name}</span> <span className="text-muted-foreground">· {p.months} months · {pkr(p.price_pkr)}</span>
+                <span className="font-semibold">{p.name}</span> <span className="text-muted-foreground">· {p.months} months · {p.price_eur_cents != null ? `€${p.price_eur_cents / 100} (EUR plan)` : `${pkr(p.price_pkr)} (old PKR price)`}</span>
                 {!p.active && <span className="ml-2 text-[12px] text-muted-foreground">(hidden)</span>}
               </span>
               <PlanToggle id={p.id} active={p.active} />
+              <div className="w-full"><PlanEur id={p.id} cents={p.price_eur_cents ?? null} /></div>
             </li>
           ))}
         </ul>
         <PlanForm />
+      </Card>
+
+      <Card>
+        <div className="grid gap-1">
+          <CardTitle>Exchange rates</CardTitle>
+          <CardDescription>EUR is the real price. Other currencies are only a display of it, and the PKR amount bank and wallet students send (fixed on their order). Card payments are always in EUR. A plan only switches to EUR when you set its EUR price above.</CardDescription>
+        </div>
+        <ul className="grid gap-2">
+          {rates.map((r) => (
+            <li key={r.currency}>
+              <FxRateForm currency={r.currency} rate={r.per_eur} />
+            </li>
+          ))}
+        </ul>
+        <NewFxRate />
       </Card>
 
       <Card>

@@ -8,7 +8,8 @@ import { SKILL_ICONS } from "@/components/exam/skill-icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { hasPro, requireUser } from "@/lib/auth/dal";
-import { getActivePlans, pkr } from "@/lib/pro/data";
+import { getActivePlans, getFxRates } from "@/lib/pro/data";
+import { fromLabel, getDisplayCurrency } from "@/lib/pro/display";
 import { examShortName, getExamFormat } from "@/lib/exam/catalog";
 import { getLastResult, getPaperBySlug } from "@/lib/papers/data";
 import { listMocks } from "@/lib/papers/mocks";
@@ -24,7 +25,8 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
   const exam = (await listMocks()).mocks.find((m) => m.id === examId);
   if (!exam) notFound();
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
-  const cheapest = (await getActivePlans()).sort((a, b) => a.price_pkr - b.price_pkr)[0];
+  const [activePlans, rates] = await Promise.all([getActivePlans(), getFxRates()]);
+  const from = fromLabel(activePlans, await getDisplayCurrency(user.timeZone, rates), rates);
   const paper = await getPaperBySlug(examId);
   const last = paper ? await getLastResult(user.id, paper.id) : null;
   const skills = getExamFormat(user.exam).skills;
@@ -91,7 +93,7 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
               !exam.free && !hasPro(user) ? (
                 <Button asChild className="w-full sm:w-auto">
                   <Link href="/dashboard/upgrade">
-                    <Sparkles aria-hidden /> Go Pro{cheapest ? ` · from ${pkr(cheapest.price_pkr)}` : ""}
+                    <Sparkles aria-hidden /> Go Pro{from ? ` · ${from}` : ""}
                   </Link>
                 </Button>
               ) : null
@@ -102,7 +104,7 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
             ) : (
               <Button asChild variant="outline" className="w-full sm:w-auto">
                 <Link href="/dashboard/upgrade">
-                  <Lock aria-hidden /> Unlock with Pro{cheapest ? ` · from ${pkr(cheapest.price_pkr)}` : ""}
+                  <Lock aria-hidden /> Unlock with Pro{from ? ` · ${from}` : ""}
                 </Link>
               </Button>
             )}

@@ -10,7 +10,8 @@ import { ProofForm } from "@/components/dashboard/proof-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
-import { cardReady, getActiveAccounts, getMyOrder, pkr } from "@/lib/pro/data";
+import { cardReady, getActiveAccounts, getMyOrder } from "@/lib/pro/data";
+import { orderLabel } from "@/lib/pro/money";
 
 export const metadata: Metadata = { title: "Your order" };
 
@@ -30,7 +31,7 @@ export default async function OrderPage(props: PageProps<"/dashboard/upgrade/ord
       <header className="grid gap-1">
         <h1 className="text-[28px] leading-tight font-extrabold sm:text-[32px]">Order {order.reference}</h1>
         <p className="text-muted-foreground">
-          Deutli Pro · {order.plan_name} · {pkr(order.amount_pkr)}
+          Deutli Pro · {order.plan_name} · {orderLabel(order)}
         </p>
       </header>
 
@@ -81,7 +82,7 @@ export default async function OrderPage(props: PageProps<"/dashboard/upgrade/ord
         <div className="grid items-start gap-6 lg:grid-cols-2">
           <Card>
             <div className="grid gap-1">
-              <CardTitle>1 · Send {pkr(order.amount_pkr)}</CardTitle>
+              <CardTitle>1 · Send {orderLabel(order)}</CardTitle>
               <CardDescription>Use your bank app, internet banking, ATM, EasyPaisa or JazzCash. Write your reference in the message if you can.</CardDescription>
             </div>
             {accounts.length === 0 ? (
@@ -136,7 +137,7 @@ export default async function OrderPage(props: PageProps<"/dashboard/upgrade/ord
           ) : cardReady() ? (
             <>
               <div className="grid gap-1">
-                <CardTitle>Pay {pkr(order.amount_pkr)} by card</CardTitle>
+                <CardTitle>Pay {orderLabel(order)} by card</CardTitle>
                 <CardDescription>You will go to Stripe&apos;s secure page. Your card details never touch Deutli. Your bank may ask you to verify the payment.</CardDescription>
               </div>
               {sp.card === "cancelled" && <p className="text-[14px] text-muted-foreground">Payment was cancelled. You can try again.</p>}

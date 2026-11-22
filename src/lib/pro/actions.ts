@@ -11,6 +11,7 @@ import { SUPPORT } from "@/lib/support/contact";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { cardReady } from "./data";
+import { convertEur, orderLabel } from "./money";
 import { getStripe, stripeCurrency } from "./stripe";
 
 /** "I want Pro": saved so the academy can contact the student. Asking twice is fine. */
@@ -38,32 +39,41 @@ async function makeOrder(userId: string, planId: string, method: "card" | "bank_
   if (method === "card" && !cardReady()) return { error: "Card payments are not open yet. Please pay with a bank or wallet." };
 
   const supabase = await createClient();
-  const { data: plan } = await supabase.from("plans").select("id, name, months, price_pkr").eq("id", planId).eq("active", true).maybeSingle();
+  const { data: plan } = await supabase.from("plans").select("*").eq("id", planId).eq("active", true).maybeSingle();
   if (!plan) return { error: "This plan is no longer available. Please choose again." };
 
   const admin = createAdminClient();
   if (!admin) return { error: GENERIC };
 
+  // Work out what the customer pays. A plan with a EUR price: card pays EUR, bank/wallet pays the PKR equivalent,
+  // locked now. A plan without one keeps the old PKR price.
+  const eur = (plan.price_eur_cents as number | null) ?? null;
+  let money: { amount_pkr: number; amount_eur_cents?: number; pay_currency?: string; pay_amount_minor?: number; fx_rate?: number };
+  if (eur != null) {
+    if (method === "card") {
+      money = { amount_pkr: 0, amount_eur_cents: eur, pay_currency: "EUR", pay_amount_minor: eur };
+    } else {
+      const { data: fx } = await admin.from("fx_rates").select("per_eur").eq("currency", "PKR").maybeSingle();
+      const rate = fx ? Number(fx.per_eur) : 0;
+      if (!rate) return { error: "Bank and wallet payments are not set up yet. Please pay by card or contact us." };
+      const minor = convertEur(eur, rate);
+      money = { amount_pkr: Math.round(minor / 100), amount_eur_cents: eur, pay_currency: "PKR", pay_amount_minor: minor, fx_rate: rate };
+    }
+  } else {
+    money = { amount_pkr: plan.price_pkr };
+  }
+
   // Already started this payment (same plan, same way, still waiting, same price)? Carry on with that order
   // instead of piling up duplicates every time the student taps the button again.
   const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
-  const { data: waiting } = await admin
-    .from("orders")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("plan_id", plan.id)
-    .eq("method", method)
-    .eq("status", "pending")
-    .eq("amount_pkr", plan.price_pkr)
-    .gt("created_at", weekAgo)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  let waitingQuery = admin.from("orders").select("id").eq("user_id", userId).eq("plan_id", plan.id).eq("method", method).eq("status", "pending").gt("created_at", weekAgo);
+  waitingQuery = money.pay_currency ? waitingQuery.eq("pay_currency", money.pay_currency).eq("pay_amount_minor", money.pay_amount_minor!) : waitingQuery.eq("amount_pkr", money.amount_pkr).is("pay_currency", null);
+  const { data: waiting } = await waitingQuery.order("created_at", { ascending: false }).limit(1).maybeSingle();
   if (waiting) return { id: waiting.id as string };
 
   const { data, error } = await admin
     .from("orders")
-    .insert({ user_id: userId, plan_id: plan.id, plan_name: plan.name, months: plan.months, amount_pkr: plan.price_pkr, method, reference: newReference() })
+    .insert({ user_id: userId, plan_id: plan.id, plan_name: plan.name, months: plan.months, ...money, method, reference: newReference() })
     .select("id")
     .single();
   if (error || !data) return { error: GENERIC };
@@ -97,14 +107,14 @@ export async function submitPaymentProof(orderId: unknown, txnId: unknown, note:
   if (!p.success) return { error: p.error.issues[0].message };
   const admin = createAdminClient();
   if (!admin) return { error: GENERIC };
-  const { data: order } = await admin.from("orders").select("id, status, method, plan_name, amount_pkr, reference").eq("id", p.data.id).eq("user_id", user.id).maybeSingle();
+  const { data: order } = await admin.from("orders").select("*").eq("id", p.data.id).eq("user_id", user.id).maybeSingle();
   if (!order || order.method !== "bank_wallet" || !["pending", "awaiting_review"].includes(order.status)) return { error: GENERIC };
   const { error } = await admin.from("orders").update({ txn_id: p.data.txn, payer_note: p.data.note || null, status: "awaiting_review" }).eq("id", order.id);
   if (error) return { error: GENERIC };
   revalidatePath(`/dashboard/upgrade/order/${order.id}`);
   // Emails (best effort): the student gets a receipt, the Deutli inbox gets a "please check" note.
-  if (user.email) await sendEmail({ to: user.email, ...paymentDetailsEmail({ name: user.fullName, planName: order.plan_name, amount: order.amount_pkr, reference: order.reference }) });
-  await sendEmail({ to: SUPPORT.email, replyTo: user.email ?? undefined, ...adminPaymentToCheckEmail({ name: user.fullName, email: user.email, planName: order.plan_name, amount: order.amount_pkr, reference: order.reference, txn: p.data.txn }) });
+  if (user.email) await sendEmail({ to: user.email, ...paymentDetailsEmail({ name: user.fullName, planName: order.plan_name, amount: orderLabel(order), reference: order.reference }) });
+  await sendEmail({ to: SUPPORT.email, replyTo: user.email ?? undefined, ...adminPaymentToCheckEmail({ name: user.fullName, email: user.email, planName: order.plan_name, amount: orderLabel(order), reference: order.reference, txn: p.data.txn }) });
   return { ok: true };
 }
 
@@ -128,9 +138,11 @@ export async function startCardPayment(orderId: unknown): Promise<{ error: strin
   if (!id.success || !admin) return { error: GENERIC };
   if (!stripe) return { error: "Card payments are not open yet. Please pay with a bank or wallet." };
 
-  const { data: o } = await admin.from("orders").select("id, plan_name, months, amount_pkr, method, status, reference, stripe_session_id").eq("id", id.data).eq("user_id", user.id).maybeSingle();
+  const { data: o } = await admin.from("orders").select("*").eq("id", id.data).eq("user_id", user.id).maybeSingle();
   if (!o || o.method !== "card" || o.status !== "pending") return { error: GENERIC };
 
+  // New orders carry their own currency (EUR for card); old ones are PKR rupees charged in the env currency.
+  const charge = o.pay_currency && o.pay_amount_minor != null ? { currency: o.pay_currency as string, minor: o.pay_amount_minor as number } : { currency: stripeCurrency(), minor: o.amount_pkr * 100 };
   const site = (process.env.SITE_URL ?? "").replace(/\/$/, "") || "http://localhost:3000";
   try {
     // Tapped again while Stripe's page for this order is still open: send them back to that same page. A second page
@@ -145,7 +157,7 @@ export async function startCardPayment(orderId: unknown): Promise<{ error: strin
       client_reference_id: o.id,
       customer_email: user.email ?? undefined,
       metadata: { order_id: o.id, reference: o.reference },
-      line_items: [{ quantity: 1, price_data: { currency: stripeCurrency(), unit_amount: o.amount_pkr * 100, product_data: { name: `Deutli Pro · ${o.plan_name}` } } }],
+      line_items: [{ quantity: 1, price_data: { currency: charge.currency.toLowerCase(), unit_amount: charge.minor, product_data: { name: `Deutli Pro · ${o.plan_name}` } } }],
       success_url: `${site}/dashboard/upgrade/order/${o.id}?card=done`,
       cancel_url: `${site}/dashboard/upgrade/order/${o.id}?card=cancelled`,
     });

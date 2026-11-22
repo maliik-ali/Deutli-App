@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { addAccount, addPlan, approveOrder, deleteAccount, rejectOrder, setPlanActive } from "@/lib/pro/admin-actions";
+import { addAccount, addPlan, approveOrder, deleteAccount, rejectOrder, setFxRate, setPlanActive, setPlanEur } from "@/lib/pro/admin-actions";
 
 type Res = { error: string } | { ok: true };
 
@@ -105,5 +105,48 @@ export function DeleteAccount({ id }: { id: string }) {
     <Button size="sm" variant="ghost" disabled={busy} onClick={() => window.confirm("Remove this account from the payment page?") && run(() => deleteAccount(id))}>
       Remove
     </Button>
+  );
+}
+
+export function PlanEur({ id, cents }: { id: string; cents: number | null }) {
+  const { error, busy, run } = useRun();
+  const [v, setV] = useState(cents == null ? "" : String(cents / 100));
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <label className="sr-only" htmlFor={`eur-${id}`}>EUR price</label>
+      <span className="text-[13px] text-muted-foreground">€</span>
+      <Input id={`eur-${id}`} className="h-9 w-24" inputMode="decimal" value={v} onChange={(e) => setV(e.target.value)} placeholder="6.99" />
+      <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => setPlanEur(id, v))}>Save EUR price</Button>
+      {error && <span role="alert" className="text-[13px] text-destructive">{error}</span>}
+    </div>
+  );
+}
+
+export function FxRateForm({ currency, rate }: { currency: string; rate: number }) {
+  const { error, busy, run } = useRun();
+  const [v, setV] = useState(String(rate));
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="w-12 font-semibold">{currency}</span>
+      <span className="text-[13px] text-muted-foreground">1 EUR =</span>
+      <label className="sr-only" htmlFor={`fx-${currency}`}>Rate for {currency}</label>
+      <Input id={`fx-${currency}`} className="h-9 w-28" inputMode="decimal" value={v} onChange={(e) => setV(e.target.value)} />
+      <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => setFxRate(currency, v))}>Save</Button>
+      {error && <span role="alert" className="text-[13px] text-destructive">{error}</span>}
+    </div>
+  );
+}
+
+export function NewFxRate() {
+  const { error, busy, run } = useRun();
+  const [c, setC] = useState("");
+  const [v, setV] = useState("");
+  return (
+    <form className="flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); run(() => setFxRate(c, v), () => { setC(""); setV(""); }); }}>
+      <label className="grid gap-1 text-sm font-semibold">Currency<Input className="h-9 w-24 uppercase" maxLength={3} value={c} onChange={(e) => setC(e.target.value)} placeholder="INR" /></label>
+      <label className="grid gap-1 text-sm font-semibold">Per 1 EUR<Input className="h-9 w-28" inputMode="decimal" value={v} onChange={(e) => setV(e.target.value)} placeholder="90" /></label>
+      <Button type="submit" size="sm" disabled={busy}>Add currency</Button>
+      {error && <span role="alert" className="text-[13px] text-destructive">{error}</span>}
+    </form>
   );
 }

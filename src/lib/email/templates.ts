@@ -38,20 +38,20 @@ export function proActiveEmail(p: { name: string | null; planName: string; until
 }
 
 /** To the student: bank or wallet payment details received, we will check them. */
-export function paymentDetailsEmail(p: { name: string | null; planName: string; amount: number; reference: string }) {
+export function paymentDetailsEmail(p: { name: string | null; planName: string; amount: string | number; reference: string }) {
   const { html, text } = layout({
     heading: "We received your payment details",
-    lines: [`Hi ${first(p.name)},`, `Thank you. We got your transaction ID for ${p.planName} (Rs. ${p.amount.toLocaleString("en-PK")}), order ${p.reference}.`, "We check every bank or wallet payment by hand, usually within one working day. Pro turns on as soon as we confirm it, and we will email you then."],
+    lines: [`Hi ${first(p.name)},`, `Thank you. We got your transaction ID for ${p.planName} (${typeof p.amount === "number" ? `Rs. ${p.amount.toLocaleString("en-PK")}` : p.amount}), order ${p.reference}.`, "We check every bank or wallet payment by hand, usually within one working day. Pro turns on as soon as we confirm it, and we will email you then."],
     button: { label: "See your order", href: `${APP}/dashboard/upgrade` },
   });
   return { subject: `We received your payment details (${p.reference})`, html, text };
 }
 
 /** To the Deutli inbox: a bank or wallet payment needs checking. */
-export function adminPaymentToCheckEmail(p: { name: string | null; email: string | null; planName: string; amount: number; reference: string; txn: string }) {
+export function adminPaymentToCheckEmail(p: { name: string | null; email: string | null; planName: string; amount: string | number; reference: string; txn: string }) {
   const { html, text } = layout({
     heading: "New payment to check",
-    lines: [`${p.name ?? "A student"}${p.email ? ` (${p.email})` : ""} says they paid.`, `Plan: ${p.planName}. Amount: Rs. ${p.amount.toLocaleString("en-PK")}. Reference: ${p.reference}. Transaction ID: ${p.txn}.`, "Look in your bank or wallet for this transaction, then approve it in the admin panel."],
+    lines: [`${p.name ?? "A student"}${p.email ? ` (${p.email})` : ""} says they paid.`, `Plan: ${p.planName}. Amount: ${typeof p.amount === "number" ? `Rs. ${p.amount.toLocaleString("en-PK")}` : p.amount}. Reference: ${p.reference}. Transaction ID: ${p.txn}.`, "Look in your bank or wallet for this transaction, then approve it in the admin panel."],
     button: { label: "Open Payments", href: `${APP}/admin/payments` },
     small: "This message goes to the support inbox only.",
   });

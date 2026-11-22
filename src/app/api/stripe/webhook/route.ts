@@ -29,8 +29,10 @@ export async function POST(request: NextRequest) {
     const session = event.data.object;
     const orderId = session.client_reference_id;
     if (orderId && session.payment_status === "paid") {
-      const { data: order } = await admin.from("orders").select("id, amount_pkr, method, stripe_session_id").eq("id", orderId).maybeSingle();
-      const okAmount = order && session.amount_total === order.amount_pkr * 100 && session.currency === stripeCurrency();
+      const { data: order } = await admin.from("orders").select("*").eq("id", orderId).maybeSingle();
+      // New orders carry their own currency and amount (EUR for card); old ones are PKR rupees in the env currency.
+      const expected = order && order.pay_currency && order.pay_amount_minor != null ? { currency: String(order.pay_currency).toLowerCase(), minor: order.pay_amount_minor as number } : order ? { currency: stripeCurrency(), minor: order.amount_pkr * 100 } : null;
+      const okAmount = !!expected && session.amount_total === expected.minor && session.currency === expected.currency;
       if (order && order.method === "card" && order.stripe_session_id === session.id && okAmount) {
         const r = await fulfilOrder(admin, order.id);
         if ("error" in r) return NextResponse.json({ error: r.error }, { status: 500 }); // Stripe will retry

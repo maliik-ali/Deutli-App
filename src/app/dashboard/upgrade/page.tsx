@@ -6,7 +6,10 @@ import { PlanCompare, type PlanView } from "@/components/dashboard/plan-compare"
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { hasPro, requireUser } from "@/lib/auth/dal";
-import { cardReady, getActivePlans, getMyOrders, pkr } from "@/lib/pro/data";
+import { CurrencyPicker } from "@/components/dashboard/currency-picker";
+import { cardReady, getActivePlans, getFxRates, getMyOrders } from "@/lib/pro/data";
+import { getDisplayCurrency, planPrice } from "@/lib/pro/display";
+import { formatMinor, orderLabel } from "@/lib/pro/money";
 import { createClient } from "@/lib/supabase/server";
 import { todayIn } from "@/lib/time";
 
@@ -16,24 +19,32 @@ const STATUS: Record<string, string> = { pending: "Waiting for your payment", aw
 
 export default async function UpgradePage() {
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
-  const [plans, orders] = await Promise.all([getActivePlans(), getMyOrders(5)]);
+  const [plans, orders, rates] = await Promise.all([getActivePlans(), getMyOrders(5), getFxRates()]);
+  const currency = await getDisplayCurrency(user.timeZone, rates);
   const pro = hasPro(user) && user.role === "student";
   const supabase = await createClient();
   const { data: req } = plans.length === 0 ? await supabase.from("pro_requests").select("user_id").eq("user_id", user.id).maybeSingle() : { data: null };
   // Savings are worked out against paying the 1-month plan again and again (only when there is one).
   const monthly = plans.find((p) => p.months === 1);
   const views: PlanView[] = plans.map((p) => {
-    const full = monthly && p.months > 1 ? monthly.price_pkr * p.months : 0;
-    const saved = full > p.price_pkr ? full - p.price_pkr : 0;
+    const price = planPrice(p, currency, rates);
+    // Savings against paying the 1-month plan again and again, in the same money as the plan (EUR or rupees).
+    const eur = p.price_eur_cents != null && monthly?.price_eur_cents != null;
+    const full = monthly && p.months > 1 ? (eur ? monthly.price_eur_cents! * p.months : monthly.price_pkr * p.months) : 0;
+    const own = eur ? p.price_eur_cents! : p.price_pkr;
+    const saved = full > own ? full - own : 0;
+    const saveLabel = !saved ? null : eur ? planPrice({ ...p, price_eur_cents: saved, months: 1 }, currency, rates).total.main : formatMinor(saved * 100, "PKR");
     return {
       id: p.id,
       months: p.months,
-      total: p.price_pkr,
-      perMonth: Math.round(p.price_pkr / p.months),
-      save: saved || null,
+      total: price.total.main,
+      perMonth: price.perMonth.main,
+      note: price.perMonth.note,
+      save: saveLabel,
       savePct: saved ? Math.round((saved / full) * 100) : null,
     };
   });
+  const currencies = plans.some((p) => p.price_eur_cents != null) ? ["EUR", ...Object.keys(rates)] : [];
   // Waiting orders from the last week (older unpaid ones are just abandoned and not worth listing).
   const weekAgo = Date.parse(todayIn(user.timeZone)) - 7 * 86_400_000;
   const open = orders.filter((o) => (o.status === "pending" || o.status === "awaiting_review") && Date.parse(o.created_at) > weekAgo);
@@ -54,7 +65,7 @@ export default async function UpgradePage() {
             {open.map((o) => (
               <li key={o.id} className="flex flex-wrap items-center justify-between gap-3">
                 <span className="text-[15px]">
-                  {o.plan_name} · {pkr(o.amount_pkr)} <span className="text-muted-foreground">· {o.method === "card" ? "Card" : "Bank or wallet"} · {STATUS[o.status]}</span>
+                  {o.plan_name} · {orderLabel(o)} <span className="text-muted-foreground">· {o.method === "card" ? "Card" : "Bank or wallet"} · {STATUS[o.status]}</span>
                 </span>
                 <span className="flex items-center gap-1">
                   {o.status === "pending" && <CancelOrderButton orderId={o.id} />}
@@ -68,6 +79,7 @@ export default async function UpgradePage() {
         </Card>
       )}
 
+      {currencies.length > 1 && <CurrencyPicker value={currency} options={currencies} />}
       <PlanCompare plans={views} isPro={pro} requested={!!req} cardReady={cardReady()} />
       <p className="text-center text-[14px] text-muted-foreground">
         Questions about Pro or paying?{" "}

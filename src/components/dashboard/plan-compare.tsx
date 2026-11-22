@@ -15,14 +15,15 @@ import { cn } from "@/lib/utils";
 export type PlanView = {
   id: string;
   months: number;
-  total: number;
-  perMonth: number;
+  /** Prices already formatted in the student's currency (EUR, or a display currency with its rate as a note). */
+  total: string;
+  perMonth: string;
+  /** "1 EUR = 300 PKR" when the price is shown in another currency than EUR. */
+  note: string | null;
   /** What they save against paying month by month, or null. */
-  save: number | null;
+  save: string | null;
   savePct: number | null;
 };
-
-const pkr = (n: number) => `PKR ${n.toLocaleString("en-PK")}`;
 
 /** Same layout as the pricing section on deutli.com. Only things that exist are listed. Add a line here (and on deutli.com) the day a new feature goes live: A2/B1/B2 vocabulary lists, grammar lessons, speaking practice in small groups. */
 const FREE_YES = [
@@ -97,7 +98,7 @@ export function PlanCompare({ plans, isPro, requested, cardReady }: { plans: Pla
           <div className="flex h-full flex-col rounded-[20px] border border-border bg-card p-6 sm:p-8">
             <h2 className="text-xl font-bold">Free</h2>
             <div className="mt-4 flex items-baseline gap-2">
-              <span className="text-5xl font-extrabold">PKR 0</span>
+              <span className="text-5xl font-extrabold">{`${(plans[0]?.perMonth ?? "").replace(/[\d.,].*$/, "").trim() || "PKR"} 0`.replace("€ ", "€")}</span>
               <span className="text-muted-foreground">forever</span>
             </div>
             <p className="mt-3 text-muted-foreground">Try the platform and see how we teach.</p>
@@ -129,13 +130,14 @@ export function PlanCompare({ plans, isPro, requested, cardReady }: { plans: Pla
             {plan ? (
               <>
                 <div className="mt-4 flex items-baseline gap-2">
-                  <span className="text-5xl font-extrabold">{pkr(plan.perMonth)}</span>
+                  <span className="text-5xl font-extrabold">{plan.perMonth}</span>
                   <span className="text-muted-foreground">/ month</span>
                 </div>
                 <p className="mt-3 min-h-[3rem] text-muted-foreground">
                   {plan.months === 1
                     ? `One payment for 1 month.${hasLonger ? " Choose a longer plan and save." : ""}`
-                    : `One payment of ${pkr(plan.total)} for ${plan.months} months.${plan.save ? ` You save ${pkr(plan.save)}.` : ""}`}
+                    : `One payment of ${plan.total} for ${plan.months} months.${plan.save ? ` You save ${plan.save}.` : ""}`}
+                  {plan.note ? <span className="block text-[13px]">{plan.note}</span> : null}
                 </p>
               </>
             ) : (
@@ -187,7 +189,7 @@ export function PlanCompare({ plans, isPro, requested, cardReady }: { plans: Pla
                   )}
                   <Button type="button" className="h-12 rounded-xl text-[15px]" disabled={busy} onClick={buy}>
                     {busy ? <Loader2 className="animate-spin" aria-hidden /> : null}
-                    {busy ? "Opening secure payment…" : `${isPro ? "Extend Pro" : "Get Pro"} · ${pkr(plan.total)}`}
+                    {busy ? "Opening secure payment…" : `${isPro ? "Extend Pro" : "Get Pro"} · ${plan.total}`}
                   </Button>
                   <Link href={`/dashboard/upgrade/checkout?plan=${plan.id}`} className="inline-flex min-h-11 items-center justify-center text-[14px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
                     Pay with a bank or wallet instead

@@ -1,8 +1,9 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import type { FxRates } from "./money";
 
-export type Plan = { id: string; name: string; months: number; price_pkr: number; active: boolean; sort: number };
+export type Plan = { id: string; name: string; months: number; price_pkr: number; price_eur_cents: number | null; active: boolean; sort: number };
 export type PayAccount = { id: string; label: string; account_title: string; account_number: string; note: string | null; active: boolean; sort: number };
 export type Order = {
   id: string;
@@ -10,6 +11,10 @@ export type Order = {
   plan_name: string;
   months: number;
   amount_pkr: number;
+  amount_eur_cents: number | null;
+  pay_currency: string | null;
+  pay_amount_minor: number | null;
+  fx_rate: number | null;
   method: "card" | "bank_wallet";
   status: "pending" | "awaiting_review" | "paid" | "rejected" | "cancelled";
   reference: string;
@@ -20,20 +25,21 @@ export type Order = {
   paid_at: string | null;
 };
 
-export const ORDER_COLUMNS = "id, user_id, plan_name, months, amount_pkr, method, status, reference, txn_id, payer_note, admin_note, created_at, paid_at";
+/** "*" on purpose: works before and after the EUR migration (new columns are optional). */
+export const ORDER_COLUMNS = "*";
 export const pkr = (n: number) => `Rs. ${n.toLocaleString("en-PK")}`;
 /** Card payments need a gateway account. Until Stripe is connected (env STRIPE_SECRET_KEY), the card option is shown as "soon". */
 export const cardReady = () => Boolean(process.env.STRIPE_SECRET_KEY);
 
 export async function getActivePlans(): Promise<Plan[]> {
   const supabase = await createClient();
-  const { data } = await supabase.from("plans").select("id, name, months, price_pkr, active, sort").eq("active", true).order("sort").order("months");
+  const { data } = await supabase.from("plans").select("*").eq("active", true).order("sort").order("months");
   return (data ?? []) as Plan[];
 }
 
 export async function getPlan(id: string): Promise<Plan | null> {
   const supabase = await createClient();
-  const { data } = await supabase.from("plans").select("id, name, months, price_pkr, active, sort").eq("id", id).eq("active", true).maybeSingle();
+  const { data } = await supabase.from("plans").select("*").eq("id", id).eq("active", true).maybeSingle();
   return (data as Plan | null) ?? null;
 }
 
@@ -54,4 +60,13 @@ export async function getMyOrders(limit = 5): Promise<Order[]> {
   const supabase = await createClient();
   const { data } = await supabase.from("orders").select(ORDER_COLUMNS).order("created_at", { ascending: false }).limit(limit);
   return (data ?? []) as Order[];
+}
+
+/** Exchange rates for showing a EUR price in another currency (set by an admin). Empty until the migration has run. */
+export async function getFxRates(): Promise<FxRates> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("fx_rates").select("currency, per_eur");
+  const out: FxRates = {};
+  for (const r of (data ?? []) as { currency: string; per_eur: number }[]) out[r.currency] = Number(r.per_eur);
+  return out;
 }

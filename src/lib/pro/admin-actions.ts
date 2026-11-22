@@ -97,3 +97,37 @@ export async function rejectOrder(id: unknown, note: unknown): Promise<Result> {
   refresh();
   return { ok: true };
 }
+
+/** Set (or clear) a plan's EUR price. With a EUR price, cards are charged in EUR and bank/wallet students see the PKR equivalent. */
+export async function setPlanEur(id: unknown, euros: unknown): Promise<Result> {
+  const admin = await db();
+  const i = uuid.safeParse(id);
+  const text = typeof euros === "string" ? euros.trim().replace(",", ".") : "";
+  if (!i.success || !admin) return { error: GENERIC };
+  if (text === "") {
+    const { error } = await admin.from("plans").update({ price_eur_cents: null }).eq("id", i.data).eq("kind", "student");
+    if (error) return { error: GENERIC };
+    refresh();
+    return { ok: true };
+  }
+  const n = Number(text);
+  if (!Number.isFinite(n) || n < 0 || n > 10_000) return { error: "Enter the price in euros, for example 6.99." };
+  const { error } = await admin.from("plans").update({ price_eur_cents: Math.round(n * 100) }).eq("id", i.data).eq("kind", "student");
+  if (error) return { error: GENERIC };
+  refresh();
+  return { ok: true };
+}
+
+/** Set the display rate for a currency (units per 1 EUR). It is only a display of the EUR price and the PKR amount for bank orders. */
+export async function setFxRate(currency: unknown, perEur: unknown): Promise<Result> {
+  const admin = await db();
+  const c = z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/, "Use a 3-letter code like PKR.").refine((v) => v !== "EUR", "EUR is the base currency.").safeParse(currency);
+  const r = z.coerce.number().positive("Enter a rate above 0.").max(1_000_000).safeParse(typeof perEur === "string" ? perEur.replace(",", ".") : perEur);
+  if (!c.success) return { error: c.error.issues[0].message };
+  if (!r.success) return { error: r.error.issues[0].message };
+  if (!admin) return { error: GENERIC };
+  const { error } = await admin.from("fx_rates").upsert({ currency: c.data, per_eur: r.data, updated_at: new Date().toISOString() });
+  if (error) return { error: GENERIC };
+  refresh();
+  return { ok: true };
+}
