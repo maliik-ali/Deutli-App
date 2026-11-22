@@ -3,8 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 
+import { StudentMaterial } from "@/components/materials/material-item";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
+import { listBatchMaterials } from "@/lib/materials/data";
 import { getMyBatch, listAnnouncements, listBatchClasses } from "@/lib/batches/data";
 
 export const metadata: Metadata = { title: "Batch" };
@@ -14,7 +16,7 @@ export default async function MyBatchPage(props: PageProps<"/dashboard/batches/[
   const { id } = await props.params;
   const batch = await getMyBatch(id, user.id);
   if (!batch) notFound();
-  const [announcements, classes] = await Promise.all([listAnnouncements(batch.id), listBatchClasses(batch.id)]);
+  const [announcements, classes, materials] = await Promise.all([listAnnouncements(batch.id), listBatchClasses(batch.id), listBatchMaterials(batch.id, user.id)]);
   const when = (d: string) => new Date(d).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: user.timeZone });
   return (
     <main className="mx-auto grid max-w-[960px] gap-6 px-4 py-6 sm:px-6 md:px-8 md:py-8">
@@ -26,6 +28,10 @@ export default async function MyBatchPage(props: PageProps<"/dashboard/batches/[
       <Card>
         <div className="grid gap-1"><CardTitle>Upcoming classes</CardTitle><CardDescription>Times in your time zone. Open Classes to register and join.</CardDescription></div>
         {classes.length === 0 ? <p className="text-[14px] text-muted-foreground">No classes planned yet.</p> : <ul className="divide-y divide-border">{classes.map((c) => <li key={c.id} className="flex justify-between gap-3 py-2.5 text-[15px]"><Link className="font-semibold hover:text-gold-ink" href={`/dashboard/classes/${c.id}`}>{c.title}</Link><span className="text-muted-foreground">{when(c.starts_at)}</span></li>)}</ul>}
+      </Card>
+      <Card>
+        <div className="grid gap-1"><CardTitle>Material and homework</CardTitle><CardDescription>Notes, files, links and homework from your teacher.</CardDescription></div>
+        {materials.length === 0 ? <p className="text-[14px] text-muted-foreground">Nothing shared yet.</p> : <ul className="divide-y divide-border">{materials.map((m) => <StudentMaterial key={m.id} m={m} done={m.done} />)}</ul>}
       </Card>
       <Card>
         <CardTitle>Announcements</CardTitle>

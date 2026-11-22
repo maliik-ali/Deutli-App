@@ -55,7 +55,10 @@ export default async function TeacherBatchPage(props: PageProps<"/teacher/batche
           <Card>
             <div className="grid gap-1"><CardTitle>Schedule</CardTitle><CardDescription>Upcoming classes for this batch.</CardDescription></div>
             {classes.length === 0 ? <p className="text-[14px] text-muted-foreground">No classes for this batch yet.</p> : <ul className="divide-y divide-border">{classes.map((c) => <li key={c.id} className="flex justify-between gap-3 py-2.5 text-[15px]"><Link className="font-semibold hover:text-gold-ink" href={`/teacher/classes/${c.id}`}>{c.title}</Link><span className="text-muted-foreground">{when(c.starts_at)}</span></li>)}</ul>}
-            <Button asChild size="sm" variant="outline" className="w-fit"><Link href={`/teacher/classes/new?batch=${batch.id}`}>New class for this batch</Link></Button>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild size="sm" variant="outline"><Link href={`/teacher/classes/new?batch=${batch.id}`}>New class for this batch</Link></Button>
+              <Button asChild size="sm" variant="outline"><Link href={`/teacher/materials?batch=${batch.id}`}>Add material or homework</Link></Button>
+            </div>
           </Card>
         </div>
 

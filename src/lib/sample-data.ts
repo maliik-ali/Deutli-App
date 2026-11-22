@@ -23,7 +23,7 @@ export const NAV_ITEMS = [
   },
   { href: "/dashboard/certificates", label: "Certificates", icon: "award" },
   // Not built yet: always at the bottom, marked "Soon".
-  { href: "/dashboard/homework", label: "Homework", icon: "pen", soon: true },
+  { href: "/dashboard/homework", label: "Homework", icon: "pen" },
   { href: "/dashboard/speaking-club", label: "Speaking club", icon: "mic", soon: true },
   { href: "/dashboard/ask-a-teacher", label: "Ask a teacher", icon: "message", soon: true },
 ] as const;
