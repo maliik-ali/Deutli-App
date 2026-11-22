@@ -387,3 +387,33 @@ export async function getDashboardClass(userId: string): Promise<{ next: ClassCa
     .gt("starts_at", new Date().toISOString());
   return { next: null, anyUpcoming: (count ?? 0) > 0 };
 }
+
+/** The recording link of a class, read on its own so a missing column never breaks the class pages. */
+export async function getRecordingUrl(classId: string): Promise<string | null> {
+  const admin = createAdminClient();
+  if (!admin) return null;
+  const { data, error } = await admin.from("live_classes").select("recording_url").eq("id", classId).maybeSingle();
+  return error ? null : ((data?.recording_url as string | null) ?? null);
+}
+
+/** The teacher's saved room link (their own only; used to start new classes with it). */
+export async function getDefaultRoom(teacherId: string): Promise<{ joinUrl: string; passcode: string } | null> {
+  const admin = createAdminClient();
+  if (!admin) return null;
+  const { data, error } = await admin.from("teacher_room_links").select("join_url, passcode").eq("teacher_id", teacherId).maybeSingle();
+  return error || !data ? null : { joinUrl: data.join_url as string, passcode: (data.passcode as string | null) ?? "" };
+}
+
+/** May this student watch the recording? Registered for the class, or in the class's batch, and the class has started. */
+export async function canWatchRecording(classId: string, userId: string): Promise<boolean> {
+  const admin = createAdminClient();
+  if (!admin) return false;
+  const { data: c } = await admin.from("live_classes").select("starts_at, batch_id").eq("id", classId).maybeSingle();
+  if (!c || new Date(c.starts_at as string).getTime() > Date.now()) return false;
+  const { data: reg } = await admin.from("class_registrations").select("status").eq("class_id", classId).eq("user_id", userId).eq("status", "registered").maybeSingle();
+  if (reg) return true;
+  const batchId = (c as { batch_id?: string | null }).batch_id;
+  if (!batchId) return false;
+  const { data: m } = await admin.from("batch_members").select("batch_id").eq("batch_id", batchId).eq("student_id", userId).maybeSingle();
+  return !!m;
+}

@@ -36,6 +36,8 @@ export type ClassFormValues = {
   capacity: string;
   joinUrl: string;
   passcode: string;
+  /** YouTube link of the recording (added after the class). */
+  recordingUrl: string;
   /** Set when the class is created for a batch (from the batch page). */
   batchId?: string;
 };
@@ -117,6 +119,7 @@ export function ClassForm({
         capacity,
         joinUrl: v.joinUrl,
         passcode: v.passcode,
+        recordingUrl: v.recordingUrl,
         repeatWeeks: mode === "create" ? repeat : 1,
         batchId: mode === "create" ? v.batchId : undefined,
       });
@@ -330,6 +333,9 @@ export function ClassForm({
         </Field>
         <Field id="passcode" label="Passcode" optional>
           <Input id="passcode" value={v.passcode} onChange={(e) => set("passcode", e.target.value)} maxLength={40} className="sm:max-w-xs" autoComplete="off" />
+        </Field>
+        <Field id="recordingUrl" label="Recording (YouTube link)" optional hint="Add it any time, usually after the class. Students who registered or are in the batch can watch it once the class has started. YouTube links only.">
+          <Input id="recordingUrl" type="url" inputMode="url" value={v.recordingUrl} onChange={(e) => set("recordingUrl", e.target.value)} placeholder="https://youtu.be/…" maxLength={500} />
         </Field>
       </Card>
 

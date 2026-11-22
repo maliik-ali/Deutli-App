@@ -18,6 +18,7 @@ export function blankClass(tz: string, teacherId: string): ClassFormValues {
     capacity: "",
     joinUrl: "",
     passcode: "",
+    recordingUrl: "",
   };
 }
 
@@ -36,7 +37,7 @@ type Row = {
 };
 
 /** Form values for an existing class, with its date and time shown in the editor's time zone. */
-export function classToValues(row: Row, link: { joinUrl: string; passcode: string }, tz: string): ClassFormValues {
+export function classToValues(row: Row, link: { joinUrl: string; passcode: string }, tz: string, recordingUrl = ""): ClassFormValues {
   return {
     id: row.id,
     teacherId: row.teacher_id,
@@ -52,5 +53,6 @@ export function classToValues(row: Row, link: { joinUrl: string; passcode: strin
     capacity: row.capacity == null ? "" : String(row.capacity),
     joinUrl: link.joinUrl,
     passcode: link.passcode,
+    recordingUrl,
   };
 }

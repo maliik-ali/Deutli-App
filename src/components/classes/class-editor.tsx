@@ -7,7 +7,7 @@ import { Registrants } from "@/components/classes/registrants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
-import { getClassForEdit, listCourseTitles, listTeacherOptions } from "@/lib/classes/data";
+import { getClassForEdit, getRecordingUrl, listCourseTitles, listTeacherOptions } from "@/lib/classes/data";
 import { classToValues } from "@/lib/classes/form";
 import { formatClock } from "@/lib/time";
 
@@ -26,6 +26,7 @@ export async function ClassEditor({
   if (!UUID.test(id)) notFound();
   const isAdmin = viewer.role !== "teacher";
   const data = await getClassForEdit(id);
+  const recordingUrl = (await getRecordingUrl(id)) ?? "";
   if (data === null) notFound();
   if (data.unavailable) {
     return <p className="text-muted-foreground">Classes are not available right now. Please try again in a few minutes.</p>;
@@ -55,7 +56,7 @@ export async function ClassEditor({
           </p>
         )}
         <ClassForm
-          initial={classToValues(data.row, { joinUrl: data.joinUrl, passcode: data.passcode }, tz)}
+          initial={classToValues(data.row, { joinUrl: data.joinUrl, passcode: data.passcode }, tz, recordingUrl)}
           mode="edit"
           teachers={teachers}
           courseSuggestions={suggestions}

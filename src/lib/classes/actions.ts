@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { youtubeId } from "./recording";
 import { getManagedBatch } from "@/lib/batches/data";
 import { requireUser } from "@/lib/auth/dal";
 import { JOIN_GRACE_MIN, JOIN_OPENS_MIN, LEVEL_IDS, SKILL_IDS, SPECIALTIES } from "@/lib/classes/constants";
@@ -51,6 +52,7 @@ const classSchema = z.object({
   passcode: text(40).default(""),
   repeatWeeks: z.number().int().min(1).max(12).default(1),
   batchId: z.uuid().optional(),
+  recordingUrl: z.string().trim().max(500).default("").refine((v) => v === "" || youtubeId(v) !== null, "The recording must be a YouTube link (youtube.com or youtu.be)."),
 });
 export type ClassInput = z.input<typeof classSchema>;
 
@@ -93,7 +95,7 @@ export async function saveClass(input: unknown): Promise<{ error: string } | { o
   if (v.id) {
     const startsAt = zonedToUtc(v.date, v.time, user.timeZone);
     if (!startsAt) return { error: "Pick a valid date and time." };
-    const patch = { ...fields, starts_at: startsAt.toISOString(), ...(isAdmin ? { teacher_id: teacherId } : {}) };
+    const patch = { ...fields, starts_at: startsAt.toISOString(), recording_url: v.recordingUrl || null, ...(isAdmin ? { teacher_id: teacherId } : {}) };
     const { data, error } = await supabase.from("live_classes").update(patch).eq("id", v.id).select("id");
     if (error || !data?.length) return { error: SAVE_ERROR };
     const linked = await saveLink(v.id, v.joinUrl, v.passcode);
@@ -116,7 +118,7 @@ export async function saveClass(input: unknown): Promise<{ error: string } | { o
     const startsAt = zonedToUtc(addDays(v.date, i * 7), v.time, user.timeZone);
     if (!startsAt) return { error: "Pick a valid date and time." };
     if (i === 0 && startsAt.getTime() < Date.now() - 5 * 60_000) return { error: "That time is in the past. Pick a later time." };
-    rows.push({ ...fields, teacher_id: teacherId, created_by: user.id, starts_at: startsAt.toISOString(), ...(batchId ? { batch_id: batchId } : {}) });
+    rows.push({ ...fields, teacher_id: teacherId, created_by: user.id, starts_at: startsAt.toISOString(), ...(batchId ? { batch_id: batchId } : {}), ...(v.recordingUrl ? { recording_url: v.recordingUrl } : {}) });
   }
   const { data, error } = await supabase.from("live_classes").insert(rows).select("id");
   if (error || !data?.length) return { error: SAVE_ERROR };
@@ -312,5 +314,24 @@ export async function saveTeacherProfile(input: unknown): Promise<Result> {
   if (error) return { error: SAVE_ERROR };
   revalidatePath("/dashboard/teachers", "layout");
   revalidatePath("/teacher/profile");
+  return { ok: true };
+}
+
+const roomSchema = z.object({
+  joinUrl: z.string().trim().max(500).refine((v) => v === "" || /^https:\/\/\S+$/i.test(v), "The link must start with https://"),
+  passcode: z.string().trim().max(40),
+});
+
+/** The teacher's default room link: new classes start with it. An empty link removes it. */
+export async function saveDefaultRoom(input: unknown): Promise<{ error: string } | { ok: true }> {
+  const user = await requireUser(["teacher"]);
+  const p = roomSchema.safeParse(input);
+  if (!p.success) return { error: p.error.issues[0].message };
+  const admin = createAdminClient();
+  if (!admin) return { error: NO_ADMIN };
+  const { error } = p.data.joinUrl
+    ? await admin.from("teacher_room_links").upsert({ teacher_id: user.id, join_url: p.data.joinUrl, passcode: p.data.passcode || null, updated_at: new Date().toISOString() })
+    : await admin.from("teacher_room_links").delete().eq("teacher_id", user.id);
+  if (error) return { error: SAVE_ERROR };
   return { ok: true };
 }

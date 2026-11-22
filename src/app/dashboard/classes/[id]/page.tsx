@@ -13,7 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
 import { classPhase, durationText, levelLabel, seatsText, skillLabel } from "@/lib/classes/constants";
-import { getClassDetail } from "@/lib/classes/data";
+import { RecordingEmbed } from "@/components/classes/recording-embed";
+import { canWatchRecording, getClassDetail, getRecordingUrl } from "@/lib/classes/data";
+import { youtubeId } from "@/lib/classes/recording";
 import { dayKeyIn, formatClock, formatDayLong, timeZoneLabel } from "@/lib/time";
 
 export const metadata: Metadata = { title: "Class" };
@@ -46,6 +48,8 @@ export default async function ClassPage(props: PageProps<"/dashboard/classes/[id
   }
 
   const { card: c, syllabus, teacher, myRating } = detail;
+  // The recording shows to students who registered or are in the class's batch, once the class has started.
+  const recordingId = (await canWatchRecording(id, user.id)) ? youtubeId(await getRecordingUrl(id)) : null;
   const tz = user.timeZone;
   const serverNow = new Date().getTime();
   const end = new Date(new Date(c.startsAt).getTime() + c.durationMin * 60_000);
@@ -115,6 +119,12 @@ export default async function ClassPage(props: PageProps<"/dashboard/classes/[id
           <div className="grid gap-6">
             {c.description && (
               <div className="rounded-2xl border border-border bg-card px-5 py-4 text-[16px]">{c.description}</div>
+            )}
+            {recordingId && (
+              <section className="grid gap-3" aria-label="Recording">
+                <h2 className="text-xl font-bold">Recording</h2>
+                <RecordingEmbed videoId={recordingId} title={c.title} />
+              </section>
             )}
             {syllabus && (
               <section className="grid gap-3" aria-labelledby="syllabus-title">
