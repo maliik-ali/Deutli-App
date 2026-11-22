@@ -30,6 +30,8 @@ export type AccountInfo = {
     /** A payment still being sorted out, or null. */
     openOrder: { id: string; reference: string; status: "pending" | "awaiting_review" } | null;
   };
+  /** The workspace (school or teacher) the student joined, or null. Only students see the join section. */
+  join: { workspaceName: string | null } | null;
   /** Only students can delete their own account; staff accounts are removed by an admin. */
   canDelete: boolean;
 };

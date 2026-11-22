@@ -37,6 +37,13 @@ export const signupSchema = z.object({
   email: emailRules,
   phone: phoneRules,
   password: passwordRules,
+  /** Optional teacher or school code (6 letters/digits). */
+  joinCode: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .refine((v) => v === "" || /^[A-Z0-9]{6}$/.test(v), { message: "A code has 6 letters or digits. Check it, or leave it empty." })
+    .optional(),
 });
 
 export const changePasswordSchema = z

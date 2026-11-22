@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 
+import { redeemFromSignup } from "@/lib/join/redeem";
 import { homeForRole, isRole } from "@/lib/auth/roles";
 import { NOT_CONFIGURED_MESSAGE, getSupabaseEnv } from "@/lib/supabase/env";
 import { siteUrl } from "@/lib/site-url";
@@ -47,7 +48,7 @@ export async function signUp(input: unknown): Promise<ActionResult> {
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   if (!getSupabaseEnv()) return { error: NOT_CONFIGURED_MESSAGE };
 
-  const { fullName, email, phone, password } = parsed.data;
+  const { fullName, email, phone, password, joinCode } = parsed.data;
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -57,13 +58,16 @@ export async function signUp(input: unknown): Promise<ActionResult> {
       emailRedirectTo: `${await siteUrl()}/auth/confirm?next=/onboarding`,
       // Only name and phone are sent. The role is always set to "student"
       // by the database, never from this form.
-      data: { full_name: fullName, phone: phone || null },
+      data: { full_name: fullName, phone: phone || null, ...(joinCode ? { join_code: joinCode } : {}) },
     },
   });
   if (error) return { error: friendlyAuthError(error.message, error.code) };
 
   // If email confirmation is switched off in Supabase, the user is logged in now.
-  if (data.session) redirect("/onboarding");
+  if (data.session) {
+    if (data.user) await redeemFromSignup(data.user);
+    redirect("/onboarding");
+  }
 
   redirect(`/check-email?type=signup&email=${encodeURIComponent(email)}`);
 }

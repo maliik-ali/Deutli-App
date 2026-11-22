@@ -2,6 +2,7 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { importGooglePhoto } from "@/lib/account/google-photo";
+import { redeemFromSignup } from "@/lib/join/redeem";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -39,6 +40,9 @@ export async function GET(request: NextRequest) {
   }
 
   if (!ok) return fail;
+  // A teacher or school code given at signup is used now, the first time the email is confirmed.
+  const { data: who } = await supabase.auth.getUser();
+  if (who.user) await redeemFromSignup(who.user);
   // "/" sends the user on to the right page for their role.
   return NextResponse.redirect(new URL(next, request.url));
 }

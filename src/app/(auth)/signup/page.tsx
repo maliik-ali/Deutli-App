@@ -8,8 +8,10 @@ import { SignupForm } from "./signup-form";
 
 export const metadata: Metadata = { title: "Create account" };
 
-export default async function SignupPage() {
+export default async function SignupPage(props: PageProps<"/signup">) {
   await redirectIfLoggedIn();
+  const sp = await props.searchParams;
+  const join = typeof sp.join === "string" && /^[A-Za-z0-9]{6}$/.test(sp.join) ? sp.join.toUpperCase() : "";
   return (
     <div className="grid gap-8">
       <AuthHeading
@@ -17,7 +19,7 @@ export default async function SignupPage() {
         subtitle="Free student account — start preparing for German B1 today."
       />
       <SocialButtons />
-      <SignupForm />
+      <SignupForm joinCode={join} />
       <p className="text-center text-[13px] text-muted-foreground">
         By creating an account you agree to our{" "}
         <Link href="/terms" className="underline underline-offset-4 hover:text-foreground">Terms</Link> and{" "}

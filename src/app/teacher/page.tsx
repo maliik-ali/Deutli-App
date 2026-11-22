@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2, Clock, Inbox, Users, type LucideIcon } from "lucide-react";
 
+import { JoinCodeCard } from "@/components/join/join-code-card";
 import { WorkspaceCard } from "@/components/academies/workspace-card";
 import { CheckedCard, ToCheckCard } from "@/components/teacher/review-lists";
 import { Card, CardTitle } from "@/components/ui/card";
 import { formatMinor, getMyWorkspace } from "@/lib/academies/data";
+import { getOrCreateJoinCode, joinLink, qrSvg } from "@/lib/join/codes";
 import { requireUser } from "@/lib/auth/dal";
 import { getTeacherData } from "@/lib/teachers/data";
 import { ensureTeacherCode } from "@/lib/writing/teacher";
@@ -26,6 +28,9 @@ export default async function TeacherPage() {
   const user = await requireUser(["teacher", "academy_admin", "super_admin"]);
   const isAdmin = user.role !== "teacher";
   const [data, code, workspace] = await Promise.all([getTeacherData(user.id, isAdmin), isAdmin ? null : ensureTeacherCode(user.id), isAdmin ? null : getMyWorkspace(user.id)]);
+  const join = workspace ? await getOrCreateJoinCode(user.id, workspace.workspace.id) : null;
+  const link = join ? await joinLink(join.code) : null;
+  const qr = link ? await qrSvg(link) : null;
   const todo = data.mine.filter((r) => r.status === "requested");
   const done = data.mine.filter((r) => r.status === "done");
   const scored = done.filter((r) => r.total != null);
@@ -63,7 +68,9 @@ export default async function TeacherPage() {
         />
       )}
 
-      {code && (
+      {join && link && qr && <JoinCodeCard code={join.code} active={join.active} link={link} qr={qr} />}
+
+      {code && !join && (
         <Card className="grid gap-1 p-6">
           <CardTitle>Your teacher code</CardTitle>
           <p className="font-mono text-3xl font-extrabold tracking-[0.2em]">{code}</p>

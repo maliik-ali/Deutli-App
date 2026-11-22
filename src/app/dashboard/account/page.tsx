@@ -6,6 +6,7 @@ import { hasPro, requireUser } from "@/lib/auth/dal";
 import { getMyOrders } from "@/lib/pro/data";
 import { longDay, proReminder } from "@/lib/pro/reminder";
 import { todayIn } from "@/lib/time";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Account" };
@@ -19,6 +20,15 @@ export default async function AccountPage() {
     supabase.auth.getUser(),
     user.role === "student" ? getMyOrders(5) : Promise.resolve([]),
   ]);
+  // The workspace the student joined (read on the server; students have no direct access to the academies table for other people's data).
+  let workspaceName: string | null = null;
+  if (user.role === "student") {
+    const { data: own } = await supabase.from("profiles").select("academy_id").eq("id", user.id).maybeSingle();
+    if (own?.academy_id) {
+      const { data: ac } = await createAdminClient()?.from("academies").select("name").eq("id", own.academy_id).maybeSingle() ?? { data: null };
+      workspaceName = ac?.name ?? null;
+    }
+  }
   const pro = user.role === "student" && hasPro(user);
   const today = todayIn(user.timeZone);
   const daysLeft = pro && user.proUntil ? Math.round((Date.parse(user.proUntil) - Date.parse(today)) / 86_400_000) : null;
@@ -63,6 +73,7 @@ export default async function AccountPage() {
               reminder: nudge && user.proUntil ? { ...nudge, until: longDay(user.proUntil) } : null,
               openOrder: open ? { id: open.id, reference: open.reference, status: open.status as "pending" | "awaiting_review" } : null,
             },
+            join: user.role === "student" ? { workspaceName } : null,
             canDelete: user.role === "student",
           }}
         />

@@ -5,6 +5,7 @@ import { CheckCircle2 } from "lucide-react";
 import type { AccountInfo } from "./account-types";
 import { LEGAL_LINKS } from "./account-ui";
 import { DeleteAccountSection } from "./delete-section";
+import { JoinSection } from "./join-section";
 import { LearningSection } from "./learning-section";
 import { PlanSection } from "./plan-section";
 import { ProfileSection } from "./profile-section";
@@ -30,6 +31,7 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
 
       <ProfileSection st={st} />
       <PlanSection info={info} />
+      {info.join && <JoinSection workspaceName={info.join.workspaceName} />}
       <SignInSection info={info} st={st} />
       <LearningSection st={st} />
       <DeleteAccountSection info={info} st={st} />

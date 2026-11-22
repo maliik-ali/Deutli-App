@@ -11,7 +11,7 @@ import { SubmitButton } from "@/components/auth/submit-button";
 import { signupSchema, type SignupInput } from "@/lib/validation/auth";
 import { signUp } from "../actions";
 
-export function SignupForm() {
+export function SignupForm({ joinCode = "" }: { joinCode?: string }) {
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
   const {
@@ -21,7 +21,7 @@ export function SignupForm() {
     formState: { errors },
   } = useForm<SignupInput>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { fullName: "", email: "", phone: "", password: "" },
+    defaultValues: { fullName: "", email: "", phone: "", password: "", joinCode },
   });
   const password = useWatch({ control, name: "password" });
 
@@ -74,6 +74,17 @@ export function SignupForm() {
         error={errors.password?.message}
         hint={<PasswordStrength password={password} />}
         {...register("password")}
+      />
+      <FormField
+        id="joinCode"
+        label="Teacher or school code"
+        optional
+        autoComplete="off"
+        autoCapitalize="characters"
+        placeholder="ABC234"
+        error={errors.joinCode?.message}
+        hint="Only if your teacher or school gave you one."
+        {...register("joinCode")}
       />
       <SubmitButton pending={pending} pendingText="Creating account…">
         Create account
