@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
+import { getBatchAttendance } from "@/lib/school/data";
 import { getManagedBatch, listAddableStudents, listAnnouncements, listBatchClasses, listBatchMembers } from "@/lib/batches/data";
 
 export const metadata: Metadata = { title: "Batch" };
@@ -17,7 +18,7 @@ export default async function TeacherBatchPage(props: PageProps<"/teacher/batche
   const { id } = await props.params;
   const batch = await getManagedBatch(id, user.id);
   if (!batch) notFound();
-  const [members, announcements, addable, classes] = await Promise.all([listBatchMembers(batch.id), listAnnouncements(batch.id), listAddableStudents(batch.teacher_id, batch.id), listBatchClasses(batch.id)]);
+  const [members, announcements, addable, classes, attendance] = await Promise.all([listBatchMembers(batch.id), listAnnouncements(batch.id), listAddableStudents(batch.teacher_id, batch.id), listBatchClasses(batch.id), getBatchAttendance(batch.id)]);
   const when = (d: string) => new Date(d).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: user.timeZone });
 
   return (
@@ -67,6 +68,12 @@ export default async function TeacherBatchPage(props: PageProps<"/teacher/batche
             <div className="grid gap-1"><CardTitle>Students ({members.length})</CardTitle></div>
             {members.length === 0 ? <p className="text-[14px] text-muted-foreground">No students yet.</p> : <ul className="divide-y divide-border">{members.map((m) => <li key={m.id} className="flex items-center justify-between gap-3 py-2"><span>{m.name}</span><RemoveMember batchId={batch.id} studentId={m.id} name={m.name} /></li>)}</ul>}
           </Card>
+          {attendance.held > 0 && (
+            <Card>
+              <div className="grid gap-1"><CardTitle>Attendance</CardTitle><CardDescription>{attendance.held} class{attendance.held === 1 ? "" : "es"} held. Tick Present on each class to keep this right.</CardDescription></div>
+              <ul className="divide-y divide-border">{attendance.rows.map((r) => <li key={r.studentId} className="flex justify-between gap-3 py-2 text-[15px]"><span>{r.name}</span><span className="font-semibold">{r.attended}/{r.held}{r.pct != null ? ` · ${r.pct}%` : ""}</span></li>)}</ul>
+            </Card>
+          )}
           <Card>
             <CardTitle>Add your students</CardTitle>
             <AddStudents batchId={batch.id} students={addable} />

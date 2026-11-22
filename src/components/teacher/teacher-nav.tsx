@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GraduationCap, Layers, FolderOpen, LayoutDashboard, LogOut, Palette, Menu, PenLine, ShieldCheck, UserRound, Users, Video } from "lucide-react";
+import { Building2, GraduationCap, Layers, FolderOpen, LayoutDashboard, LogOut, Palette, Menu, PenLine, ShieldCheck, UserRound, Users, Video } from "lucide-react";
 
 import { signOut } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/avatar";
@@ -24,7 +24,7 @@ const ITEMS = [
   { href: "/teacher/profile", label: "My profile", icon: UserRound },
 ] as const;
 
-function Links({ todo, isAdmin, onNavigate }: { todo: number; isAdmin: boolean; onNavigate?: () => void }) {
+function Links({ todo, isAdmin, showSchool, onNavigate }: { todo: number; isAdmin: boolean; showSchool?: boolean; onNavigate?: () => void }) {
   const pathname = usePathname();
   const cls = (active: boolean) =>
     cn(
@@ -34,7 +34,7 @@ function Links({ todo, isAdmin, onNavigate }: { todo: number; isAdmin: boolean; 
   return (
     <nav aria-label="Teacher">
       <ul className="grid gap-1">
-        {ITEMS.map(({ href, label, icon: Icon, ...rest }) => {
+        {[...ITEMS, ...(showSchool ? [{ href: "/teacher/school", label: "My school", icon: Building2 } as const] : [])].map(({ href, label, icon: Icon, ...rest }) => {
           const active = href === "/teacher" ? pathname === href : pathname.startsWith(href) || (href === "/teacher/reviews" && pathname.startsWith("/teacher/review/"));
           return (
             <li key={href}>
@@ -83,14 +83,14 @@ function Footer({ name, email, avatarUrl }: { name: string; email: string | null
   );
 }
 
-type Props = { todo: number; isAdmin: boolean; name: string; email: string | null; avatarUrl: string | null };
+type Props = { todo: number; isAdmin: boolean; showSchool?: boolean; name: string; email: string | null; avatarUrl: string | null };
 
 export function TeacherSidebar(p: Props) {
   return (
     <div className="sticky top-0 flex h-dvh flex-col gap-8 px-4 py-6">
       <Logo href="/teacher" className="px-2" />
       <div className="flex-1 overflow-y-auto">
-        <Links todo={p.todo} isAdmin={p.isAdmin} />
+        <Links todo={p.todo} isAdmin={p.isAdmin} showSchool={p.showSchool} />
       </div>
       <Footer name={p.name} email={p.email} avatarUrl={p.avatarUrl} />
     </div>
@@ -111,7 +111,7 @@ export function TeacherMobileNav(p: Props) {
         <SheetDescription className="sr-only">Teacher navigation</SheetDescription>
         <Logo href="/teacher" className="px-2" />
         <div className="flex-1 overflow-y-auto">
-          <Links todo={p.todo} isAdmin={p.isAdmin} onNavigate={() => setOpen(false)} />
+          <Links todo={p.todo} isAdmin={p.isAdmin} showSchool={p.showSchool} onNavigate={() => setOpen(false)} />
         </div>
         <Footer name={p.name} email={p.email} avatarUrl={p.avatarUrl} />
       </SheetContent>
