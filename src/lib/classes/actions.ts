@@ -335,3 +335,47 @@ export async function saveDefaultRoom(input: unknown): Promise<{ error: string }
   if (error) return { error: SAVE_ERROR };
   return { ok: true };
 }
+
+const slotSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a date."),
+  time: z.string().regex(/^\d{2}:\d{2}$/, "Pick a start time."),
+  durationMin: z.number().int().min(15).max(180),
+  priceEur: z.string().trim().refine((v) => v === "" || (Number.isFinite(Number(v.replace(",", "."))) && Number(v.replace(",", ".")) >= 0 && Number(v.replace(",", ".")) <= 1000), "Enter the price in euros, for example 25."),
+  repeatWeeks: z.number().int().min(1).max(12),
+});
+
+/** The teacher offers one or more free 1:1 slots (one seat each). The price is agreed and paid outside Deutli. */
+export async function createOneToOneSlots(input: unknown): Promise<{ error: string } | { ok: true }> {
+  const user = await requireUser(["teacher"]);
+  const p = slotSchema.safeParse(input);
+  if (!p.success) return { error: p.error.issues[0].message };
+  const admin = createAdminClient();
+  if (!admin) return { error: NO_ADMIN };
+  const price = p.data.priceEur === "" ? null : Math.round(Number(p.data.priceEur.replace(",", ".")) * 100);
+  const rows: Record<string, unknown>[] = [];
+  for (let i = 0; i < p.data.repeatWeeks; i++) {
+    const startsAt = zonedToUtc(addDays(p.data.date, i * 7), p.data.time, user.timeZone);
+    if (!startsAt) return { error: "Pick a valid date and time." };
+    if (i === 0 && startsAt.getTime() < Date.now() - 5 * 60_000) return { error: "That time is in the past. Pick a later time." };
+    rows.push({ teacher_id: user.id, created_by: user.id, course_title: "1:1 lesson", title: `1:1 lesson with ${user.fullName ?? "your teacher"}`, skill: "general", level: "b1", starts_at: startsAt.toISOString(), duration_min: p.data.durationMin, capacity: 1, kind: "1to1", price_eur_cents: price });
+  }
+  const { error } = await admin.from("live_classes").insert(rows);
+  if (error) return { error: SAVE_ERROR };
+  refresh();
+  return { ok: true };
+}
+
+/** Remove a free 1:1 slot. A booked one is cancelled from its class page, so the student is told. */
+export async function deleteFreeSlot(classId: unknown): Promise<{ error: string } | { ok: true }> {
+  const user = await requireUser(["teacher"]);
+  const id = z.uuid().safeParse(classId);
+  const admin = createAdminClient();
+  if (!id.success || !admin) return { error: SAVE_ERROR };
+  const { data: c } = await admin.from("live_classes").select("id, teacher_id, kind").eq("id", id.data).maybeSingle();
+  if (!c || c.teacher_id !== user.id || c.kind !== "1to1") return { error: SAVE_ERROR };
+  const { data: regs } = await admin.from("class_registrations").select("user_id").eq("class_id", id.data).eq("status", "registered").limit(1);
+  if (regs?.length) return { error: "A student booked this slot. Cancel it from the class page so they are told." };
+  await admin.from("live_classes").delete().eq("id", id.data);
+  refresh();
+  return { ok: true };
+}

@@ -115,6 +115,7 @@ export async function listClassesBetween(fromIso: string, toIso: string, userId:
     .select(CLASS_COLS)
     .gte("starts_at", fromIso)
     .lt("starts_at", toIso)
+    .neq("kind", "1to1") // 1:1 slots are booked on the teacher's page, not in the group class list
     .order("starts_at");
   const cards = await toCards(admin, (data ?? []) as ClassRow[], userId);
   return cards.filter((c) => c.status === "scheduled" || c.registered);
@@ -442,4 +443,32 @@ export async function listMyTimetable(userId: string): Promise<ClassCard[]> {
     for (const c of await toCards(admin, rows, userId)) out.set(c.id, c);
   }
   return [...out.values()].filter((c) => c.status === "scheduled").sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+}
+
+export type OneToOneSlot = { id: string; startsAt: string; durationMin: number; priceEurCents: number | null; booked: boolean; bookedBy: string | null };
+
+/** Free (and booked) 1:1 slots of a teacher. Students see only the free future ones; the teacher also sees who booked. */
+export async function listOneToOneSlots(teacherId: string, forTeacher: boolean): Promise<OneToOneSlot[]> {
+  const admin = createAdminClient();
+  if (!admin) return [];
+  const { data, error } = await admin
+    .from("live_classes")
+    .select("id, starts_at, duration_min, price_eur_cents")
+    .eq("teacher_id", teacherId)
+    .eq("kind", "1to1")
+    .eq("status", "scheduled")
+    .gte("starts_at", new Date().toISOString())
+    .order("starts_at")
+    .limit(60);
+  if (error) return [];
+  const rows = (data ?? []) as { id: string; starts_at: string; duration_min: number; price_eur_cents: number | null }[];
+  if (!rows.length) return [];
+  const { data: regs } = await admin.from("class_registrations").select("class_id, user_id").in("class_id", rows.map((r) => r.id)).eq("status", "registered");
+  const who = new Map(((regs ?? []) as { class_id: string; user_id: string }[]).map((r) => [r.class_id, r.user_id]));
+  const names = new Map<string, string>();
+  if (forTeacher && who.size) {
+    for (const p of ((await admin.from("profiles").select("id, full_name").in("id", [...who.values()])).data ?? []) as { id: string; full_name: string | null }[]) names.set(p.id, p.full_name ?? "Student");
+  }
+  const slots = rows.map((r) => ({ id: r.id, startsAt: r.starts_at, durationMin: r.duration_min, priceEurCents: r.price_eur_cents, booked: who.has(r.id), bookedBy: who.has(r.id) ? (names.get(who.get(r.id)!) ?? null) : null }));
+  return forTeacher ? slots : slots.filter((s) => !s.booked);
 }

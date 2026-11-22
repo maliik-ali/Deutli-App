@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
 import { levelLabel, skillLabel } from "@/lib/classes/constants";
-import { getCoursesNow, getTeacherDetails, listMyTimetable, listTeacherUpcoming } from "@/lib/classes/data";
+import { getCoursesNow, getTeacherDetails, listMyTimetable, listOneToOneSlots, listTeacherUpcoming } from "@/lib/classes/data";
 import { getLanguage } from "@/lib/languages";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatClock, formatShortDate } from "@/lib/time";
@@ -29,7 +29,7 @@ export default async function TeacherProfilePage(props: PageProps<"/dashboard/te
 
   const teacher = await getTeacherDetails(admin, id);
   if (!teacher || (!teacher.isPublic && user.role === "student")) notFound();
-  const [courses, upcoming, mine] = await Promise.all([getCoursesNow(admin, id), listTeacherUpcoming(id, user.id), listMyTimetable(user.id)]);
+  const [courses, upcoming, mine, slots] = await Promise.all([getCoursesNow(admin, id), listTeacherUpcoming(id, user.id), listMyTimetable(user.id), listOneToOneSlots(id, false)]);
   const mineWithTeacher = mine.filter((c) => c.teacher.id === id);
   const tz = user.timeZone;
   const serverNow = new Date().getTime();
@@ -101,6 +101,28 @@ export default async function TeacherProfilePage(props: PageProps<"/dashboard/te
             </ul>
           )}
         </section>
+
+        {slots.length > 0 && (
+          <section className="grid gap-3" aria-labelledby="one">
+            <h2 id="one" className="text-xl font-bold">
+              Book a 1:1 lesson
+            </h2>
+            <Card>
+              <p className="text-[13px] text-muted-foreground">One student, one teacher. You agree the price and pay your teacher directly, outside Deutli.</p>
+              <ul className="divide-y divide-border">
+                {slots.map((sl) => (
+                  <li key={sl.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                    <span className="grid gap-0.5">
+                      <span className="font-semibold">{formatShortDate(sl.startsAt, tz)} · {formatClock(sl.startsAt, tz)} · {sl.durationMin} min</span>
+                      <span className="text-[13px] text-muted-foreground">{sl.priceEurCents != null ? `€${sl.priceEurCents / 100}` : "Price agreed with the teacher"}</span>
+                    </span>
+                    <Link href={`/dashboard/classes/${sl.id}`} className="inline-flex h-11 items-center rounded-full bg-brand-gradient px-5 text-[14px] font-semibold text-white sm:h-9">Book</Link>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          </section>
+        )}
 
         {mineWithTeacher.length > 0 && (
           <section className="grid gap-3" aria-labelledby="mine">

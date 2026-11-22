@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Layers, FolderOpen, LayoutDashboard, LogOut, Palette, Menu, PenLine, ShieldCheck, UserRound, Users, Video } from "lucide-react";
+import { GraduationCap, Layers, FolderOpen, LayoutDashboard, LogOut, Palette, Menu, PenLine, ShieldCheck, UserRound, Users, Video } from "lucide-react";
 
 import { signOut } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/avatar";
@@ -17,6 +17,7 @@ const ITEMS = [
   { href: "/teacher/reviews", label: "Writing reviews", icon: PenLine, badge: true },
   { href: "/teacher/students", label: "My students", icon: Users },
   { href: "/teacher/batches", label: "Batches", icon: Layers },
+  { href: "/teacher/lessons", label: "1:1 lessons", icon: GraduationCap },
   { href: "/teacher/materials", label: "Material", icon: FolderOpen },
   { href: "/teacher/classes", label: "My classes", icon: Video },
   { href: "/teacher/branding", label: "Branding", icon: Palette },
