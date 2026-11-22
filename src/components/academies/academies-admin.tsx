@@ -160,9 +160,9 @@ export function WorkspaceRow({ item, plans }: { item: WorkspaceItem; plans: Plan
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className={item.kind === "school" ? "grid gap-3 sm:grid-cols-2" : "grid gap-3"}>
         <UsageMeter label="Students" used={item.students} limit={item.maxStudents} />
-        <UsageMeter label="Teachers" used={item.teachers} limit={item.maxTeachers} />
+        {item.kind === "school" && <UsageMeter label="Teachers" used={item.teachers} limit={item.maxTeachers} />}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-[1.4fr_0.7fr_1fr]">

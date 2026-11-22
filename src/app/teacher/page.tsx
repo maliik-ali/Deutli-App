@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2, Clock, Inbox, Users, type LucideIcon } from "lucide-react";
 
+import { WorkspaceCard } from "@/components/academies/workspace-card";
 import { CheckedCard, ToCheckCard } from "@/components/teacher/review-lists";
 import { Card, CardTitle } from "@/components/ui/card";
+import { formatMinor, getMyWorkspace } from "@/lib/academies/data";
 import { requireUser } from "@/lib/auth/dal";
 import { getTeacherData } from "@/lib/teachers/data";
 import { ensureTeacherCode } from "@/lib/writing/teacher";
@@ -23,7 +25,7 @@ function Stat({ icon: Icon, label, value, href }: { icon: LucideIcon; label: str
 export default async function TeacherPage() {
   const user = await requireUser(["teacher", "academy_admin", "super_admin"]);
   const isAdmin = user.role !== "teacher";
-  const [data, code] = await Promise.all([getTeacherData(user.id, isAdmin), isAdmin ? null : ensureTeacherCode(user.id)]);
+  const [data, code, workspace] = await Promise.all([getTeacherData(user.id, isAdmin), isAdmin ? null : ensureTeacherCode(user.id), isAdmin ? null : getMyWorkspace(user.id)]);
   const todo = data.mine.filter((r) => r.status === "requested");
   const done = data.mine.filter((r) => r.status === "done");
   const scored = done.filter((r) => r.total != null);
@@ -42,6 +44,24 @@ export default async function TeacherPage() {
         <Stat icon={Users} label={isAdmin ? "Students (see Admin)" : "My students"} value={isAdmin ? "–" : data.students.length} href="/teacher/students" />
         <Stat icon={CheckCircle2} label={avg != null ? `Checked · average ${avg} / 45` : "Checked"} value={done.length} href="/teacher/reviews" />
       </div>
+
+      {workspace && (
+        <WorkspaceCard
+          data={{
+            name: workspace.workspace.name,
+            kind: workspace.workspace.kind,
+            planName: workspace.plan?.name ?? "No plan",
+            priceLabel: workspace.plan?.eur_cents ? `${formatMinor(workspace.plan.eur_cents, "EUR")} a month` : "Free plan",
+            students: workspace.students,
+            maxStudents: workspace.plan?.max_students ?? null,
+            teachers: workspace.teachers,
+            maxTeachers: workspace.plan?.max_teachers ?? null,
+            discountPercent: workspace.workspace.discount_percent,
+            discountUntil: workspace.workspace.discount_until,
+            isOwner: workspace.role === "owner",
+          }}
+        />
+      )}
 
       {code && (
         <Card className="grid gap-1 p-6">
