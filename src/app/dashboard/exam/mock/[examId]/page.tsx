@@ -8,6 +8,8 @@ import { SKILL_ICONS } from "@/components/exam/skill-icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { hasPro, requireUser } from "@/lib/auth/dal";
+import { ReportPaper } from "@/components/exam/report-paper";
+import { isTeacherPaper } from "@/lib/papers/teacher-data";
 import { getActivePlans, getFxRates } from "@/lib/pro/data";
 import { fromLabel, getDisplayCurrency } from "@/lib/pro/display";
 import { examShortName, getExamFormat } from "@/lib/exam/catalog";
@@ -29,6 +31,7 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
   const from = fromLabel(activePlans, await getDisplayCurrency(user.timeZone, rates), rates);
   const paper = await getPaperBySlug(examId);
   const last = paper ? await getLastResult(user.id, paper.id) : null;
+  const teacherPaper = paper ? await isTeacherPaper(paper.id) : false;
   const skills = getExamFormat(user.exam).skills;
   const total = skills.reduce((sum, s) => sum + s.minutes, 0);
 
@@ -119,6 +122,7 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
                   ? "Solve the real paper on screen. Your answers are saved as you go."
                   : "Premium mock exams come with Deutli Pro. Tell us you are interested and we will contact you."}
             </p>
+            {paper && teacherPaper && <ReportPaper paperId={paper.id} />}
           </div>
         </div>
       </div>

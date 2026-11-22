@@ -8,13 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
 import { PAPER_BUCKET, getPapers } from "@/lib/papers/data";
+import { listPaperReports } from "@/lib/papers/teacher-data";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Mock exam papers" };
 
 export default async function AdminMockPapersPage() {
   await requireUser(["academy_admin", "super_admin"]);
-  const papers = await getPapers();
+  const [papers, reports] = await Promise.all([getPapers(), listPaperReports()]);
   const covers = new Map<string, string>();
   const withCover = papers.filter((p) => p.cover_path);
   if (withCover.length) {
@@ -49,6 +50,19 @@ export default async function AdminMockPapersPage() {
           </ul>
         )}
       </Card>
+      {reports.length > 0 && (
+        <Card>
+          <div className="grid gap-1">
+            <CardTitle className="text-lg">Reported papers ({reports.length})</CardTitle>
+            <CardDescription>Students and teachers reported these. Papers uploaded by teachers are marked as drafts or published in the list above.</CardDescription>
+          </div>
+          <ul className="divide-y divide-border">
+            {reports.map((r) => (
+              <li key={r.id} className="grid gap-0.5 py-2.5"><span className="font-semibold">{r.paperTitle}</span><span className="text-[14px]">{r.reason}</span></li>
+            ))}
+          </ul>
+        </Card>
+      )}
       <Card>
         <div className="grid gap-1">
           <CardTitle className="text-lg">Add a paper</CardTitle>

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 
 import { FormError } from "@/components/auth/form-error";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createPaper, createPaperUploadUrls, setPaperText } from "@/lib/papers/actions";
+import { createTeacherPaper, createTeacherUploadUrls, setTeacherPaperText } from "@/lib/papers/teacher";
 import { extractPageText, openPdf, pageToJpeg, renderPage, type TextItem } from "@/lib/papers/render";
 import { COVER_TONES } from "@/lib/exam/catalog";
 import { SECTIONS, TELC_B1_PARTS, type PaperPart } from "@/lib/papers/template";
@@ -40,7 +41,11 @@ function Thumb({ doc, n }: { doc: PDFDocumentProxy; n: number }) {
 }
 
 /** Upload a telc B1 paper: PDF pages become images, the audio is stored, the answer key is pasted. */
-export function PaperUploadForm() {
+/** Admin form. With `teacher`, the same form makes a private paper for the teacher's batches or workspace. */
+export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string; name: string }[] } } = {}) {
+  const [visibility, setVisibility] = useState<"batches" | "academy">("batches");
+  const [batchIds, setBatchIds] = useState<string[]>([]);
+  const [rights, setRights] = useState(false);
   const router = useRouter();
   const [doc, setDoc] = useState<PDFDocumentProxy | null>(null);
   const [parts, setParts] = useState<PaperPart[]>(TELC_B1_PARTS);
@@ -83,7 +88,7 @@ export function PaperUploadForm() {
       const id = crypto.randomUUID();
       const pages = [...new Set(parts.flatMap((p) => Array.from({ length: p.toPage - p.fromPage + 1 }, (_, i) => p.fromPage + i)))].sort((a, b) => a - b);
       setStatus("Preparing the upload…");
-      const links = await createPaperUploadUrls(id, pages, hasAudio ? audio.name : null);
+      const links = await (teacher ? createTeacherUploadUrls : createPaperUploadUrls)(id, pages, hasAudio ? audio.name : null);
       if ("error" in links) {
         setStatus(null);
         return setError(links.error);
@@ -104,17 +109,30 @@ export function PaperUploadForm() {
         }
       }
       setStatus("Saving…");
-      const res = await createPaper({
-        id,
-        slug: String(f.get("slug") ?? ""),
-        title: String(f.get("title") ?? ""),
-        topics: String(f.get("topics") ?? ""),
-        tone: f.get("tone"),
-        isFree: f.get("free") === "on",
-        structure: { parts },
-        audioPath: hasAudio ? (links.audio?.path ?? null) : null,
-        answersText: String(f.get("answers") ?? ""),
-      });
+      const res = teacher
+        ? await createTeacherPaper({
+            id,
+            title: String(f.get("title") ?? ""),
+            topics: String(f.get("topics") ?? ""),
+            tone: f.get("tone"),
+            visibility,
+            batchIds: visibility === "batches" ? batchIds : [],
+            rights,
+            structure: { parts },
+            audioPath: hasAudio ? (links.audio?.path ?? null) : null,
+            answersText: String(f.get("answers") ?? ""),
+          })
+        : await createPaper({
+            id,
+            slug: String(f.get("slug") ?? ""),
+            title: String(f.get("title") ?? ""),
+            topics: String(f.get("topics") ?? ""),
+            tone: f.get("tone"),
+            isFree: f.get("free") === "on",
+            structure: { parts },
+            audioPath: hasAudio ? (links.audio?.path ?? null) : null,
+            answersText: String(f.get("answers") ?? ""),
+          });
       let textNote = "";
       if (!("error" in res)) {
         // Selectable text for the chosen pages (best effort: scanned PDFs have none).
@@ -124,7 +142,7 @@ export function PaperUploadForm() {
           for (const n of pages) text[String(n)] = await extractPageText(doc, n);
           const found = Object.values(text).reduce((a, b) => a + b.length, 0);
           if (found > 0) {
-            const saved = await setPaperText(res.id, text);
+            const saved = await (teacher ? setTeacherPaperText : setPaperText)(res.id, text);
             if ("error" in saved) textNote = " Students can't select words yet: " + saved.error;
           } else textNote = " This PDF has no selectable text (it may be a scan), so students can't select words on it.";
         } catch {
@@ -158,10 +176,12 @@ export function PaperUploadForm() {
           <Label htmlFor="p-title">Name (shown on the book cover)</Label>
           <Input id="p-title" name="title" required maxLength={120} placeholder="e.g. Hamburg" />
         </div>
-        <div className="grid gap-2">
-          <Label htmlFor="p-slug">Web address</Label>
-          <Input id="p-slug" name="slug" required maxLength={40} placeholder="e.g. hamburg" />
-        </div>
+        {!teacher && (
+          <div className="grid gap-2">
+            <Label htmlFor="p-slug">Web address</Label>
+            <Input id="p-slug" name="slug" required maxLength={40} placeholder="e.g. hamburg" />
+          </div>
+        )}
         <div className="grid gap-2 sm:col-span-2">
           <Label htmlFor="p-topics">
             Topics <span className="font-normal text-subtle-foreground">(optional)</span>
@@ -176,10 +196,47 @@ export function PaperUploadForm() {
             ))}
           </select>
         </div>
-        <label className="flex items-center gap-3 self-end pb-2 text-[15px] font-medium">
-          <input type="checkbox" name="free" defaultChecked className="size-5 accent-[var(--gold-ink)]" /> Free for all students
-        </label>
+        {!teacher && (
+          <label className="flex items-center gap-3 self-end pb-2 text-[15px] font-medium">
+            <input type="checkbox" name="free" defaultChecked className="size-5 accent-[var(--gold-ink)]" /> Free for all students
+          </label>
+        )}
       </div>
+
+      {teacher && (
+        <section className="grid gap-4 rounded-xl border border-border bg-card p-4" aria-label="Who can open this paper">
+          <div className="grid gap-2">
+            <span className="text-sm font-semibold">Who can open it?</span>
+            <div role="radiogroup" className="flex flex-wrap gap-2">
+              {([["batches", "Selected batches"], ["academy", "My whole workspace"]] as const).map(([k, label]) => (
+                <label key={k} className="relative">
+                  <input type="radio" name="p-vis" className="peer sr-only" checked={visibility === k} onChange={() => setVisibility(k)} />
+                  <span className="inline-flex h-11 cursor-pointer items-center rounded-full border border-input bg-card px-5 text-[14px] font-semibold peer-checked:border-gold-ink peer-checked:bg-gold-soft peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring">{label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          {visibility === "batches" && (
+            <ul className="grid gap-1 sm:grid-cols-2">
+              {teacher.batches.length === 0 && <li className="text-[14px] text-muted-foreground">Create a batch first, or share with your whole workspace.</li>}
+              {teacher.batches.map((b) => (
+                <li key={b.id}>
+                  <label className="relative flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-2 text-[15px] hover:bg-muted">
+                    <input type="checkbox" className="peer sr-only" checked={batchIds.includes(b.id)} onChange={() => setBatchIds((p) => (p.includes(b.id) ? p.filter((x) => x !== b.id) : [...p, b.id]))} />
+                    <span className="grid size-5 place-items-center rounded-md border border-input bg-card text-transparent peer-checked:border-gold-ink peer-checked:bg-gold-ink peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring"><Check className="size-3.5" aria-hidden /></span>
+                    {b.name}
+                  </label>
+                </li>
+              ))}
+            </ul>
+          )}
+          <label className="relative flex min-h-11 cursor-pointer items-start gap-3 text-[14px]">
+            <input type="checkbox" className="peer sr-only" checked={rights} onChange={(e) => setRights(e.target.checked)} />
+            <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-md border border-input bg-card text-transparent peer-checked:border-gold-ink peer-checked:bg-gold-ink peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring"><Check className="size-3.5" aria-hidden /></span>
+            <span>I own this paper or have the right to use it with my students. Students can report papers that should not be here.</span>
+          </label>
+        </section>
+      )}
 
       <div className="grid gap-2">
         <Label htmlFor="p-pdf">Paper PDF (telc Deutsch B1)</Label>
