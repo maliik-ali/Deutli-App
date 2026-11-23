@@ -21,10 +21,12 @@ type Props = {
   hasLink: boolean;
   /** Bigger buttons and a Cancel link (class page). */
   large?: boolean;
+  /** A 1:1 lesson is "Book" / "Booked" instead of "Register" / "Registered". */
+  oneToOne?: boolean;
 };
 
 /** Register / Registered / Join / Full for one class. Updates itself as the start time gets closer. */
-export function ClassAction({ classId, serverNow, startsAt, durationMin, status, registered, full, hasLink, large }: Props) {
+export function ClassAction({ classId, serverNow, startsAt, durationMin, status, registered, full, hasLink, large, oneToOne = false }: Props) {
   const router = useRouter();
   const [now, setNow] = useState(serverNow);
   const [busy, startBusy] = useTransition();
@@ -96,7 +98,7 @@ export function ClassAction({ classId, serverNow, startsAt, durationMin, status,
     body = (
       <span className="flex items-center gap-3">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1.5 text-[13px] font-semibold text-success">
-          <Check className="size-3.5" strokeWidth={3} aria-hidden /> Registered
+          <Check className="size-3.5" strokeWidth={3} aria-hidden /> {oneToOne ? "Booked" : "Registered"}
         </span>
         {large && (
           <button
@@ -121,7 +123,7 @@ export function ClassAction({ classId, serverNow, startsAt, durationMin, status,
         onClick={() => run(() => registerForClass(classId))}
         disabled={busy}
       >
-        {busy ? <Loader2 className="animate-spin" aria-hidden /> : <Plus aria-hidden />} Register
+        {busy ? <Loader2 className="animate-spin" aria-hidden /> : <Plus aria-hidden />} {oneToOne ? "Book this lesson" : "Register"}
       </Button>
     );
   }

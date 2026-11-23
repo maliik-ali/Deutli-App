@@ -257,6 +257,7 @@ export async function listTeacherUpcoming(teacherId: string, userId: string, lim
     .select(CLASS_COLS)
     .eq("teacher_id", teacherId)
     .eq("status", "scheduled")
+    .neq("kind", "1to1") // booked from "Book a 1:1 lesson", not listed as a class
     .gte("starts_at", new Date(Date.now() - MAX_CLASS_MS).toISOString())
     .order("starts_at")
     .limit(limit + 4);
@@ -386,11 +387,20 @@ export async function getDashboardClass(userId: string): Promise<{ next: ClassCa
     .from("live_classes")
     .select("id", { count: "exact", head: true })
     .eq("status", "scheduled")
+    .neq("kind", "1to1")
     .gt("starts_at", new Date().toISOString());
   return { next: null, anyUpcoming: (count ?? 0) > 0 };
 }
 
 /** The recording link of a class, read on its own so a missing column never breaks the class pages. */
+/** For a 1:1 lesson: its price (null = not set). Returns null when the class is not a 1:1 lesson. */
+export async function getOneToOneInfo(classId: string): Promise<{ priceEurCents: number | null } | null> {
+  const admin = createAdminClient();
+  if (!admin) return null;
+  const { data } = await admin.from("live_classes").select("kind, price_eur_cents").eq("id", classId).maybeSingle();
+  return data?.kind === "1to1" ? { priceEurCents: (data.price_eur_cents as number | null) ?? null } : null;
+}
+
 export async function getRecordingUrl(classId: string): Promise<string | null> {
   const admin = createAdminClient();
   if (!admin) return null;

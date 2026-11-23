@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, CalendarPlus, ChevronLeft, Clock, Hourglass, Layers } from "lucide-react";
+import { CalendarDays, CalendarPlus, ChevronLeft, Clock, Euro, Hourglass, Layers } from "lucide-react";
 
 import { ClassAction } from "@/components/classes/class-action";
 import { ClassesEmpty } from "@/components/classes/classes-empty";
@@ -14,7 +14,7 @@ import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
 import { classPhase, durationText, levelLabel, seatsText, skillLabel } from "@/lib/classes/constants";
 import { RecordingEmbed } from "@/components/classes/recording-embed";
-import { canWatchRecording, getClassDetail, getRecordingUrl } from "@/lib/classes/data";
+import { canWatchRecording, getClassDetail, getOneToOneInfo, getRecordingUrl } from "@/lib/classes/data";
 import { youtubeId } from "@/lib/classes/recording";
 import { dayKeyIn, formatClock, formatDayLong, timeZoneLabel } from "@/lib/time";
 
@@ -50,6 +50,7 @@ export default async function ClassPage(props: PageProps<"/dashboard/classes/[id
   const { card: c, syllabus, teacher, myRating } = detail;
   // The recording shows to students who registered or are in the class's batch, once the class has started.
   const recordingId = (await canWatchRecording(id, user.id)) ? youtubeId(await getRecordingUrl(id)) : null;
+  const oneToOne = await getOneToOneInfo(id);
   const tz = user.timeZone;
   const serverNow = new Date().getTime();
   const end = new Date(new Date(c.startsAt).getTime() + c.durationMin * 60_000);
@@ -62,7 +63,9 @@ export default async function ClassPage(props: PageProps<"/dashboard/classes/[id
     { icon: CalendarDays, text: formatDayLong(dayKeyIn(tz, c.startsAt)) },
     { icon: Clock, text: `${formatClock(c.startsAt, tz)} – ${formatClock(end, tz)}` },
     { icon: Hourglass, text: durationText(c.durationMin) },
-    { icon: Layers, text: `${skillLabel(c.skill)} · ${levelLabel(c.level)}` },
+    oneToOne
+      ? { icon: Euro, text: oneToOne.priceEurCents != null ? `${new Intl.NumberFormat("en", { style: "currency", currency: "EUR" }).format(oneToOne.priceEurCents / 100)} · paid to your teacher directly` : "Price agreed with your teacher" }
+      : { icon: Layers, text: `${skillLabel(c.skill)} · ${levelLabel(c.level)}` },
   ];
 
   return (
@@ -103,6 +106,7 @@ export default async function ClassPage(props: PageProps<"/dashboard/classes/[id
             registered={c.registered}
             full={seats?.full ?? false}
             hasLink={c.hasLink}
+            oneToOne={!!oneToOne}
             large
           />
           {c.registered && !cancelled && phase !== "ended" && (
@@ -134,7 +138,7 @@ export default async function ClassPage(props: PageProps<"/dashboard/classes/[id
                 <SyllabusText text={syllabus} />
               </section>
             )}
-            {!c.description && !syllabus && (
+            {!c.description && !syllabus && !oneToOne && (
               <p className="text-[15px] text-muted-foreground">Your teacher hasn&apos;t added details for this class yet.</p>
             )}
             {c.registered && started && !cancelled && <RateClass classId={c.id} initial={myRating} />}
