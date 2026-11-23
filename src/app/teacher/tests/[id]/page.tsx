@@ -24,7 +24,7 @@ export default async function TeacherTestPage(props: PageProps<"/teacher/tests/[
       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="grid gap-1">
           <h1 className="text-[28px] leading-tight font-extrabold sm:text-[32px]">{m.test.title}</h1>
-          <p className="flex flex-wrap items-center gap-2 text-[14px] text-muted-foreground"><Badge variant={m.test.published ? "success" : "outline"}>{m.test.published ? "Published" : "Draft"}</Badge>{m.questions.length} questions{m.test.time_limit_min ? ` · ${m.test.time_limit_min} min` : ""}</p>
+          <p className="flex flex-wrap items-center gap-2 text-[14px] text-muted-foreground"><Badge variant={m.test.published ? "success" : "outline"}>{m.test.published ? "Published" : "Draft"}</Badge>{m.questions.length} {m.questions.length === 1 ? "question" : "questions"}{m.test.time_limit_min ? ` · ${m.test.time_limit_min} min` : ""}</p>
         </div>
         <TestButtons id={m.test.id} published={m.test.published} />
       </header>

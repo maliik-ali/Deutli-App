@@ -91,6 +91,11 @@ export function formatClock(at: Date | string, timeZone: string): string {
   }).format(new Date(at));
 }
 
+/** "18 Nov 2026" for a YYYY-MM-DD day. */
+export function formatDayMedium(day: string): string {
+  return new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", day: "numeric", month: "short", year: "numeric" }).format(new Date(`${day}T12:00:00Z`));
+}
+
 /** "Wednesday, 18 November" for a YYYY-MM-DD day. */
 export function formatDayLong(day: string): string {
   return new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" }).format(

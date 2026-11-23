@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
+import { formatDayMedium } from "@/lib/time";
 import { getBatchAttendance } from "@/lib/school/data";
 import { getManagedBatch, listAddableStudents, listAnnouncements, listBatchClasses, listBatchMembers } from "@/lib/batches/data";
 
@@ -29,7 +30,7 @@ export default async function TeacherBatchPage(props: PageProps<"/teacher/batche
           <h1 className="text-[28px] leading-tight font-extrabold sm:text-[32px]">{batch.name}</h1>
           <p className="flex flex-wrap items-center gap-2 text-[14px] text-muted-foreground">
             {batch.level && <Badge variant="gold">{batch.level}</Badge>}
-            {batch.exam}{batch.starts_on ? ` · from ${batch.starts_on}` : ""}{batch.ends_on ? ` to ${batch.ends_on}` : ""}
+            {batch.exam}{batch.starts_on ? ` · from ${formatDayMedium(batch.starts_on)}` : ""}{batch.ends_on ? ` to ${formatDayMedium(batch.ends_on)}` : ""}
             {batch.archived && <Badge variant="outline">Archived</Badge>}
           </p>
         </div>

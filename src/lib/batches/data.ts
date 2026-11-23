@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { studentLabels } from "@/lib/students/names";
 
 export type Batch = {
   id: string;
@@ -53,7 +54,7 @@ export async function listBatchMembers(batchId: string) {
   const ids = ((data ?? []) as { student_id: string }[]).map((r) => r.student_id);
   if (!ids.length) return [];
   const { data: p } = await admin.from("profiles").select("id, full_name").in("id", ids).order("full_name");
-  return ((p ?? []) as { id: string; full_name: string | null }[]).map((r) => ({ id: r.id, name: r.full_name ?? "Student" }));
+  return studentLabels(admin, (p ?? []) as { id: string; full_name: string | null }[]);
 }
 
 export async function listAnnouncements(batchId: string, limit = 30): Promise<Announcement[]> {
@@ -72,7 +73,7 @@ export async function listAddableStudents(teacherId: string, batchId: string) {
     admin.from("batch_members").select("student_id").eq("batch_id", batchId),
   ]);
   const taken = new Set(((inBatch ?? []) as { student_id: string }[]).map((r) => r.student_id));
-  return ((mine ?? []) as { id: string; full_name: string | null }[]).filter((s) => !taken.has(s.id)).map((s) => ({ id: s.id, name: s.full_name ?? "Student" }));
+  return studentLabels(admin, ((mine ?? []) as { id: string; full_name: string | null }[]).filter((s) => !taken.has(s.id)));
 }
 
 export async function listBatchClasses(batchId: string) {

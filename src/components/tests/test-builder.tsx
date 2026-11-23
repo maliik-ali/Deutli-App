@@ -45,7 +45,12 @@ export function TestBuilder({ batches }: { batches: { id: string; name: string }
         batchIds: picked,
         questions: qs.map((q) => {
           const points = Number(q.points.replace(",", ".")) || 0;
-          if (q.kind === "mc") return { kind: "mc", prompt: q.prompt, points, options: q.options, correct: q.correct };
+          if (q.kind === "mc") {
+            // Blank options are simply left out, so a question can have 2 to 4 answers.
+            const kept = q.options.map((text, i) => ({ text, i })).filter((o) => o.text.trim());
+            const correct = kept.findIndex((o) => o.i === q.correct);
+            return { kind: "mc", prompt: q.prompt, points, options: kept.map((o) => o.text), correct: correct === -1 ? kept.length : correct };
+          }
           if (q.kind === "tf") return { kind: "tf", prompt: q.prompt, points, correct: q.correct };
           return { kind: "fill", prompt: q.prompt, points, accepted: q.accepted.split("|").map((a) => a.trim()).filter(Boolean) };
         }),

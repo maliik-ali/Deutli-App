@@ -117,7 +117,7 @@ export function BrandingEditor({ initial, features, workspaceName }: { initial: 
                 <label htmlFor={`c-${key}`}>{label}</label>
                 <div className="flex items-center gap-2">
                   <input type="color" aria-label={`${label} picker`} value={normaliseHex(v[key]) ?? "#7161ff"} disabled={!canColour} onChange={(e) => setV({ ...v, [key]: e.target.value })} className="size-11 shrink-0 cursor-pointer rounded-xl border border-input bg-card p-1 disabled:opacity-60" />
-                  <Input id={`c-${key}`} value={v[key]} onChange={(e) => setV({ ...v, [key]: e.target.value })} disabled={!canColour} className="font-mono" maxLength={7} aria-invalid={!!problem} />
+                  <Input id={`c-${key}`} value={v[key]} onChange={(e) => setV({ ...v, [key]: e.target.value })} disabled={!canColour} className="font-mono" maxLength={7} aria-invalid={canColour && !!problem} />
                 </div>
                 {canColour && problem && <span role="alert" className="text-destructive">{problem}</span>}
               </div>

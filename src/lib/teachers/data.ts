@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { studentLabels } from "@/lib/students/names";
 
 export type ReviewRow = {
   id: string;
@@ -19,7 +20,7 @@ export type TeacherData = {
   mine: ReviewRow[];
   open: ReviewRow[];
   names: Map<string, string>;
-  students: { id: string; name: string; email?: string | null }[];
+  students: { id: string; name: string }[];
 };
 
 /** Everything the teacher screens need. Server only (uses the secret key); the caller has already checked the role. */
@@ -36,13 +37,7 @@ export async function getTeacherData(teacherId: string, isAdmin: boolean): Promi
   ]);
   const mine = (m.data ?? []) as ReviewRow[];
   const open = (o.data ?? []) as ReviewRow[];
-  const students: { id: string; name: string; email?: string | null }[] = await Promise.all(
-    ((s.data ?? []) as { id: string; full_name: string | null }[]).map(async (p) => {
-      // A student with no saved name shows their email instead, so the teacher can tell them apart.
-      const email = p.full_name ? null : ((await admin.auth.admin.getUserById(p.id)).data.user?.email ?? null);
-      return { id: p.id, name: p.full_name ?? email ?? "Student", email };
-    }),
-  );
+  const students = await studentLabels(admin, (s.data ?? []) as { id: string; full_name: string | null }[]);
 
   const names = new Map<string, string>(students.map((x) => [x.id, x.name]));
   const missing = [...new Set([...mine, ...open].map((r) => r.student_id))].filter((id) => !names.has(id));
