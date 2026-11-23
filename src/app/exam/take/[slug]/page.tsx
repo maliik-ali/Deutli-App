@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { ExamPlayer } from "@/components/exam/exam-player";
 import { hasPro, requireUser } from "@/lib/auth/dal";
 import { getSavedWords } from "@/lib/practice/data";
+import { paperExamLabel } from "@/lib/papers/template";
 import { getAudioUrl, getPageText, getPageUrls, getPaperBySlug, openAttempt } from "@/lib/papers/data";
 
 export const metadata: Metadata = { title: "Mock exam" };
@@ -26,6 +27,7 @@ export default async function TakeExamPage(props: PageProps<"/exam/take/[slug]">
       key={attempt.id}
       slug={paper.slug}
       title={paper.title}
+      examLabel={paperExamLabel(paper.exam, paper.level)}
       attemptId={attempt.id}
       structure={paper.structure}
       pageUrls={pageUrls}

@@ -21,6 +21,8 @@ import { OptionSelect } from "@/components/ui/option-select";
 type Props = {
   slug: string;
   title: string;
+  /** e.g. "telc · B1" */
+  examLabel: string;
   attemptId: string;
   structure: PaperStructure;
   pageUrls: Record<number, string>;
@@ -40,7 +42,7 @@ function mmss(total: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
-export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioUrl, initialAnswers, initialWriting, initialSpent, pageText, savedWords, languages }: Props) {
+export function ExamPlayer({ slug, title, examLabel, attemptId, structure, pageUrls, audioUrl, initialAnswers, initialWriting, initialSpent, pageText, savedWords, languages }: Props) {
   const router = useRouter();
   const parts = structure.parts;
   const [partIndex, setPartIndex] = useState(0);
@@ -153,7 +155,7 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
             <ArrowLeft className="size-5" aria-hidden />
           </Link>
           <p className="truncate font-bold">
-            {title} <span className="ml-1 text-[12px] font-semibold tracking-[0.12em] text-subtle-foreground uppercase">telc · B1</span>
+            {title} <span className="ml-1 text-[12px] font-semibold tracking-[0.12em] text-subtle-foreground uppercase">{examLabel}</span>
           </p>
         </div>
         <div className="flex items-center justify-end gap-3">

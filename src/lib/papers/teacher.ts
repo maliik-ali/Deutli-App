@@ -9,7 +9,7 @@ import { getManagedBatch } from "@/lib/batches/data";
 import { COVER_TONES } from "@/lib/exam/catalog";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PAPER_BUCKET } from "./data";
-import { parseAnswerKey, partQuestions, type PaperStructure } from "./template";
+import { PAPER_EXAMS, PAPER_LEVELS, parseAnswerKey, partQuestions, type PaperExam, type PaperStructure } from "./template";
 
 const GENERIC = "That didn't work. Please wait a moment and try again.";
 const uuid = z.string().uuid();
@@ -61,6 +61,8 @@ const schema = z.object({
   title: z.string().trim().min(1, "Give the paper a title.").max(120),
   topics: z.string().trim().max(300),
   tone: z.enum(COVER_TONES),
+  exam: z.enum(PAPER_EXAMS.map((e) => e.id) as [PaperExam, ...PaperExam[]]),
+  level: z.enum(PAPER_LEVELS),
   visibility: z.enum(["batches", "academy"]),
   batchIds: z.array(uuid).max(50),
   rights: z.literal(true, { error: "Please confirm that you own this paper or have the right to use it." }),
@@ -89,7 +91,7 @@ export async function createTeacherPaper(input: unknown): Promise<{ error: strin
 
   const slug = `${d.title.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 24) || "paper"}-${crypto.randomUUID().slice(0, 6)}`;
   const { error } = await admin.from("mock_papers").insert({
-    id: d.id, slug, title: d.title, topics: d.topics, tone: d.tone, is_free: true, structure, audio_path: d.audioPath,
+    id: d.id, slug, title: d.title, topics: d.topics, tone: d.tone, exam: d.exam, level: d.level, is_free: true, structure, audio_path: d.audioPath,
     owner_id: user.id, academy_id: ws.workspace.id, visibility: d.visibility, rights_confirmed_at: new Date().toISOString(),
   });
   if (error) return { error: GENERIC };

@@ -9,6 +9,10 @@ export type CertScores = {
   hoeren: { got: number; max: number };
   /** null = not marked yet */
   writing: number | null;
+  /** The paper has a writing task. */
+  hasWriting: boolean;
+  /** The paper has every section of the real exam (a teacher's paper may have only some). */
+  full: boolean;
   writingBy: "teacher" | "ai" | null;
 };
 
@@ -43,7 +47,9 @@ function Row({ label, got, max, sub }: { label: string; got: number | null; max:
  */
 export function PracticeCertificate({ s, bare = false }: { s: CertScores; bare?: boolean }) {
   const written = s.lesen.got + s.sprach.got + s.hoeren.got + (s.writing ?? 0);
-  const complete = s.writing != null;
+  const writtenMax = s.lesen.max + s.sprach.max + s.hoeren.max + (s.hasWriting ? 45 : 0);
+  // A Prädikat only makes sense for the full exam, once writing is marked.
+  const complete = s.full && s.writing != null;
   return (
     <figure className="grid gap-3">
       <div className="relative mx-auto w-full max-w-[640px] overflow-hidden rounded-md bg-[#fbfaf7] p-6 text-neutral-900 shadow-2xl shadow-black/50 sm:p-10" style={{ aspectRatio: "auto" }}>
@@ -70,25 +76,35 @@ export function PracticeCertificate({ s, bare = false }: { s: CertScores; bare?:
           </div>
 
           <div className="grid gap-1.5 text-[14px]">
-            <Row label="Schriftliche Prüfung" got={written} max={225} />
-            <Row sub label="Leseverstehen" got={s.lesen.got} max={s.lesen.max} />
-            <Row sub label="Sprachbausteine" got={s.sprach.got} max={s.sprach.max} />
-            <Row sub label="Hörverstehen" got={s.hoeren.got} max={s.hoeren.max} />
-            <Row sub label="Schriftlicher Ausdruck" got={s.writing} max={45} />
-            <div className="mt-2 text-neutral-500">
-              <Row label="Mündliche Prüfung" got={null} max={75} />
-            </div>
-            <p className="pl-4 text-[12px] text-neutral-500">Speaking is not part of the online mock. Practise it with your teacher.</p>
+            <Row label="Schriftliche Prüfung" got={written} max={writtenMax} />
+            {s.lesen.max > 0 && <Row sub label="Leseverstehen" got={s.lesen.got} max={s.lesen.max} />}
+            {s.sprach.max > 0 && <Row sub label="Sprachbausteine" got={s.sprach.got} max={s.sprach.max} />}
+            {s.hoeren.max > 0 && <Row sub label="Hörverstehen" got={s.hoeren.got} max={s.hoeren.max} />}
+            {s.hasWriting && <Row sub label="Schriftlicher Ausdruck" got={s.writing} max={45} />}
+            {s.full && (
+              <>
+                <div className="mt-2 text-neutral-500">
+                  <Row label="Mündliche Prüfung" got={null} max={75} />
+                </div>
+                <p className="pl-4 text-[12px] text-neutral-500">Speaking is not part of the online mock. Practise it with your teacher.</p>
+              </>
+            )}
           </div>
 
           <div className="grid gap-1 border-t border-neutral-300 pt-3 text-[14px]">
-            <div className="grid grid-cols-[1fr_auto] items-baseline gap-2">
-              <span className="font-semibold">Prädikat</span>
-              <span className="font-bold">{complete ? projectedPrädikat(written) : "–"}</span>
-            </div>
-            <p className="text-[11.5px] text-neutral-500">
-              {complete ? "A projection: this is your Prädikat if your speaking result matches your written percentage." : "Appears once your writing is marked."}
-            </p>
+            {s.full ? (
+              <>
+                <div className="grid grid-cols-[1fr_auto] items-baseline gap-2">
+                  <span className="font-semibold">Prädikat</span>
+                  <span className="font-bold">{complete ? projectedPrädikat(written) : "–"}</span>
+                </div>
+                <p className="text-[11.5px] text-neutral-500">
+                  {complete ? "A projection: this is your Prädikat if your speaking result matches your written percentage." : "Appears once your writing is marked."}
+                </p>
+              </>
+            ) : (
+              <p className="text-[11.5px] text-neutral-500">This paper has only some sections of the exam, so there is no overall Prädikat.</p>
+            )}
             {s.writingBy && <p className="text-[11.5px] text-neutral-500">Writing score: {s.writingBy === "teacher" ? "marked by your teacher" : "AI estimate"}.</p>}
           </div>
 

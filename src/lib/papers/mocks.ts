@@ -3,6 +3,7 @@ import "server-only";
 import { MOCK_EXAMS, type MockExam } from "@/lib/exam/catalog";
 import { createClient } from "@/lib/supabase/server";
 import { PAPER_BUCKET, getPapers } from "./data";
+import { paperExamLabel } from "./template";
 
 /** Mock exams for the student list: uploaded papers first, then the sample covers that have no paper yet. */
 export async function listMocks(): Promise<{ mocks: MockExam[]; ready: Set<string> }> {
@@ -24,6 +25,9 @@ export async function listMocks(): Promise<{ mocks: MockExam[]; ready: Set<strin
     tone: p.tone,
     free: p.is_free,
     image: urls.get(p.id),
+    level: p.level ?? "b1",
+    examLabel: paperExamLabel(p.exam, p.level),
+    shared: !!p.owner_id,
   }));
   const ids = new Set(real.map((m) => m.id));
   return { mocks: [...real, ...MOCK_EXAMS.filter((m) => !ids.has(m.id))], ready: ids };

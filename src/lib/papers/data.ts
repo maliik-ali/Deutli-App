@@ -17,12 +17,17 @@ export type PaperRow = {
   audio_path: string | null;
   /** Optional cover photo in the mock-papers bucket (needs migration 20261114000014). */
   cover_path?: string | null;
+  /** Which exam and level the paper is for (needs migration 20261123000044). Missing = telc B1. */
+  exam?: string;
+  level?: string;
+  /** Set when a teacher uploaded the paper. */
+  owner_id?: string | null;
   created_at: string;
 };
 
 const BASE_COLUMNS = "id, slug, title, topics, tone, is_free, is_published, structure, audio_path, created_at";
 // If the cover migration has not been run yet, fall back to the old columns so nothing breaks.
-const COLUMNS = `${BASE_COLUMNS}, cover_path`;
+const COLUMNS = `${BASE_COLUMNS}, cover_path, exam, level, owner_id`;
 
 /** Papers students may see (RLS hides unpublished ones from students). */
 export async function getPapers(): Promise<PaperRow[]> {

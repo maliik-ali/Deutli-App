@@ -33,6 +33,7 @@ const TONE_VARS: Record<CoverTone, string> = {
  */
 export function ExamCover({ exam, className }: { exam: MockExam; className?: string }) {
   const photo = exam.image;
+  const level = (exam.level ?? "b1").toUpperCase();
   return (
     <div className={cn("relative", className)}>
       {/* page edges behind the cover */}
@@ -46,7 +47,7 @@ export function ExamCover({ exam, className }: { exam: MockExam; className?: str
           <span className="absolute z-10 top-[6cqw] left-[6.5cqw] font-heading text-[6.4cqw] font-extrabold tracking-tight text-white">
             deutli<span className="text-brand-cyan">.</span>
           </span>
-          {exam.free && (
+          {exam.free && !exam.shared && (
             <span className="absolute z-10 top-[5.5cqw] right-[6cqw] rounded-full bg-success-soft px-[3cqw] py-[0.8cqw] text-[4.2cqw] font-bold tracking-wider text-success">
               FREE
             </span>
@@ -74,7 +75,7 @@ export function ExamCover({ exam, className }: { exam: MockExam; className?: str
             />
           )}
           <span className="absolute z-10 right-[5cqw] bottom-[-3.5cqw] font-heading text-[34cqw] leading-none font-black tracking-[-0.06em] text-white">
-            B1
+            {level}
           </span>
         </div>
         <div className="relative h-[44%] bg-cover-paper bg-[radial-gradient(rgb(11_23_57/0.07)_1px,transparent_1px)] [background-size:4cqw_4cqw] px-[6.5cqw] pt-[6cqw] text-cover-paper-ink">
@@ -83,7 +84,7 @@ export function ExamCover({ exam, className }: { exam: MockExam; className?: str
             <br />
             Modellprüfung
           </p>
-          <Stamp className="absolute bottom-[6cqw] left-[6cqw] size-[24cqw]" />
+          <Stamp level={level} className="absolute bottom-[6cqw] left-[6cqw] size-[24cqw]" />
           <span
             aria-hidden
             className="absolute top-[5cqw] right-[2.5cqw] text-[2.4cqw] font-semibold tracking-[0.2em] whitespace-nowrap text-cover-paper-ink/45 uppercase [writing-mode:vertical-rl]"
@@ -96,7 +97,7 @@ export function ExamCover({ exam, className }: { exam: MockExam; className?: str
   );
 }
 
-function Stamp({ className }: { className?: string }) {
+function Stamp({ level, className }: { level: string; className?: string }) {
   return (
     <svg viewBox="0 0 100 100" aria-hidden className={cn("text-cover-paper-ink", className)}>
       <defs>
@@ -108,7 +109,7 @@ function Stamp({ className }: { className?: string }) {
         <textPath href="#stamp-ring">MODELLPRÜFUNG · DEUTLI.COM ·</textPath>
       </text>
       <text x="50" y="58" textAnchor="middle" fontSize="24" fontWeight="900" fill="currentColor">
-        B1
+        {level}
       </text>
     </svg>
   );
@@ -124,8 +125,10 @@ export function ExamCard({ exam, examName, pro = false, ready = true }: { exam: 
       <ExamCover exam={exam} className="mr-1.5 transition-transform duration-200 group-hover:-translate-y-1" />
       <div className="grid gap-1.5">
         <p className="flex flex-wrap items-center gap-x-1.5 text-[11px] font-semibold tracking-[0.1em] text-muted-foreground uppercase sm:text-[12px] sm:tracking-[0.12em]">
-          {examName} ·<span className="max-sm:hidden">B1 ·</span>
-          {exam.free ? (
+          {exam.examLabel ?? `${examName} · B1`} ·
+          {exam.shared ? (
+            <span className="text-gold-ink">Shared by your teacher</span>
+          ) : exam.free ? (
             <span className="text-success">Free</span>
           ) : pro && !ready ? (
             <span className="text-muted-foreground">Coming soon</span>

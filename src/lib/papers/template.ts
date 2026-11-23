@@ -134,3 +134,22 @@ export function contentsLabel(structure: PaperStructure): string | null {
   const names = have.map((s) => s.english);
   return names.length === 1 ? `${names[0]} only` : names.join(" + ");
 }
+
+/** Which exam and level a paper is for. The answer-sheet format is the same for all of them. */
+export const PAPER_EXAMS = [
+  { id: "telc", label: "telc" },
+  { id: "goethe", label: "Goethe" },
+  { id: "oesd", label: "ÖSD" },
+  { id: "dtz", label: "DTZ" },
+  { id: "other", label: "Other" },
+] as const;
+export const PAPER_LEVELS = ["a1", "a2", "b1", "b2", "c1"] as const;
+export type PaperExam = (typeof PAPER_EXAMS)[number]["id"];
+export type PaperLevel = (typeof PAPER_LEVELS)[number];
+
+/** "telc · B1", "Goethe · A2". "Other" shows only the level. */
+export function paperExamLabel(exam: string | undefined, level: string | undefined): string {
+  const lv = (level ?? "b1").toUpperCase();
+  const name = PAPER_EXAMS.find((e) => e.id === exam)?.label;
+  return !name || exam === "other" ? lv : `${name} · ${lv}`;
+}

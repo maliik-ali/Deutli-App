@@ -17,7 +17,7 @@ import { hasPro, requireUser } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { certDate, certScores } from "@/lib/papers/certificate";
 import { getAttempt, getPaperById } from "@/lib/papers/data";
-import { SECTIONS, WRITTEN_MAX, WRITTEN_PASS, contentsLabel, partQuestions, sectionsInStructure } from "@/lib/papers/template";
+import { SECTIONS, WRITTEN_MAX, WRITTEN_PASS, contentsLabel, paperExamLabel, partQuestions, sectionsInStructure } from "@/lib/papers/template";
 import { getWritingFeedback } from "@/lib/writing/data";
 import { getReviewForStudent, getTeacherName } from "@/lib/writing/teacher";
 
@@ -79,7 +79,7 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
       <Link href={`/dashboard/exam/mock/${examId}`} className="inline-flex w-fit items-center gap-1 py-2 pr-3 text-[14px] font-medium text-muted-foreground hover:text-foreground">
         <ChevronLeft className="size-4" aria-hidden /> {paper.title}
       </Link>
-      <p className="-mb-3 text-[12px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">telc B1 · {paper.title}</p>
+      <p className="-mb-3 text-[12px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">{paperExamLabel(paper.exam, paper.level)} · {paper.title}</p>
 
       <ScoreHero
         skipped={skipped}

@@ -1,5 +1,5 @@
 import type { CertScores } from "@/components/exam/practice-certificate";
-import type { AttemptResult, PaperStructure } from "./template";
+import { SECTIONS, sectionsInStructure, type AttemptResult, type PaperStructure } from "./template";
 
 type ReviewLike = { status: string; total: number | null } | null;
 type FeedbackLike = { total: number } | null;
@@ -22,6 +22,8 @@ export function certScores(opts: { name: string | null; title: string; structure
     lesen: sectionPoints(st, r, "lesen"),
     sprach: sectionPoints(st, r, "sprachbausteine"),
     hoeren: sectionPoints(st, r, "hoeren"),
+    hasWriting: st.parts.some((p) => p.section === "schreiben"),
+    full: sectionsInStructure(st).length === SECTIONS.length,
     writing: teacher ? review.total : (feedback?.total ?? null),
     writingBy: teacher ? "teacher" : feedback ? "ai" : null,
   };

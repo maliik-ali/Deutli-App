@@ -14,6 +14,12 @@ export type MockExam = {
   /** Optional cover photo (uploaded by an admin). Without it the cover shows the owl. */
   image?: string;
   free: boolean;
+  /** Level of the paper ("a1" … "c1"). Missing = B1. */
+  level?: string;
+  /** What the cover says it is for, e.g. "telc · B1". Missing = the student's own exam. */
+  examLabel?: string;
+  /** A teacher shared this paper with their students (it is not a Deutli free or premium paper). */
+  shared?: boolean;
 };
 
 export const MOCK_EXAMS: MockExam[] = [

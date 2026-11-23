@@ -8,7 +8,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { COVER_TONES } from "@/lib/exam/catalog";
 import { PAPER_BUCKET } from "./data";
-import { countWords, grade, parseAnswerKey, partQuestions, type PaperStructure } from "./template";
+import { PAPER_EXAMS, PAPER_LEVELS, countWords, grade, parseAnswerKey, partQuestions, type PaperExam, type PaperStructure } from "./template";
 
 const ADMINS = ["academy_admin", "super_admin"] as const;
 const LEARNERS = ["student", "academy_admin", "super_admin"] as const;
@@ -73,6 +73,8 @@ const createSchema = z.object({
   title: z.string().trim().min(1, "Give the paper a title.").max(120),
   topics: z.string().trim().max(300),
   tone: z.enum(COVER_TONES),
+  exam: z.enum(PAPER_EXAMS.map((e) => e.id) as [PaperExam, ...PaperExam[]]),
+  level: z.enum(PAPER_LEVELS),
   isFree: z.boolean(),
   structure: z.object({ parts: z.array(partSchema).min(1).max(20) }),
   audioPath: z.string().max(300).nullable(),
@@ -100,6 +102,8 @@ export async function createPaper(input: unknown): Promise<{ error: string } | {
     title: d.title,
     topics: d.topics,
     tone: d.tone,
+    exam: d.exam,
+    level: d.level,
     is_free: d.isFree,
     structure,
     audio_path: d.audioPath,

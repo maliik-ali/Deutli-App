@@ -13,7 +13,7 @@ import { createPaper, createPaperUploadUrls, setPaperText } from "@/lib/papers/a
 import { createTeacherPaper, createTeacherUploadUrls, setTeacherPaperText } from "@/lib/papers/teacher";
 import { extractPageText, openPdf, pageToJpeg, renderPage, type TextItem } from "@/lib/papers/render";
 import { COVER_TONES } from "@/lib/exam/catalog";
-import { SECTIONS, TELC_B1_PARTS, type PaperPart } from "@/lib/papers/template";
+import { PAPER_EXAMS, PAPER_LEVELS, SECTIONS, TELC_B1_PARTS, type PaperPart } from "@/lib/papers/template";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { OptionSelect } from "@/components/ui/option-select";
@@ -48,6 +48,8 @@ export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string
   const [visibility, setVisibility] = useState<"batches" | "academy">("batches");
   const [batchIds, setBatchIds] = useState<string[]>([]);
   const [rights, setRights] = useState(false);
+  const [exam, setExam] = useState<string>("telc");
+  const [level, setLevel] = useState<string>("b1");
   const router = useRouter();
   const [doc, setDoc] = useState<PDFDocumentProxy | null>(null);
   const [allParts, setParts] = useState<PaperPart[]>(TELC_B1_PARTS);
@@ -133,6 +135,8 @@ export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string
             title: String(f.get("title") ?? ""),
             topics: String(f.get("topics") ?? ""),
             tone: f.get("tone"),
+            exam,
+            level,
             visibility,
             batchIds: visibility === "batches" ? batchIds : [],
             rights,
@@ -146,6 +150,8 @@ export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string
             title: String(f.get("title") ?? ""),
             topics: String(f.get("topics") ?? ""),
             tone: f.get("tone"),
+            exam,
+            level,
             isFree: f.get("free") === "on",
             structure: { parts },
             audioPath: hasAudio ? (links.audio?.path ?? null) : null,
@@ -208,6 +214,14 @@ export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string
           <Input id="p-topics" name="topics" maxLength={300} placeholder="e.g. Computer, Weiterbildung, Anzeigen" />
         </div>
         <div className="grid gap-2">
+          <Label htmlFor="p-exam">Exam</Label>
+          <OptionSelect id="p-exam" value={exam} onChange={setExam} options={PAPER_EXAMS.map((e) => ({ value: e.id, label: e.label }))} />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="p-level">Level</Label>
+          <OptionSelect id="p-level" value={level} onChange={setLevel} options={PAPER_LEVELS.map((l) => ({ value: l, label: l.toUpperCase() }))} />
+        </div>
+        <div className="grid gap-2">
           <Label htmlFor="p-tone">Cover colour</Label>
           <OptionSelect id="p-tone" name="tone" defaultValue="navy" options={COVER_TONES.map((t) => ({ value: t, label: t }))} />
         </div>
@@ -254,7 +268,7 @@ export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string
       )}
 
       <div className="grid gap-2">
-        <Label htmlFor="p-pdf">Paper PDF (telc Deutsch B1)</Label>
+        <Label htmlFor="p-pdf">Paper PDF</Label>
         <input id="p-pdf" type="file" accept="application/pdf" onChange={(e) => onPdf(e.target.files?.[0])} className={cn(FIELD, "h-11 py-2")} />
         <p className="text-sm text-muted-foreground">
           The PDF stays on your computer. Only the exam pages you choose below are uploaded, as images, so students never get the answer pages.

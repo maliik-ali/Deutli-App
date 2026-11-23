@@ -29,7 +29,7 @@ export default async function TeacherPapersPage() {
             {papers.length === 0 ? <p className="text-[14px] text-muted-foreground">None yet.</p> : <ul className="divide-y divide-border">{papers.map((p) => <TeacherPaperRow key={p.id} id={p.id} title={p.title} published={p.is_published} visibility={p.visibility} />)}</ul>}
           </Card>
           <Card>
-            <div className="grid gap-1"><CardTitle>Add a paper</CardTitle><CardDescription>telc Deutsch B1 format. Saved as a draft; publish it from the list.</CardDescription></div>
+            <div className="grid gap-1"><CardTitle>Add a paper</CardTitle><CardDescription>Choose the exam and level. Saved as a draft; publish it from the list.</CardDescription></div>
             <PaperUploadForm teacher={{ batches: batches.filter((b) => !b.archived).map((b) => ({ id: b.id, name: b.name })) }} />
           </Card>
         </>

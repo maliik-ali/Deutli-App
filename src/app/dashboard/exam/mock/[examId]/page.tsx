@@ -62,11 +62,11 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
         <div className="grid gap-6">
           <div className="grid gap-2">
             <p className="text-[12px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-              {examShortName(user.exam)} · B1 ·{" "}
-              {!paper ? <span className="text-subtle-foreground">Coming soon</span> : exam.free ? <span className="text-success">Free</span> : <span className="text-gold-ink">Premium</span>}
+              {exam.examLabel ?? `${examShortName(user.exam)} · B1`} ·{" "}
+              {!paper ? <span className="text-subtle-foreground">Coming soon</span> : exam.shared ? <span className="text-gold-ink">Shared by your teacher</span> : exam.free ? <span className="text-success">Free</span> : <span className="text-gold-ink">Premium</span>}
             </p>
             <h1 className="text-[28px] font-extrabold sm:text-[32px]">{exam.city} Modellprüfung</h1>
-            <p className="text-muted-foreground">Topics: {exam.topics}</p>
+            {exam.topics?.trim() && <p className="text-muted-foreground">Topics: {exam.topics}</p>}
             <div className="mt-1 flex flex-wrap gap-2">
               <Badge>
                 <Clock aria-hidden /> About {Math.round((total / 60) * 2) / 2} hours with breaks between parts
