@@ -200,6 +200,7 @@ export async function getCoursesNow(admin: Admin, teacherId: string): Promise<Co
     .select("id, course_title, skill, level, starts_at, duration_min")
     .eq("teacher_id", teacherId)
     .eq("status", "scheduled")
+    .neq("kind", "1to1") // 1:1 slots are offered on their own, they are not a course
     .gte("starts_at", new Date(Date.now() - MAX_CLASS_MS).toISOString())
     .order("starts_at");
   const now = Date.now();
@@ -348,7 +349,7 @@ export async function listTeacherOptions(): Promise<{ id: string; name: string }
 export async function listCourseTitles(teacherId: string | null): Promise<string[]> {
   const admin = createAdminClient();
   if (!admin) return [];
-  let q = admin.from("live_classes").select("course_title").order("created_at", { ascending: false }).limit(60);
+  let q = admin.from("live_classes").select("course_title").neq("kind", "1to1").order("created_at", { ascending: false }).limit(60);
   if (teacherId) q = q.eq("teacher_id", teacherId);
   const { data } = await q;
   return [...new Set((data ?? []).map((r) => r.course_title as string))].slice(0, 6);
