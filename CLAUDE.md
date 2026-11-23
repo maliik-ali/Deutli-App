@@ -253,10 +253,9 @@ At the end of every session that finished or added work, update it:
 1. AI checks homework and writing, teacher confirms or overrides, student sees both
 2. Timed B1 mock exam, all 4 skills (start with 1 mock)
 3. Batches, timetable and attendance
-4. Fees, installments and balances
-5. Playbook PDF sales with free preview and discount code
 
-Direction changed on 22 Nov 2026 (see "Product direction"): pilot feature 3 (batches, timetable, attendance) becomes the teacher tools, and feature 4 (fees, installments) moves to the school tools, later.
+Removed on 23 Nov 2026: "Fees, installments and balances" and "Playbook PDF sales" are no longer pilot features.
+Direction changed on 22 Nov 2026 (see "Product direction"): pilot feature 3 (batches, timetable, attendance) becomes the teacher tools.
 
 ## Status
 - [x] Project setup + design tokens
