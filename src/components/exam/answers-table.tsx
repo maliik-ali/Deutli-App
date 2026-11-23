@@ -5,6 +5,7 @@ import { Sparkles } from "lucide-react";
 
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { explainAnswer, type Explanation } from "@/lib/papers/explain";
+import { EXPLAIN_ENABLED } from "@/lib/papers/features";
 import { cn } from "@/lib/utils";
 
 export type AnswerRow = { n: number; part: string; given: string | null; right: string; ok: boolean; listening?: boolean };
@@ -135,16 +136,16 @@ export function AnswersTable({ attemptId, parts }: { attemptId: string; parts: P
         <p className="rounded-xl bg-success/10 px-4 py-6 text-center text-[15px] text-success">No mistakes. Every answer was right!</p>
       ) : (
         <div>
-          <div className="hidden grid-cols-[4rem_1.4fr_1fr_1fr_7rem] gap-4 border-b border-border pb-2 text-[13px] font-medium text-subtle-foreground md:grid">
+          <div className={cn("hidden gap-4 border-b border-border pb-2 text-[13px] font-medium text-subtle-foreground md:grid", EXPLAIN_ENABLED ? "grid-cols-[4rem_1.4fr_1fr_1fr_7rem]" : "grid-cols-[4rem_1.4fr_1fr_1fr]")}>
             <span>No.</span>
             <span>Part</span>
             <span>Your answer</span>
             <span>Right answer</span>
-            <span>Explanation</span>
+            {EXPLAIN_ENABLED && <span>Explanation</span>}
           </div>
           <ul className="divide-y divide-border">
             {rows.map((r) => (
-              <li key={r.n} className="grid grid-cols-[3rem_1fr_auto] items-center gap-x-3 gap-y-2 py-3 text-[15px] md:grid-cols-[4rem_1.4fr_1fr_1fr_7rem] md:gap-4">
+              <li key={r.n} className={cn("grid grid-cols-[3rem_1fr_auto] items-center gap-x-3 gap-y-2 py-3 text-[15px] md:gap-4", EXPLAIN_ENABLED ? "md:grid-cols-[4rem_1.4fr_1fr_1fr_7rem]" : "md:grid-cols-[4rem_1.4fr_1fr_1fr]")}>
                 <span className="font-bold">{String(r.n).padStart(2, "0")}</span>
                 <span className="text-muted-foreground">{r.part}</span>
                 <span className={cn("font-semibold md:order-none", r.ok ? "text-success" : r.given ? "text-destructive" : "text-muted-foreground")}>
@@ -155,7 +156,7 @@ export function AnswersTable({ attemptId, parts }: { attemptId: string; parts: P
                   <span className="md:hidden text-[12px] font-normal text-subtle-foreground">Right: </span>
                   {show(r.right)}
                 </span>
-                <Why attemptId={attemptId} row={r} />
+                {EXPLAIN_ENABLED && <Why attemptId={attemptId} row={r} />}
               </li>
             ))}
           </ul>

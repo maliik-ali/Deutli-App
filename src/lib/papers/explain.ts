@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { generateJson, aiReady } from "@/lib/ai/provider";
 import { allow } from "@/lib/rate-limit";
+import { EXPLAIN_ENABLED } from "./features";
 import { requireUser } from "@/lib/auth/dal";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -46,6 +47,7 @@ const show = (v: string | null) => (v === "+" ? "richtig (+)" : v === "-" ? "fal
  */
 export async function explainAnswer(attemptId: unknown, question: unknown): Promise<{ error: string } | { explanation: Explanation }> {
   const user = await requireUser(LEARNERS);
+  if (!EXPLAIN_ENABLED) return { error: "Explanations are not available right now." };
   const a = z.string().uuid().safeParse(attemptId);
   const q = z.number().int().min(1).max(120).safeParse(question);
   if (!a.success || !q.success) return { error: GENERIC };
