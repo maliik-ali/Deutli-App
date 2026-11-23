@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Section, SettingRow, FormButtons, timeZoneOptions } from "./account-ui";
 import type { AccountState } from "./use-account-state";
 
-export function LearningSection({ st }: { st: AccountState }) {
+/** Student: meaning languages and time zone. Staff (teachers, admins): only the time zone, since class times depend on it. */
+export function LearningSection({ st, staff = false }: { st: AccountState; staff?: boolean }) {
   const {
     editing,
     busy,
@@ -28,39 +29,41 @@ export function LearningSection({ st }: { st: AccountState }) {
   } = st;
   return (
     <>
-      <Section title="Learning" description="Languages for word meanings, and your time zone.">
-        <SettingRow
-          label="Meaning languages"
-          value={
-            <span className="grid gap-0.5">
-              <span className="text-foreground">{languages.map((c) => getLanguage(c)?.name ?? c).join(", ")}</span>
-              <span className="text-[13px]">Saved words are translated into these languages.</span>
-            </span>
-          }
-          editing={editing === "languages"}
-          onEdit={() => open("languages")}
-          editLabel="Edit meaning languages"
-        >
-          <form
-            className="grid gap-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              submit(async () => {
-                const r = await setMyLanguages(draftLanguages);
-                if ("languages" in r) setLanguages(r.languages);
-                return r;
-              }, "Your languages are saved.");
-            }}
+      <Section title={staff ? "Time zone" : "Learning"} description={staff ? "Class times are shown in this time zone." : "Languages for word meanings, and your time zone."}>
+        {!staff && (
+          <SettingRow
+            label="Meaning languages"
+            value={
+              <span className="grid gap-0.5">
+                <span className="text-foreground">{languages.map((c) => getLanguage(c)?.name ?? c).join(", ")}</span>
+                <span className="text-[13px]">Saved words are translated into these languages.</span>
+              </span>
+            }
+            editing={editing === "languages"}
+            onEdit={() => open("languages")}
+            editLabel="Edit meaning languages"
           >
-            <LanguageChips
-              value={draftLanguages}
-              onChange={setDraftLanguages}
-              legend={`Pick up to ${MAX_LANGUAGES} languages`}
-            />
-            {errorText}
-            <FormButtons busy={busy || draftLanguages.length === 0} onCancel={close} />
-          </form>
-        </SettingRow>
+            <form
+              className="grid gap-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                submit(async () => {
+                  const r = await setMyLanguages(draftLanguages);
+                  if ("languages" in r) setLanguages(r.languages);
+                  return r;
+                }, "Your languages are saved.");
+              }}
+            >
+              <LanguageChips
+                value={draftLanguages}
+                onChange={setDraftLanguages}
+                legend={`Pick up to ${MAX_LANGUAGES} languages`}
+              />
+              {errorText}
+              <FormButtons busy={busy || draftLanguages.length === 0} onCancel={close} />
+            </form>
+          </SettingRow>
+        )}
 
         <SettingRow
           label="Time zone"

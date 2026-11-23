@@ -17,6 +17,8 @@ export type { AccountInfo } from "./account-types";
 export function AccountSettings({ info }: { info: AccountInfo }) {
   const st = useAccountState(info);
   const { notice } = st;
+  // Teachers and admins: no plan card (a teacher's plan belongs to the workspace on their Overview) and no learning languages.
+  const staff = info.plan.kind === "staff";
 
   return (
     <div className="grid gap-6">
@@ -29,11 +31,11 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
         </p>
       )}
 
-      <ProfileSection st={st} />
-      <PlanSection info={info} />
+      <ProfileSection st={st} staff={staff} />
+      {!staff && <PlanSection info={info} />}
       {info.join && <JoinSection workspaceName={info.join.workspaceName} />}
       <SignInSection info={info} st={st} />
-      {info.plan.kind !== "staff" && <LearningSection st={st} />}
+      <LearningSection st={st} staff={staff} />
       <DeleteAccountSection info={info} st={st} />
 
       <nav aria-label="Legal" className="flex flex-wrap gap-x-5 px-1 text-[13px] text-subtle-foreground">

@@ -9,7 +9,7 @@ import { removeAvatar, updateFullName } from "@/lib/account/actions";
 import { Section, SettingRow, FormButtons } from "./account-ui";
 import type { AccountState } from "./use-account-state";
 
-export function ProfileSection({ st }: { st: AccountState }) {
+export function ProfileSection({ st, staff = false }: { st: AccountState; staff?: boolean }) {
   const {
     editing,
     busy,
@@ -29,7 +29,7 @@ export function ProfileSection({ st }: { st: AccountState }) {
   } = st;
   return (
     <>
-      <Section title="Profile" description="How you appear to your teachers and classmates.">
+      <Section title="Profile" description={staff ? "How you appear to your students." : "How you appear to your teachers and classmates."}>
         <SettingRow
           label="Photo"
           value={
