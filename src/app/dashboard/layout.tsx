@@ -21,7 +21,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
   const [brand, teacherTools] = await Promise.all([getBrandForUser(user.id), user.role === "student" ? hasTeacherTools(user.id, user.teacherId) : Promise.resolve(true)]);
   const name = user.fullName ?? "Student";
   const avatarUrl = await getAvatarUrl(user.avatarPath);
-  // MVP: the menu always says "My B1 Exam". Later: const examTitle = myExamTitle(user.exam); (follows the chosen exam level)
+  // MVP: the menu always says "My Exam". Later: const examTitle = myExamTitle(user.exam); (follows the chosen exam level)
   const examTitle = undefined;
   const footer = <UserMenu name={name} email={user.email} avatarUrl={avatarUrl} isAdmin={user.role !== "student"} />;
 

@@ -28,7 +28,7 @@ const TITLES: Record<string, string> = {
 
 export async function generateMetadata(props: PageProps<"/dashboard/exam/[skill]">): Promise<Metadata> {
   const title = TITLES[(await props.params).skill];
-  return { title: title ? `${title} · My B1 Exam` : "My B1 Exam" };
+  return { title: title ? `${title} · My Exam` : "My Exam" };
 }
 
 /** Sum of "N questions" over the parts; 0 when the parts are not counted in questions. */

@@ -10,7 +10,7 @@ import { hasPro, requireUser } from "@/lib/auth/dal";
 import { examShortName } from "@/lib/exam/catalog";
 import { listMocks } from "@/lib/papers/mocks";
 
-export const metadata: Metadata = { title: "My B1 Exam" };
+export const metadata: Metadata = { title: "My Exam" };
 
 export default async function ExamPage() {
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
@@ -24,7 +24,7 @@ export default async function ExamPage() {
     <MotionProvider>
     <main className="mx-auto grid max-w-[1240px] gap-8 px-4 py-6 sm:px-6 md:px-8 md:py-8">
       <header className="grid gap-2">
-        <h1 className="text-[28px] font-extrabold sm:text-[32px]">My B1 Exam{/* later: {myExamTitle(user.exam)} */}</h1>
+        <h1 className="text-[28px] font-extrabold sm:text-[32px]">My Exam{/* later: {myExamTitle(user.exam)} */}</h1>
         <p className="max-w-2xl text-muted-foreground">
           Full mock exams with all four parts, timed like the real day. Free exams you can start right now. {pro ? "Your Pro opens the premium exams as we publish them." : "Premium exams unlock with Deutli Pro."} To train one skill at a time, open Skills in the menu.
         </p>

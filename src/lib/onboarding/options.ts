@@ -108,7 +108,7 @@ export const SKILLS: {
     ],
     help: "Homework with instant AI feedback, confirmed by your teacher, is coming to Deutli soon. Until then, Improve Accent builds the words and phrases you need for clear emails.",
     next: "Write the email in a mock exam and get feedback on structure, tone and mistakes.",
-    start: { href: "/dashboard/exam", label: "My B1 Exam", detail: "mock exam" },
+    start: { href: "/dashboard/exam", label: "My Exam", detail: "mock exam" },
   },
   {
     id: "sprechen",

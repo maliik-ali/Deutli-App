@@ -149,7 +149,7 @@ export function BrandingEditor({ initial, features, workspaceName }: { initial: 
           <span className="text-[18px] font-bold">{shownName}</span>
         </div>
         <div className="grid gap-1 rounded-xl bg-card p-3">
-          <span className="rounded-full bg-gold-soft px-3 py-2 text-[14px] font-semibold">My B1 Exam</span>
+          <span className="rounded-full bg-gold-soft px-3 py-2 text-[14px] font-semibold">My Exam</span>
           <span className="px-3 py-2 text-[14px] text-muted-foreground">Classes</span>
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
