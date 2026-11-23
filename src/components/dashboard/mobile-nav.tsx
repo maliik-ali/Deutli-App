@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { NavLinks } from "./nav-links";
 
-export function MobileNav({ footer, examTitle }: { footer: React.ReactNode; examTitle?: string }) {
+export function MobileNav({ footer, examTitle, teacherTools }: { footer: React.ReactNode; examTitle?: string; teacherTools?: boolean }) {
   const [open, setOpen] = useState(false);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -29,7 +29,7 @@ export function MobileNav({ footer, examTitle }: { footer: React.ReactNode; exam
         <SheetDescription className="sr-only">Main navigation</SheetDescription>
         <Logo href="/dashboard" className="px-2" />
         <div className="flex-1 overflow-y-auto">
-          <NavLinks examTitle={examTitle} onNavigate={() => setOpen(false)} />
+          <NavLinks examTitle={examTitle} teacherTools={teacherTools} onNavigate={() => setOpen(false)} />
         </div>
         {footer}
       </SheetContent>

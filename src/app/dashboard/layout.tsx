@@ -8,6 +8,7 @@ import { UserMenu } from "@/components/dashboard/user-menu";
 import { getAvatarUrl } from "@/lib/account/avatar";
 import { TimeZoneSync } from "@/components/account/time-zone-sync";
 import { getBrandForUser } from "@/lib/branding/data";
+import { hasTeacherTools } from "@/lib/students/teacher-tools";
 import { requireUser } from "@/lib/auth/dal";
 // import { myExamTitle } from "@/lib/exam/choice"; // MVP: switched off, B1 only
 
@@ -17,7 +18,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
   // New students answer a few questions first (asked once; they can skip them).
   if (user.role === "student" && !user.onboardedAt) redirect("/onboarding");
-  const brand = await getBrandForUser(user.id);
+  const [brand, teacherTools] = await Promise.all([getBrandForUser(user.id), user.role === "student" ? hasTeacherTools(user.id, user.teacherId) : Promise.resolve(true)]);
   const name = user.fullName ?? "Student";
   const avatarUrl = await getAvatarUrl(user.avatarPath);
   // MVP: the menu always says "My B1 Exam". Later: const examTitle = myExamTitle(user.exam); (follows the chosen exam level)
@@ -32,14 +33,14 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
         <div className="sticky top-0 flex h-dvh flex-col gap-8 px-4 py-6">
           <Logo href="/dashboard" className="px-2" />
           <div className="flex-1 overflow-y-auto">
-            <NavLinks examTitle={examTitle} />
+            <NavLinks examTitle={examTitle} teacherTools={teacherTools} />
           </div>
           {footer}
         </div>
       </aside>
 
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/95 px-2 backdrop-blur md:hidden">
-        <MobileNav footer={footer} examTitle={examTitle} />
+        <MobileNav footer={footer} examTitle={examTitle} teacherTools={teacherTools} />
         <Logo href="/dashboard" />
         <span className="size-11" aria-hidden />
       </header>

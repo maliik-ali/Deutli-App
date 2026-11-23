@@ -30,6 +30,9 @@ export const NAV_ITEMS = [
   { href: "/dashboard/ask-a-teacher", label: "Ask a teacher", icon: "message", soon: true },
 ] as const;
 
+/** Menu items that only make sense for a student with a teacher or school. */
+export const TEACHER_TOOL_HREFS: readonly string[] = ["/dashboard/batches", "/dashboard/timetable", "/dashboard/tests", "/dashboard/homework"];
+
 export type NavIcon = (typeof NAV_ITEMS)[number]["icon"];
 
 export const studentStats = {
