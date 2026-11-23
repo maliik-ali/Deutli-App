@@ -17,12 +17,14 @@ const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "
 export function TestPlayer({ testId, attemptId, questions, initial, deadlineMs, title }: { testId: string; attemptId: string; questions: Q[]; initial: Answers; deadlineMs: number | null; title: string }) {
   const router = useRouter();
   const [answers, setAnswers] = useState<Answers>(initial);
-  const [left, setLeft] = useState<number | null>(deadlineMs ? Math.max(0, Math.round((deadlineMs - Date.now()) / 1000)) : null);
+  const [left, setLeft] = useState<number | null>(() => (deadlineMs ? Math.max(0, Math.round((deadlineMs - Date.now()) / 1000)) : null));
   const [saved, setSaved] = useState<"saved" | "saving" | "error">("saved");
   const [error, setError] = useState<string | null>(null);
   const [busy, start] = useTransition();
   const latest = useRef(answers);
-  latest.current = answers;
+  useEffect(() => {
+    latest.current = answers;
+  }, [answers]);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const done = useRef(false);
 
