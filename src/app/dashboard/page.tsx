@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CalendarDays, Flame, Sparkles } from "lucide-react";
 
 import { FormNotice } from "@/components/auth/form-error";
+import { GettingStarted } from "@/components/getting-started";
 import { FocusCard } from "@/components/dashboard/focus-card";
 import { BlurFade } from "@/components/magicui/blur-fade";
 import { MotionProvider } from "@/components/magicui/motion-provider";
@@ -13,6 +14,8 @@ import { ProReminderBanner } from "@/components/dashboard/pro-reminder";
 import { requireUser } from "@/lib/auth/dal";
 import { proReminder } from "@/lib/pro/reminder";
 import { getDashboardClass } from "@/lib/classes/data";
+import { getStudentSetup } from "@/lib/students/setup";
+import { hasTeacherTools } from "@/lib/students/teacher-tools";
 import { getReadiness } from "@/lib/papers/readiness";
 import { getFinishedAttempts, getLastResult, getPaperById, getPapers } from "@/lib/papers/data";
 import { getPracticeSets, getSavedWords } from "@/lib/practice/data";
@@ -36,13 +39,16 @@ function greeting(now: Date, timeZone: string) {
 export default async function DashboardPage(props: PageProps<"/dashboard">) {
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
   const sp = await props.searchParams;
-  const [savedWords, readiness, practice, papers, finished, liveClass] = await Promise.all([
+  const isStudent = user.role === "student";
+  const [savedWords, readiness, practice, papers, finished, liveClass, setup, hasTeacher] = await Promise.all([
     getSavedWords(user.id, 5),
     getReadiness(user.id),
     getPracticeSets(user.id),
     getPapers(),
     getFinishedAttempts(user.id, 1),
     getDashboardClass(user.id),
+    isStudent ? getStudentSetup(user.id) : Promise.resolve([]),
+    isStudent ? hasTeacherTools(user.id, user.teacherId) : Promise.resolve(true),
   ]);
   const streak = practiceStreak(practice.sets.flatMap((x) => x.tracks), todayIn(user.timeZone));
 
@@ -115,6 +121,25 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
       </header>
 
       {reminder && user.proUntil && <ProReminderBanner reminder={reminder} proUntil={user.proUntil} />}
+
+      {isStudent && (
+        <BlurFade delay={0.01}>
+          <GettingStarted
+            steps={setup}
+            description="A few easy first steps. Each one ticks off by itself when you have done it."
+            footer={
+              !hasTeacher && (
+                <p className="text-[13px] text-muted-foreground">
+                  Have a code from a teacher or school?{" "}
+                  <Link href="/dashboard/account" className="font-semibold text-gold-ink underline-offset-4 hover:underline">
+                    Join them in Account
+                  </Link>
+                </p>
+              )
+            }
+          />
+        </BlurFade>
+      )}
 
       {liveClass && (liveClass.next || liveClass.anyUpcoming) && (
         <BlurFade delay={0.01}>

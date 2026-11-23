@@ -4,7 +4,7 @@ import { CheckCircle2, Clock, Inbox, Users, type LucideIcon } from "lucide-react
 
 import { JoinCodeCard } from "@/components/join/join-code-card";
 import { WorkspaceCard } from "@/components/academies/workspace-card";
-import { GettingStarted } from "@/components/teacher/getting-started";
+import { GettingStarted } from "@/components/getting-started";
 import { CheckedCard, ToCheckCard } from "@/components/teacher/review-lists";
 import { Card, CardTitle } from "@/components/ui/card";
 import { formatMinor, getMyWorkspace } from "@/lib/academies/data";

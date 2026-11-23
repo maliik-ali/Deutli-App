@@ -5,13 +5,9 @@
 
 export const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: "home" },
-  { href: "/dashboard/daily-practice", label: "Improve Accent", icon: "speech" },
-  { href: "/dashboard/exam", label: "My B1 Exam", icon: "timer" },
-  { href: "/dashboard/classes", label: "Classes", icon: "video" },
-  { href: "/dashboard/batches", label: "My batches", icon: "layers" },
-  { href: "/dashboard/timetable", label: "Timetable", icon: "calendar" },
-  { href: "/dashboard/tests", label: "Tests", icon: "clipboard" },
+  // Learn on your own, easiest first, then the exam, then everything that needs a teacher.
   { href: "/dashboard/vocabulary", label: "Vocabulary", icon: "languages" },
+  { href: "/dashboard/daily-practice", label: "Improve Accent", icon: "speech" },
   {
     href: "/dashboard/skills",
     label: "Skills",
@@ -23,9 +19,14 @@ export const NAV_ITEMS = [
       { href: "/dashboard/exam/speaking", label: "Speaking" },
     ],
   },
+  { href: "/dashboard/exam", label: "My B1 Exam", icon: "timer" },
+  { href: "/dashboard/classes", label: "Classes", icon: "video" },
+  { href: "/dashboard/batches", label: "My batches", icon: "layers" },
+  { href: "/dashboard/timetable", label: "Timetable", icon: "calendar" },
+  { href: "/dashboard/homework", label: "Homework", icon: "pen" },
+  { href: "/dashboard/tests", label: "Tests", icon: "clipboard" },
   { href: "/dashboard/certificates", label: "Certificates", icon: "award" },
   // Not built yet: always at the bottom, marked "Soon".
-  { href: "/dashboard/homework", label: "Homework", icon: "pen" },
   { href: "/dashboard/speaking-club", label: "Speaking club", icon: "mic", soon: true },
   { href: "/dashboard/ask-a-teacher", label: "Ask a teacher", icon: "message", soon: true },
 ] as const;

@@ -1,14 +1,7 @@
 import "server-only";
 
+import type { SetupStep } from "@/lib/setup-step";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-export type SetupStep = {
-  key: "batch" | "students" | "material" | "class" | "profile";
-  title: string;
-  hint: string;
-  href: string;
-  done: boolean;
-};
 
 /**
  * The first things a new teacher does, in the order they depend on each other, and which are already done.

@@ -1,14 +1,15 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import type { SetupStep } from "@/lib/teachers/setup";
+import type { SetupStep } from "@/lib/setup-step";
 import { cn } from "@/lib/utils";
 
-/** The first steps for a new teacher. Ticks itself off as they work, and disappears when everything is done. */
-export function GettingStarted({ steps }: { steps: SetupStep[] }) {
+/** The first steps for a new teacher or student. Ticks itself off as they work, and disappears when everything is done. */
+export function GettingStarted({ steps, description = "Do these in order. Each step ticks off by itself when you have done it.", footer }: { steps: SetupStep[]; description?: string; footer?: ReactNode }) {
   const done = steps.filter((s) => s.done).length;
   if (steps.length === 0 || done === steps.length) return null;
   const next = steps.findIndex((s) => !s.done);
@@ -20,7 +21,7 @@ export function GettingStarted({ steps }: { steps: SetupStep[] }) {
           <CardTitle id="getting-started" className="text-lg">
             Get started
           </CardTitle>
-          <CardDescription>Do these in order. Each step ticks off by itself when you have done it.</CardDescription>
+          <CardDescription>{description}</CardDescription>
         </div>
         <p className="text-[13px] font-semibold text-muted-foreground">
           {done} of {steps.length} done
@@ -53,6 +54,7 @@ export function GettingStarted({ steps }: { steps: SetupStep[] }) {
           </li>
         ))}
       </ol>
+      {footer}
     </Card>
   );
 }
