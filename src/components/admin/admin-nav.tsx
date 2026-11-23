@@ -3,10 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Eye, LogOut, Menu } from "lucide-react";
+import { Eye, Menu } from "lucide-react";
 
-import { signOut } from "@/app/(auth)/actions";
-import { Avatar } from "@/components/avatar";
+import { ADMIN_MENU, UserMenu } from "@/components/dashboard/user-menu";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -53,25 +52,6 @@ function Links({ newFeedback, onNavigate }: { newFeedback: number; onNavigate?: 
   );
 }
 
-function Footer({ name, email, avatarUrl }: { name: string; email: string | null; avatarUrl: string | null }) {
-  return (
-    <div className="grid gap-2 border-t border-border pt-4">
-      <div className="flex items-center gap-3 px-2">
-        <Avatar name={name} url={avatarUrl} />
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-semibold">{name}</span>
-          {email && <span className="block truncate text-[13px] text-subtle-foreground">{email}</span>}
-        </span>
-      </div>
-      <form action={signOut}>
-        <button type="submit" className="flex h-11 w-full items-center gap-3 rounded-full px-4 text-[15px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-          <LogOut className="size-[18px]" aria-hidden /> Log out
-        </button>
-      </form>
-    </div>
-  );
-}
-
 type Props = { newFeedback: number; name: string; email: string | null; avatarUrl: string | null };
 
 export function AdminSidebar(p: Props) {
@@ -81,7 +61,7 @@ export function AdminSidebar(p: Props) {
       <div className="flex-1 overflow-y-auto">
         <Links newFeedback={p.newFeedback} />
       </div>
-      <Footer name={p.name} email={p.email} avatarUrl={p.avatarUrl} />
+      <UserMenu name={p.name} email={p.email} avatarUrl={p.avatarUrl} items={ADMIN_MENU} />
     </div>
   );
 }
@@ -102,7 +82,7 @@ export function AdminMobileNav(p: Props) {
         <div className="flex-1 overflow-y-auto">
           <Links newFeedback={p.newFeedback} onNavigate={() => setOpen(false)} />
         </div>
-        <Footer name={p.name} email={p.email} avatarUrl={p.avatarUrl} />
+        <UserMenu name={p.name} email={p.email} avatarUrl={p.avatarUrl} items={ADMIN_MENU} />
       </SheetContent>
     </Sheet>
   );

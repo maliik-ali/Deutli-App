@@ -33,7 +33,7 @@ export function AccountSettings({ info }: { info: AccountInfo }) {
       <PlanSection info={info} />
       {info.join && <JoinSection workspaceName={info.join.workspaceName} />}
       <SignInSection info={info} st={st} />
-      <LearningSection st={st} />
+      {info.plan.kind !== "staff" && <LearningSection st={st} />}
       <DeleteAccountSection info={info} st={st} />
 
       <nav aria-label="Legal" className="flex flex-wrap gap-x-5 px-1 text-[13px] text-subtle-foreground">

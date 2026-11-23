@@ -20,7 +20,11 @@ function refresh() {
   // The name also shows in the sidebar and the dashboard greeting.
   revalidatePath("/dashboard", "layout");
   revalidatePath("/teacher", "layout");
+  revalidatePath("/admin", "layout");
 }
+
+/** Where each role's Account page lives (the email-change link brings them back here). */
+const ACCOUNT_PATH = { student: "/dashboard/account", teacher: "/teacher/account", academy_admin: "/admin/account", super_admin: "/admin/account" } as const;
 
 const MAX_AVATAR_BYTES = 512 * 1024;
 const PHOTO_ERROR = "We couldn't save your photo. Check your internet and try again.";
@@ -203,7 +207,7 @@ export async function requestEmailChange(value: unknown): Promise<{ error: strin
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser(
     { email },
-    { emailRedirectTo: `${await siteUrl()}/auth/confirm?next=/dashboard/account` },
+    { emailRedirectTo: `${await siteUrl()}/auth/confirm?next=${ACCOUNT_PATH[user.role]}` },
   );
   if (error) {
     if (error.code === "email_exists") return { error: "Another account already uses that email." };

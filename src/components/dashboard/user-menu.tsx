@@ -3,22 +3,58 @@
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronUp, LifeBuoy, LogOut, ShieldCheck, SlidersHorizontal, Sparkles, UserRound } from "lucide-react";
+import { ChevronUp, IdCard, LifeBuoy, LogOut, ShieldCheck, SlidersHorizontal, Sparkles, UserRound, type LucideIcon } from "lucide-react";
 
 import { signOut } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/avatar";
 import { cn } from "@/lib/utils";
 
-/** Name card at the bottom of the sidebar. Opens a small menu: Account, Advanced settings, Plans, Support, Log out. */
-export function UserMenu({ name, email, avatarUrl, isAdmin = false }: { name: string; email: string | null; avatarUrl: string | null; /** Admins get a way back to the admin panel. */ isAdmin?: boolean }) {
+export type UserMenuItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  /** "prefix" also counts sub-pages (e.g. /dashboard/upgrade/checkout) as this item. */
+  match?: "exact" | "prefix";
+};
+
+/** What a student sees. */
+export const STUDENT_MENU: UserMenuItem[] = [
+  { href: "/dashboard/account", label: "Account", icon: UserRound },
+  { href: "/dashboard/settings", label: "Advanced settings", icon: SlidersHorizontal },
+  { href: "/dashboard/upgrade", label: "Plans", icon: Sparkles, match: "prefix" },
+  { href: "/dashboard/support", label: "Support", icon: LifeBuoy },
+];
+
+/** What a teacher sees. */
+export const TEACHER_MENU: UserMenuItem[] = [
+  { href: "/teacher/profile", label: "My profile", icon: IdCard },
+  { href: "/teacher/account", label: "Account", icon: UserRound },
+];
+
+/** What an admin sees (the way back to the admin panel is not needed here). */
+export const ADMIN_MENU: UserMenuItem[] = [
+  { href: "/admin/account", label: "Account", icon: UserRound },
+  { href: "/dashboard", label: "Student view", icon: Sparkles },
+];
+
+type Props = {
+  name: string;
+  email: string | null;
+  avatarUrl: string | null;
+  /** The links in the menu (default: the student menu). */
+  items?: UserMenuItem[];
+  /** Adds a way back to the admin panel (admins looking at the student app). */
+  isAdmin?: boolean;
+};
+
+/** Name card at the bottom of every sidebar. Opens a small menu with the role's links and Log out. */
+export function UserMenu({ name, email, avatarUrl, items = STUDENT_MENU, isAdmin = false }: Props) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
-  const onAccount = pathname === "/dashboard/account";
-  const onSettings = pathname === "/dashboard/settings";
-  const onPlans = pathname.startsWith("/dashboard/upgrade");
-  const onSupport = pathname === "/dashboard/support";
+  const isActive = (i: UserMenuItem) => (i.match === "prefix" ? pathname.startsWith(i.href) : pathname === i.href);
+  const onAny = items.some(isActive);
 
   // Close on Escape or a click outside.
   useEffect(() => {
@@ -51,38 +87,20 @@ export function UserMenu({ name, email, avatarUrl, isAdmin = false }: { name: st
             <p className="truncate text-sm font-semibold">{name}</p>
             {email && <p className="truncate text-[13px] text-subtle-foreground">{email}</p>}
           </div>
-          <Link
-            href="/dashboard/account"
-            onClick={() => setOpen(false)}
-            aria-current={onAccount ? "page" : undefined}
-            className={cn(itemClass, onAccount && "bg-gold-soft font-semibold text-foreground")}
-          >
-            <UserRound className={cn("size-[18px]", onAccount && "text-gold-ink")} aria-hidden /> Account
-          </Link>
-          <Link
-            href="/dashboard/settings"
-            onClick={() => setOpen(false)}
-            aria-current={onSettings ? "page" : undefined}
-            className={cn(itemClass, onSettings && "bg-gold-soft font-semibold text-foreground")}
-          >
-            <SlidersHorizontal className={cn("size-[18px]", onSettings && "text-gold-ink")} aria-hidden /> Advanced settings
-          </Link>
-          <Link
-            href="/dashboard/upgrade"
-            onClick={() => setOpen(false)}
-            aria-current={onPlans ? "page" : undefined}
-            className={cn(itemClass, onPlans && "bg-gold-soft font-semibold text-foreground")}
-          >
-            <Sparkles className={cn("size-[18px]", onPlans && "text-gold-ink")} aria-hidden /> Plans
-          </Link>
-          <Link
-            href="/dashboard/support"
-            onClick={() => setOpen(false)}
-            aria-current={onSupport ? "page" : undefined}
-            className={cn(itemClass, onSupport && "bg-gold-soft font-semibold text-foreground")}
-          >
-            <LifeBuoy className={cn("size-[18px]", onSupport && "text-gold-ink")} aria-hidden /> Support
-          </Link>
+          {items.map((item) => {
+            const active = isActive(item);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                aria-current={active ? "page" : undefined}
+                className={cn(itemClass, active && "bg-gold-soft font-semibold text-foreground")}
+              >
+                <item.icon className={cn("size-[18px]", active && "text-gold-ink")} aria-hidden /> {item.label}
+              </Link>
+            );
+          })}
           {isAdmin && (
             <Link href="/admin" onClick={() => setOpen(false)} className={itemClass}>
               <ShieldCheck className="size-[18px]" aria-hidden /> Admin panel
@@ -102,7 +120,7 @@ export function UserMenu({ name, email, avatarUrl, isAdmin = false }: { name: st
         aria-controls={open ? menuId : undefined}
         className={cn(
           "flex w-full items-center gap-3 rounded-2xl px-2 py-2 text-left transition-colors hover:bg-muted",
-          (open || onAccount || onSettings || onPlans || onSupport) && "bg-muted",
+          (open || onAny) && "bg-muted",
         )}
       >
         <Avatar name={name} url={avatarUrl} />

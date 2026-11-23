@@ -6,7 +6,7 @@ import { redeemFromSignup } from "@/lib/join/redeem";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
-const ALLOWED_NEXT = new Set(["/dashboard", "/dashboard/account", "/onboarding", "/reset-password", "/"]);
+const ALLOWED_NEXT = new Set(["/dashboard", "/dashboard/account", "/teacher/account", "/admin/account", "/onboarding", "/reset-password", "/"]);
 
 /**
  * Email links (confirm signup, reset password) land here.
