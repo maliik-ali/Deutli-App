@@ -108,6 +108,9 @@ Status on 22 Nov 2026. "Built" is checked against the code and git log, not gues
 - Fonts, maps, videos and tracking: no third-party requests before consent. Account deletion already exists; schools also need to delete or export a student on request.
 - This is a checklist for Malik and a lawyer, not legal advice. Ask before building any of it.
 
+## Decisions (23 Nov 2026)
+- Teachers and admins cannot delete their own account in the app (their students, classes and workspace depend on them). Students can. A teacher account is removed only by Deutli, and its workspace, classes and join code go with it, so first check which students are assigned to them.
+
 ## Stack
 - Next.js (App Router) + TypeScript, Tailwind CSS, shadcn/ui, Lucide icons
 - Supabase: Postgres database, Auth, Storage. Use the official `@supabase/ssr` package and follow Supabase's current Next.js server-side auth guide.
