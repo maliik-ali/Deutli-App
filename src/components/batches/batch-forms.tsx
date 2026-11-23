@@ -6,6 +6,7 @@ import { Check, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { addStudentsToBatch, createBatch, deleteAnnouncement, makeBatchJoinCode, postAnnouncement, removeStudentFromBatch, setBatchArchived } from "@/lib/batches/actions";
@@ -48,8 +49,8 @@ export function NewBatchForm() {
         </div>
         <label className={field}>Exam (optional)<Input value={v.exam} onChange={(e) => setV({ ...v, exam: e.target.value })} placeholder="Goethe B1" maxLength={40} /></label>
         <div className="grid grid-cols-2 gap-3">
-          <label className={field}>Starts<Input type="date" value={v.startsOn} onChange={(e) => setV({ ...v, startsOn: e.target.value })} /></label>
-          <label className={field}>Ends<Input type="date" value={v.endsOn} onChange={(e) => setV({ ...v, endsOn: e.target.value })} /></label>
+          <div className={field}><label htmlFor="batch-start">Starts</label><DatePicker id="batch-start" value={v.startsOn} onChange={(startsOn) => setV({ ...v, startsOn })} clearable /></div>
+          <div className={field}><label htmlFor="batch-end">Ends</label><DatePicker id="batch-end" value={v.endsOn} onChange={(endsOn) => setV({ ...v, endsOn })} min={v.startsOn || undefined} clearable /></div>
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-3">

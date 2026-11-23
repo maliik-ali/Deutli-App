@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker, TimePicker } from "@/components/ui/date-picker";
 import { createOneToOneSlots, deleteFreeSlot } from "@/lib/classes/actions";
 
 const field = "grid gap-1.5 text-[13px] font-medium text-muted-foreground";
@@ -28,8 +29,8 @@ export function NewSlotsForm({ defaultDate }: { defaultDate: string }) {
       }}
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <label className={field}>Date<Input type="date" value={v.date} onChange={(e) => setV({ ...v, date: e.target.value })} required /></label>
-        <label className={field}>Start<Input type="time" value={v.time} onChange={(e) => setV({ ...v, time: e.target.value })} required /></label>
+        <div className={field}><label htmlFor="slot-date">Date</label><DatePicker id="slot-date" value={v.date} onChange={(date) => setV({ ...v, date })} min={defaultDate} /></div>
+        <div className={field}><label htmlFor="slot-time">Start</label><TimePicker id="slot-time" value={v.time} onChange={(time) => setV({ ...v, time })} /></div>
         <label className={field}>Length (minutes)<Input type="number" inputMode="numeric" min={15} max={180} step={5} value={v.durationMin} onChange={(e) => setV({ ...v, durationMin: e.target.value })} /></label>
         <label className={field}>Price (€)<Input inputMode="decimal" value={v.priceEur} onChange={(e) => setV({ ...v, priceEur: e.target.value })} placeholder="25" /></label>
         <label className={field}>Repeat weekly<Input type="number" inputMode="numeric" min={1} max={12} value={v.repeatWeeks} onChange={(e) => setV({ ...v, repeatWeeks: e.target.value })} /></label>

@@ -8,6 +8,7 @@ import { UsageMeter } from "@/components/academies/usage-meter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createWorkspace, updateWorkspace } from "@/lib/academies/actions";
 
@@ -174,10 +175,10 @@ export function WorkspaceRow({ item, plans }: { item: WorkspaceItem; plans: Plan
           Discount %
           <Input type="number" inputMode="numeric" min={0} max={100} value={discount} onChange={(e) => setDiscount(e.target.value)} />
         </label>
-        <label className={field}>
-          Discount ends
-          <Input type="date" value={until} onChange={(e) => setUntil(e.target.value)} disabled={Number(discount) === 0} />
-        </label>
+        <div className={field}>
+          <label htmlFor={`discount-${item.id}`}>Discount ends</label>
+          <DatePicker id={`discount-${item.id}`} value={until} onChange={setUntil} disabled={Number(discount) === 0} clearable />
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">

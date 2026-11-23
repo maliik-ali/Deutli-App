@@ -6,6 +6,7 @@ import { Check, Download, ExternalLink, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { createMaterial, createMaterialUploadUrl, deleteMaterial, getMaterialLink, setHomeworkDone, setMaterialBatch } from "@/lib/materials/actions";
@@ -83,7 +84,12 @@ export function NewMaterialForm({ batches, defaultBatch }: { batches: { id: stri
       </div>
       <label className={field}>Title<Input value={v.title} onChange={(e) => setV({ ...v, title: e.target.value })} maxLength={160} placeholder="Chapter 3 exercises" required /></label>
       <label className={field}>{kind === "homework" ? "Task" : "Text"} (optional)<Textarea value={v.body} onChange={(e) => setV({ ...v, body: e.target.value })} rows={4} maxLength={8000} /></label>
-      {kind === "homework" && <label className={field}>Due date<Input type="date" value={v.dueOn} onChange={(e) => setV({ ...v, dueOn: e.target.value })} className="max-w-[220px]" /></label>}
+      {kind === "homework" && (
+        <div className={`${field} max-w-[260px]`}>
+          <label htmlFor="due-date">Due date</label>
+          <DatePicker id="due-date" value={v.dueOn} onChange={(dueOn) => setV({ ...v, dueOn })} clearable />
+        </div>
+      )}
       {kind === "link" && <label className={field}>Link<Input value={v.url} onChange={(e) => setV({ ...v, url: e.target.value })} placeholder="https://" inputMode="url" /></label>}
       {(kind === "file" || kind === "homework" || kind === "notes") && (
         <div className={field}>

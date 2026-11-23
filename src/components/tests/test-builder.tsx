@@ -6,6 +6,7 @@ import { Check, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker, TimePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { createTest } from "@/lib/tests/actions";
@@ -61,8 +62,8 @@ export function TestBuilder({ batches }: { batches: { id: string; name: string }
         <label className={field}>Instructions (optional)<Textarea value={head.instructions} onChange={(e) => setHead({ ...head, instructions: e.target.value })} rows={3} maxLength={2000} /></label>
         <div className="grid gap-4 sm:grid-cols-3">
           <label className={field}>Time limit (minutes, optional)<Input type="number" inputMode="numeric" min={1} max={240} value={head.timeLimit} onChange={(e) => setHead({ ...head, timeLimit: e.target.value })} /></label>
-          <label className={field}>Open until (optional)<Input type="date" value={head.closeDate} onChange={(e) => setHead({ ...head, closeDate: e.target.value })} /></label>
-          <label className={field}>Time<Input type="time" value={head.closeTime} onChange={(e) => setHead({ ...head, closeTime: e.target.value })} disabled={!head.closeDate} /></label>
+          <div className={field}><label htmlFor="close-date">Open until (optional)</label><DatePicker id="close-date" value={head.closeDate} onChange={(closeDate) => setHead({ ...head, closeDate })} clearable /></div>
+          <div className={field}><label htmlFor="close-time">Time</label><TimePicker id="close-time" value={head.closeTime} onChange={(closeTime) => setHead({ ...head, closeTime })} disabled={!head.closeDate} /></div>
         </div>
         <fieldset className="grid gap-2">
           <legend className="text-[13px] font-medium text-muted-foreground">Share with</legend>
