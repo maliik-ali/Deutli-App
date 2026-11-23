@@ -5,6 +5,7 @@ import { CheckCircle2, FileSpreadsheet, Upload } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { importDictionarySheet, type ImportResult } from "@/lib/dictionary/actions";
+import { OptionSelect } from "@/components/ui/option-select";
 
 const MAX_BYTES = 1_800_000;
 
@@ -67,17 +68,17 @@ export function DictionaryUpload() {
           <label htmlFor="dictionary-level" className="text-sm font-semibold">
             Also add to a level list
           </label>
-          <select
+          <OptionSelect
             id="dictionary-level"
-            value={level}
-            onChange={(e) => setLevel(e.target.value)}
-            className="h-11 rounded-xl border border-input bg-card px-3 text-[15px] outline-none focus-visible:border-gold-ink"
-          >
-            <option value="">No, only the dictionary</option>
-            <option value="a1">A1 vocabulary</option>
-            <option value="a2">A2 vocabulary</option>
-            <option value="b1">B1 vocabulary</option>
-          </select>
+            value={level || "none"}
+            onChange={(v) => setLevel(v === "none" ? "" : v)}
+            options={[
+              { value: "none", label: "No, only the dictionary" },
+              { value: "a1", label: "A1 vocabulary" },
+              { value: "a2", label: "A2 vocabulary" },
+              { value: "b1", label: "B1 vocabulary" },
+            ]}
+          />
           <p className="text-[13px] text-muted-foreground">
             Students learn level lists on the Vocabulary page. A &quot;level&quot; column in the sheet works too.
           </p>

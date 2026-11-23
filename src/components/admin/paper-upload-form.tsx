@@ -15,6 +15,7 @@ import { extractPageText, openPdf, pageToJpeg, renderPage, type TextItem } from 
 import { COVER_TONES } from "@/lib/exam/catalog";
 import { SECTIONS, TELC_B1_PARTS, type PaperPart } from "@/lib/papers/template";
 import { cn } from "@/lib/utils";
+import { OptionSelect } from "@/components/ui/option-select";
 
 const FIELD =
   "w-full rounded-xl border border-input bg-card px-3.5 text-[15px] text-foreground outline-none transition-colors placeholder:text-subtle-foreground/80 focus-visible:border-ink focus-visible:outline-solid focus-visible:outline-[3px] focus-visible:outline-offset-0 focus-visible:outline-ink/20";
@@ -190,11 +191,7 @@ export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string
         </div>
         <div className="grid gap-2">
           <Label htmlFor="p-tone">Cover colour</Label>
-          <select id="p-tone" name="tone" defaultValue="navy" className={cn(FIELD, "h-11")}>
-            {COVER_TONES.map((t) => (
-              <option key={t}>{t}</option>
-            ))}
-          </select>
+          <OptionSelect id="p-tone" name="tone" defaultValue="navy" options={COVER_TONES.map((t) => ({ value: t, label: t }))} />
         </div>
         {!teacher && (
           <label className="flex items-center gap-3 self-end pb-2 text-[15px] font-medium">

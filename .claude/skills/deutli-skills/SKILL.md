@@ -58,7 +58,7 @@ Default Bootstrap look, gradients everywhere (only primary buttons use the brand
 
 ## Code rules (Malik should never have to repeat these)
 - Clean code, small files, one job per component. Reuse what exists before writing something new: `Button`, `Input`, `Select`, `Popover`, `Calendar`, `DatePicker`/`TimePicker` (`src/components/ui/date-picker.tsx`), `UserMenu`, `AccountView`, `AdminShell`, `Card`.
-- Never use browser-default controls: no `type="date"`/`time`/`datetime-local`, no raw `<select>`. Checkbox and radio use the sr-only input + styled span pattern. (`npm run check` fails on date/time inputs and new raw selects.)
+- Never use browser-default controls: no `type="date"`/`time`/`datetime-local`, no raw select elements (use `OptionSelect`). Checkbox and radio use the sr-only input + styled span pattern. (`npm run check` fails on date/time inputs and raw selects.)
 - A control that opens a portal (Popover, Select) must not sit inside a `<label>`: use `<label htmlFor>` plus a separate control.
 - Responsive by default with proper CSS grid/flex, no fixed widths that cause horizontal scroll, touch targets 44px. Check 390px and 1440px.
 - Teacher, admin and student areas share patterns (same user menu, same Account page, same cards). If one role has it, the others get it or a clear reason why not.

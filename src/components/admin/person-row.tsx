@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { assignTeacher, setTeacherRole } from "@/lib/teachers/actions";
+import { OptionSelect } from "@/components/ui/option-select";
 
 export type Person = { id: string; name: string; email: string | null; role: "student" | "teacher"; teacherId: string | null; code: string | null; students: number };
 
@@ -45,20 +46,14 @@ export function PersonRow({ person, teachers }: { person: Person; teachers: { id
             <label className="sr-only" htmlFor={`t-${person.id}`}>
               Teacher of {person.name}
             </label>
-            <select
+            <OptionSelect
               id={`t-${person.id}`}
-              value={person.teacherId ?? ""}
+              value={person.teacherId ?? "none"}
               disabled={pending}
-              onChange={(e) => run(() => assignTeacher(person.id, e.target.value))}
-              className="h-11 rounded-lg border border-input bg-background px-3 text-[14px]"
-            >
-              <option value="">No teacher (standalone)</option>
-              {teachers.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
+              onChange={(id) => run(() => assignTeacher(person.id, id === "none" ? "" : id))}
+              options={[{ value: "none", label: "No teacher (standalone)" }, ...teachers.map((t) => ({ value: t.id, label: t.name }))]}
+              className="h-11 w-auto min-w-52 text-[14px]"
+            />
           </>
         )}
         <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => run(() => setTeacherRole(person.id, person.role !== "teacher"))}>

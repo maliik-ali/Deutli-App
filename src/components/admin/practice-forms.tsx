@@ -18,6 +18,7 @@ import {
 } from "@/lib/practice/actions";
 import { LEVELS } from "@/lib/practice/levels";
 import { cn } from "@/lib/utils";
+import { OptionSelect } from "@/components/ui/option-select";
 
 const FIELD =
   "w-full rounded-xl border border-input bg-card px-3.5 text-[15px] text-foreground outline-none transition-colors placeholder:text-subtle-foreground/80 focus-visible:border-ink focus-visible:outline-solid focus-visible:outline-[3px] focus-visible:outline-offset-0 focus-visible:outline-ink/20";
@@ -54,11 +55,7 @@ export function NewSetForm() {
         </div>
         <div className="grid gap-2">
           <Label htmlFor="set-level">Level</Label>
-          <select id="set-level" name="level" defaultValue="B1" className={cn(FIELD, "h-11")}>
-            {LEVELS.map((l) => (
-              <option key={l}>{l}</option>
-            ))}
-          </select>
+          <OptionSelect id="set-level" name="level" defaultValue="B1" options={LEVELS.map((l) => ({ value: l, label: l }))} />
         </div>
       </div>
       <div className="grid gap-2">

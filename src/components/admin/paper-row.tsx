@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { COVER_TONES, type CoverTone } from "@/lib/exam/catalog";
 import { createCoverUploadUrl, deletePaper, setPaperCover, setPaperPublished, setPaperText, setPaperTone } from "@/lib/papers/actions";
 import { extractPageText, imageToJpeg, openPdf, type TextItem } from "@/lib/papers/render";
+import { OptionSelect } from "@/components/ui/option-select";
 
 type Props = { id: string; title: string; slug: string; published: boolean; hasAudio: boolean; tone: CoverTone; free: boolean; coverUrl: string | null; pages: number[] };
 
@@ -101,16 +102,13 @@ export function PaperRow({ id, title, slug, published, hasAudio, tone, free, cov
         <div className="flex flex-wrap items-center gap-3 border-t border-border pt-3">
           <label className="flex items-center gap-2 text-sm font-medium">
             Cover colour
-            <select
+            <OptionSelect
               value={tone}
               disabled={pending}
-              onChange={(e) => run(() => setPaperTone(id, e.target.value))}
-              className="h-10 rounded-xl border border-input bg-background px-3 text-sm"
-            >
-              {COVER_TONES.map((t) => (
-                <option key={t}>{t}</option>
-              ))}
-            </select>
+              onChange={(t) => run(() => setPaperTone(id, t))}
+              options={COVER_TONES.map((t) => ({ value: t, label: t }))}
+              className="h-10 w-auto min-w-32 text-sm"
+            />
           </label>
           <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => { uploadCover(e.target.files?.[0]); e.target.value = ""; }} />
           <Button type="button" variant="outline" size="sm" disabled={pending} onClick={() => fileRef.current?.click()}>

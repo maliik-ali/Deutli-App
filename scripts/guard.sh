@@ -8,10 +8,9 @@ if grep -rnE 'type="(date|time|datetime-local|month|week)"' src; then
   echo "ERROR: native date/time input found. Use DatePicker / TimePicker."; fail=1
 fi
 
-# 2) Raw <select> (use the shadcn Select). Legacy files are allowed until they are touched.
-legacy='src/components/admin/paper-upload-form.tsx|src/components/admin/practice-forms.tsx|src/components/exam/exam-player.tsx'
-if grep -rnE '<select[ >]' src | grep -vE "$legacy"; then
-  echo "ERROR: raw <select> found. Use the shadcn Select."; fail=1
+# 2) Raw <select> (use OptionSelect from src/components/ui/option-select.tsx or the shadcn Select).
+if grep -rnE '<select\b' src; then
+  echo "ERROR: raw <select> found. Use OptionSelect."; fail=1
 fi
 
 # 3) Secrets in tracked files.

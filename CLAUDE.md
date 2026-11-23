@@ -239,7 +239,6 @@ More AI-specific UI ideas: **AI Elements** by Vercel (shadcn-based components fo
 ## Quality routine (set up 23 Nov 2026, keep it running)
 - On every pull request: `.github/workflows/ci.yml` runs `npm run check` (typecheck, lint, tests, `scripts/guard.sh`) and `npm run build`.
 - Weekly: Supabase security advisor, `docs/live-db-check.sql`, `npm audit`; report to Malik in a few lines. If the weekly task is not scheduled, offer to schedule it.
-- Known legacy items the guard allows and that should be replaced when touched: raw `<select>` in `paper-upload-form.tsx`, `practice-forms.tsx`, `exam-player.tsx`.
 
 ## Progress dashboard (do this automatically, without being asked)
 Malik tracks the build in the dashboard "Deutli Build Progress": https://claude.ai/artifact/Ni2FFAVK82AdfZ8KDtHbLs

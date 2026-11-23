@@ -16,6 +16,7 @@ import type { TextItem } from "@/lib/papers/render";
 import type { SavedWord } from "@/lib/practice/plan";
 import { SECTIONS, countWords, partQuestions, type PaperPart, type PaperStructure } from "@/lib/papers/template";
 import { cn } from "@/lib/utils";
+import { OptionSelect } from "@/components/ui/option-select";
 
 type Props = {
   slug: string;
@@ -231,13 +232,13 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
             </button>
           </div>
             <div className="flex min-w-0 flex-1 basis-0 items-center justify-end gap-3">
-            <select aria-label="Go to part" value={partIndex} onChange={(e) => setPartIndex(Number(e.target.value))} className="h-10 max-w-40 rounded-full border border-border bg-card px-3 text-sm lg:hidden">
-              {parts.map((p, i) => (
-                <option key={p.id} value={i}>
-                  {SECTIONS.find((s) => s.id === p.section)?.title} · {p.title}
-                </option>
-              ))}
-            </select>
+            <OptionSelect
+              aria-label="Go to part"
+              value={String(partIndex)}
+              onChange={(i) => setPartIndex(Number(i))}
+              options={parts.map((p, i) => ({ value: String(i), label: `${SECTIONS.find((s) => s.id === p.section)?.title} · ${p.title}` }))}
+              className="h-10 max-w-40 rounded-full px-3 text-sm lg:hidden"
+            />
             <button type="button" disabled={partIndex === parts.length - 1} onClick={() => setPartIndex((i) => i + 1)} aria-label="Next part" className="grid size-10 place-items-center rounded-full bg-brand-gradient text-white disabled:opacity-40">
               <ChevronRight className="size-5" aria-hidden />
             </button>

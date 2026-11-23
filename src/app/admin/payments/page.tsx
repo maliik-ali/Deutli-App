@@ -81,7 +81,7 @@ export default async function PaymentsPage() {
           {plans.map((p) => (
             <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
               <span>
-                <span className="font-semibold">{p.name}</span> <span className="text-muted-foreground">· {p.months} months · {p.price_eur_cents != null ? `€${p.price_eur_cents / 100} (EUR plan)` : `${pkr(p.price_pkr)} (old PKR price)`}</span>
+                <span className="font-semibold">{p.name}</span> <span className="text-muted-foreground">· {p.months} {p.months === 1 ? "month" : "months"} · {p.price_eur_cents != null ? `€${p.price_eur_cents / 100} (EUR plan)` : `${pkr(p.price_pkr)} (old PKR price)`}</span>
                 {!p.active && <span className="ml-2 text-[12px] text-muted-foreground">(hidden)</span>}
               </span>
               <PlanToggle id={p.id} active={p.active} />
