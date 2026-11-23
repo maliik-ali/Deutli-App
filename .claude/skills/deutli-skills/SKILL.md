@@ -73,7 +73,8 @@ Default Bootstrap look, gradients everywhere (only primary buttons use the brand
 5. Touches login, payments, files, roles or database access? Run the security review (`/security-review`) and check RLS: every table has RLS on and a policy.
 6. Database change? Write a migration file, run it on the TEST project first, then live. Never run an untested migration on live.
 7. Work on a branch, open a pull request, check the Vercel preview. Merge to `main` only when 1 to 6 are done.
-8. Tell Malik in plain words what changed and what is still not checked.
+8. After it is live (or on the preview), open the feature in the browser pane as each role it touches and click through it: no console errors, no failed network calls, data saves and shows, empty states work. Malik can only give design feedback, so testing is my job. If I am not signed in, ask Malik to sign in in the pane (never type passwords), then test.
+9. Tell Malik in plain words what changed, what I tested and what is still not checked.
 
 ## Routine (also automatic, see CLAUDE.md "Quality routine")
 - Every pull request: GitHub Action runs `npm run check` and `npm run build`.

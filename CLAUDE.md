@@ -234,7 +234,7 @@ More AI-specific UI ideas: **AI Elements** by Vercel (shadcn-based components fo
 - Every migration runs on the test project first, then on live. Test accounts (admin, student, teacher) are listed in Claude's memory file `deutli-test-accounts`, not in the repo. Never type passwords for Malik; he logs in himself in the browser pane.
 
 ## Definition of Done (follow before every push, even if nobody asks; full list in the `deutli-skills` skill)
-1. Every changed line belongs to the request. 2. Student feature: say what teacher, school admin and Deutli admin get. 3. UI: screenshots at 1440px and 390px. 4. `npm run check` and `npm run build` green. 5. Security-touching change: security review plus RLS check. 6. Database change: migration file, test project first, then live. 7. Branch, pull request, preview, then merge. 8. Tell Malik plainly what changed and what is unchecked.
+1. Every changed line belongs to the request. 2. Student feature: say what teacher, school admin and Deutli admin get. 3. UI: screenshots at 1440px and 390px. 4. `npm run check` and `npm run build` green. 5. Security-touching change: security review plus RLS check. 6. Database change: migration file, test project first, then live. 7. Branch, pull request, preview, then merge. 8. Test the feature myself in the browser pane as each role it touches (console, network, saving, empty states); Malik gives design feedback only, he does not test. 9. Tell Malik plainly what changed, what I tested and what is unchecked.
 
 ## Quality routine (set up 23 Nov 2026, keep it running)
 - On every pull request: `.github/workflows/ci.yml` runs `npm run check` (typecheck, lint, tests, `scripts/guard.sh`) and `npm run build`.
