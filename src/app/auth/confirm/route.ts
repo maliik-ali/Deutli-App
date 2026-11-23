@@ -21,6 +21,8 @@ export async function GET(request: NextRequest) {
   // Only allow known internal pages (prevents redirecting to other websites).
   let next = ALLOWED_NEXT.has(nextParam) ? nextParam : "/";
   if (type === "recovery") next = "/reset-password";
+  // An invited person (teacher, or a student added by a school) first chooses a password.
+  if (type === "invite") next = "/reset-password?welcome=1";
 
   const fail = NextResponse.redirect(new URL("/login?error=link", request.url));
   // The provider (Google) sent the person back with an error, e.g. they pressed Cancel.

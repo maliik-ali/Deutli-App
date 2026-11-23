@@ -8,7 +8,8 @@ import { ResetPasswordForm } from "./reset-password-form";
 
 export const metadata: Metadata = { title: "Choose a new password" };
 
-export default async function ResetPasswordPage() {
+export default async function ResetPasswordPage(props: PageProps<"/reset-password">) {
+  const welcome = (await props.searchParams).welcome === "1";
   // The email link logs the user in for a short time so they can set a new password.
   const user = await getCurrentUser();
 
@@ -29,10 +30,11 @@ export default async function ResetPasswordPage() {
   return (
     <div className="grid gap-8">
       <AuthHeading
-        title="Choose a new password"
+        title={welcome ? "Welcome to Deutli" : "Choose a new password"}
         subtitle={
           <>
-            For <span className="font-medium text-foreground">{user.email}</span>
+            {welcome ? "Choose a password to finish setting up " : "For "}
+            <span className="font-medium text-foreground">{user.email}</span>
           </>
         }
       />

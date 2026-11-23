@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 
 import { AdminShell } from "@/components/admin/admin-shell";
+import { InviteTeacher } from "@/components/admin/invite-teacher";
 import { PersonRow, type Person } from "@/components/admin/person-row";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -85,6 +86,8 @@ export default async function AdminTeachersPage(props: PageProps<"/admin/teacher
           </Card>
         ))}
       </div>
+
+      <InviteTeacher />
 
       <Card>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">

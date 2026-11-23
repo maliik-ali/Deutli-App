@@ -5,6 +5,8 @@ import { z } from "zod";
 
 import { requireUser } from "@/lib/auth/dal";
 import { ensurePersonalAcademy } from "@/lib/academies/personal";
+import { allow } from "@/lib/rate-limit";
+import { siteUrl } from "@/lib/site-url";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const ADMINS = ["academy_admin", "super_admin"] as const;
@@ -56,6 +58,38 @@ export async function setTeacherRole(userId: unknown, makeTeacher: unknown): Pro
     // Every teacher gets a personal workspace (an academy of one).
     await ensurePersonalAcademy(admin, uid.data);
   }
+  revalidatePath("/admin/teachers");
+  return { ok: true };
+}
+
+const inviteSchema = z.object({ name: z.string().trim().min(1, "Enter the teacher's name.").max(120), email: z.string().trim().toLowerCase().email("Enter a valid email address.") });
+
+/**
+ * Admin: invite someone as a teacher by email. They get a link, choose a password, and land in the teacher area
+ * with their own workspace. The role is set now, on the server, so it never depends on anything the invitee does.
+ */
+export async function inviteTeacher(input: unknown): Promise<Result> {
+  const me = await requireUser(ADMINS);
+  const parsed = inviteSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const admin = createAdminClient();
+  if (!admin) return { error: "This needs SUPABASE_SECRET_KEY on the server." };
+  if (!(await allow(`invite-teacher:${me.id}`, 20, 3600))) return { error: "Too many invites. Please wait a while and try again." };
+
+  const { name, email } = parsed.data;
+  const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
+    data: { full_name: name },
+    redirectTo: `${await siteUrl()}/auth/confirm?type=invite`,
+  });
+  if (error || !data.user) {
+    if (/registered|exists/i.test(error?.message ?? "")) return { error: "That email already has an account. Find them in the list below and press Make teacher." };
+    return { error: "The invite could not be sent. Check the email address and try again." };
+  }
+
+  // Teachers skip the student onboarding questions.
+  const { error: roleError } = await admin.from("profiles").update({ role: "teacher", teacher_id: null, onboarded_at: new Date().toISOString() }).eq("id", data.user.id);
+  if (roleError) return { error: "The invite was sent, but the teacher role could not be set. Find them below and press Make teacher." };
+  await ensurePersonalAcademy(admin, data.user.id);
   revalidatePath("/admin/teachers");
   return { ok: true };
 }
