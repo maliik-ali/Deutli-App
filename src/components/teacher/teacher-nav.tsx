@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Building2, ClipboardCheck, FileText, GraduationCap, Layers, FolderOpen, LayoutDashboard, Palette, Menu, PenLine, ShieldCheck, Users, Video } from "lucide-react";
 
-import { PoweredBy } from "@/components/branding/brand-shell";
 import { TEACHER_MENU, UserMenu } from "@/components/dashboard/user-menu";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -75,7 +74,6 @@ export function TeacherSidebar(p: Props) {
         <Links todo={p.todo} isAdmin={p.isAdmin} showSchool={p.showSchool} />
       </div>
       <UserMenu name={p.name} email={p.email} avatarUrl={p.avatarUrl} items={TEACHER_MENU} />
-      <PoweredBy />
     </div>
   );
 }

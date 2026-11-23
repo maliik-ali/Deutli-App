@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { BrandShell, PoweredBy } from "@/components/branding/brand-shell";
+import { BrandShell, PoweredByFooter } from "@/components/branding/brand-shell";
 import { Logo } from "@/components/logo";
 import { MobileNav } from "@/components/dashboard/mobile-nav";
 import { NavLinks } from "@/components/dashboard/nav-links";
@@ -35,7 +35,6 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
             <NavLinks examTitle={examTitle} />
           </div>
           {footer}
-          <PoweredBy />
         </div>
       </aside>
 
@@ -45,7 +44,10 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
         <span className="size-11" aria-hidden />
       </header>
 
-      <div className="min-w-0 overflow-x-clip">{children}</div>
+      <div className="flex min-w-0 flex-col overflow-x-clip">
+        <div className="min-w-0">{children}</div>
+        <PoweredByFooter />
+      </div>
     </div>
     </BrandShell>
   );

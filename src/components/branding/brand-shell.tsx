@@ -18,8 +18,9 @@ export function BrandShell({ brand, vars, className, children }: { brand: BrandV
   );
 }
 
-export function PoweredBy() {
+/** Centred line at the very bottom of a page. Shown only when the workspace's plan keeps the Deutli credit. */
+export function PoweredByFooter() {
   const brand = useBrand();
   if (!brand?.showPoweredBy) return null;
-  return <p className="px-2 pt-2 text-[12px] text-subtle-foreground">Powered by Deutli</p>;
+  return <footer className="mt-auto px-4 py-6 text-center text-[12px] text-subtle-foreground">Powered by Deutli</footer>;
 }

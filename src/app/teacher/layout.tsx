@@ -1,4 +1,4 @@
-import { BrandShell } from "@/components/branding/brand-shell";
+import { BrandShell, PoweredByFooter } from "@/components/branding/brand-shell";
 import { Logo } from "@/components/logo";
 import { TeacherMobileNav, TeacherSidebar } from "@/components/teacher/teacher-nav";
 import { getAvatarUrl } from "@/lib/account/avatar";
@@ -39,7 +39,10 @@ export default async function TeacherLayout({ children }: LayoutProps<"/teacher"
         <Logo href="/teacher" />
         <span className="size-11" aria-hidden />
       </header>
-      <div className="min-w-0">{children}</div>
+      <div className="flex min-w-0 flex-col">
+        <div className="min-w-0">{children}</div>
+        <PoweredByFooter />
+      </div>
     </div>
     </BrandShell>
   );
