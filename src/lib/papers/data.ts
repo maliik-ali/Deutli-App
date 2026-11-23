@@ -17,7 +17,7 @@ export type PaperRow = {
   audio_path: string | null;
   /** Optional cover photo in the mock-papers bucket (needs migration 20261114000014). */
   cover_path?: string | null;
-  /** Which exam and level the paper is for (needs migration 20261123000044). Missing = telc B1. */
+  /** Which exam and level the paper is for (old papers say "telc_b1"). Missing = telc B1. */
   exam?: string;
   level?: string;
   /** Set when a teacher uploaded the paper. */

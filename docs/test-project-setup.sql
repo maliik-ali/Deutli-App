@@ -1993,10 +1993,3 @@ create policy "Read own test attempts" on public.test_attempts for select to aut
 
 grant select on public.tests, public.test_batches, public.test_questions, public.test_attempts to authenticated;
 -- No insert/update/delete grants: attempts, answers and scores are written by the server only.
-
--- ===== 20261123000044_paper_exam_level.sql =====
--- Which exam and level a paper is for, so a teacher's A2 or Goethe paper is not shown as "telc B1".
--- Existing papers are telc B1 (the default), so nothing changes for them.
-
-alter table public.mock_papers add column if not exists exam text not null default 'telc' check (exam in ('telc', 'goethe', 'oesd', 'dtz', 'other'));
-alter table public.mock_papers add column if not exists level text not null default 'b1' check (level in ('a1', 'a2', 'b1', 'b2', 'c1'));

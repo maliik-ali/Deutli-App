@@ -135,7 +135,7 @@ export function contentsLabel(structure: PaperStructure): string | null {
   return names.length === 1 ? `${names[0]} only` : names.join(" + ");
 }
 
-/** Which exam and level a paper is for. The answer-sheet format is the same for all of them. */
+/** Which exam and level a paper is for (columns `exam` and `level` of mock_papers). The answer-sheet format is the same for all of them. */
 export const PAPER_EXAMS = [
   { id: "telc", label: "telc" },
   { id: "goethe", label: "Goethe" },
@@ -150,6 +150,8 @@ export type PaperLevel = (typeof PAPER_LEVELS)[number];
 /** "telc · B1", "Goethe · A2". "Other" shows only the level. */
 export function paperExamLabel(exam: string | undefined, level: string | undefined): string {
   const lv = (level ?? "b1").toUpperCase();
-  const name = PAPER_EXAMS.find((e) => e.id === exam)?.label;
-  return !name || exam === "other" ? lv : `${name} · ${lv}`;
+  // Older papers store the exam as "telc_b1": only the part before the underscore is the exam.
+  const id = (exam ?? "").split("_")[0];
+  const name = PAPER_EXAMS.find((e) => e.id === id)?.label;
+  return !name || id === "other" ? lv : `${name} · ${lv}`;
 }
