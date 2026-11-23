@@ -1,9 +1,9 @@
 ---
-name: g2d-ui
-description: Use whenever building or changing any Deutli (formerly Gateway2Deutsch / G2D) platform or website screen, so the UI follows the Deutli design system and looks modern.
+name: deutli-skills
+description: Use whenever building or changing any Deutli (formerly Gateway2Deutsch / G2D) screen or feature. Holds the design system, the code-quality rules and the Definition of Done that every change must pass before it is pushed.
 ---
 
-# Deutli UI skill
+# Deutli skills (design system, code rules, Definition of Done)
 
 Goal: every screen looks like a current, premium SaaS product (Linear / Duolingo-for-adults feel), never like a 2015 admin template.
 
@@ -55,3 +55,26 @@ Default Bootstrap look, gradients everywhere (only primary buttons use the brand
 2. Critique them: hierarchy, spacing, alignment, consistency with the rules above. Fix issues.
 3. Accessibility check: contrast (WCAG AA), visible focus states, keyboard navigation, 44px touch targets, labelled form fields.
 4. Only then report to Malik, with the screenshot file paths.
+
+## Code rules (Malik should never have to repeat these)
+- Clean code, small files, one job per component. Reuse what exists before writing something new: `Button`, `Input`, `Select`, `Popover`, `Calendar`, `DatePicker`/`TimePicker` (`src/components/ui/date-picker.tsx`), `UserMenu`, `AccountView`, `AdminShell`, `Card`.
+- Never use browser-default controls: no `type="date"`/`time`/`datetime-local`, no raw `<select>`. Checkbox and radio use the sr-only input + styled span pattern. (`npm run check` fails on date/time inputs and new raw selects.)
+- A control that opens a portal (Popover, Select) must not sit inside a `<label>`: use `<label htmlFor>` plus a separate control.
+- Responsive by default with proper CSS grid/flex, no fixed widths that cause horizontal scroll, touch targets 44px. Check 390px and 1440px.
+- Teacher, admin and student areas share patterns (same user menu, same Account page, same cards). If one role has it, the others get it or a clear reason why not.
+- Colours come from tokens, never hard-coded hex (except where a library needs a literal, e.g. the colour picker).
+- Server checks the role and ownership on every write. Secrets stay on the server. New tables carry `academy_id` and RLS.
+
+## Definition of Done (run this list before every push, no exceptions, do not wait to be asked)
+1. Re-read the request. Does every changed line belong to it? (`git diff`)
+2. Student feature? Say what the teacher, school admin and Deutli admin get, or "nothing needed".
+3. UI changed? Screenshot at 1440px and 390px on a temporary `zz-preview-*` route, then delete it.
+4. `npm run check` is green (typecheck, lint, tests, guard script for native controls and secrets). `npm run build` passes.
+5. Touches login, payments, files, roles or database access? Run the security review (`/security-review`) and check RLS: every table has RLS on and a policy.
+6. Database change? Write a migration file, run it on the TEST project first, then live. Never run an untested migration on live.
+7. Work on a branch, open a pull request, check the Vercel preview. Merge to `main` only when 1 to 6 are done.
+8. Tell Malik in plain words what changed and what is still not checked.
+
+## Routine (also automatic, see CLAUDE.md "Quality routine")
+- Every pull request: GitHub Action runs `npm run check` and `npm run build`.
+- Every week: Supabase security advisor, `docs/live-db-check.sql`, `npm audit`, then a short report to Malik.

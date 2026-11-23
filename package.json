@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:writing": "tsx --conditions=react-server --env-file=.env.local scripts/writing-test/run.ts"
+    "test:writing": "tsx --conditions=react-server --env-file=.env.local scripts/writing-test/run.ts",
+    "typecheck": "tsc --noEmit",
+    "guard": "bash scripts/guard.sh",
+    "check": "npm run typecheck && npm run lint && npm test && npm run guard"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
