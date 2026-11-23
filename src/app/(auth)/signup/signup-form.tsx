@@ -14,6 +14,8 @@ import { signUp } from "../actions";
 export function SignupForm({ joinCode = "" }: { joinCode?: string }) {
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
+  // The code field stays hidden unless the student has a code (from a join link) or asks for it.
+  const [showCode, setShowCode] = useState(!!joinCode);
   const {
     register,
     handleSubmit,
@@ -55,43 +57,37 @@ export function SignupForm({ joinCode = "" }: { joinCode?: string }) {
         {...register("email")}
       />
       <FormField
-        id="phone"
-        label="Phone"
-        optional
-        type="tel"
-        autoComplete="tel"
-        inputMode="tel"
-        placeholder="+92 300 1234567"
-        error={errors.phone?.message}
-        hint="For class reminders from your academy."
-        {...register("phone")}
-      />
-      <FormField
         id="password"
         label="Password"
         type="password"
         autoComplete="new-password"
+        placeholder="8+ characters, a letter and a number"
         error={errors.password?.message}
-        hint={<PasswordStrength password={password} />}
+        hint={password ? <PasswordStrength password={password} showRule={false} /> : undefined}
         {...register("password")}
       />
-      <FormField
-        id="joinCode"
-        label="Teacher or school code"
-        optional
-        autoComplete="off"
-        autoCapitalize="characters"
-        placeholder="ABC234"
-        error={errors.joinCode?.message}
-        hint="Only if your teacher or school gave you one."
-        {...register("joinCode")}
-      />
+      {showCode ? (
+        <FormField
+          id="joinCode"
+          label="Teacher or school code"
+          autoComplete="off"
+          autoCapitalize="characters"
+          placeholder="ABC234"
+          error={errors.joinCode?.message}
+          {...register("joinCode")}
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowCode(true)}
+          className="inline-flex min-h-11 w-fit items-center text-[14px] font-semibold text-gold-ink underline-offset-4 hover:underline"
+        >
+          Have a teacher or school code?
+        </button>
+      )}
       <SubmitButton pending={pending} pendingText="Creating account…">
         Create account
       </SubmitButton>
-      <p className="text-center text-[13px] text-subtle-foreground">
-        Teachers and academy staff get an invite from their admin.
-      </p>
     </form>
   );
 }

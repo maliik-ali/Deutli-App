@@ -1,7 +1,8 @@
 import { passwordStrength } from "@/lib/validation/auth";
 import { cn } from "@/lib/utils";
 
-export function PasswordStrength({ password }: { password: string }) {
+/** `showRule` = also spell out the password rule (signup puts it in the field's placeholder instead). */
+export function PasswordStrength({ password, showRule = true }: { password: string; showRule?: boolean }) {
   const { score, label } = passwordStrength(password);
   return (
     <div className="grid gap-1.5">
@@ -22,7 +23,7 @@ export function PasswordStrength({ password }: { password: string }) {
             <span className="font-semibold text-foreground">{label}.</span>{" "}
           </>
         ) : null}
-        Use 8+ characters with a letter and a number.
+        {showRule && "Use 8+ characters with a letter and a number."}
       </p>
     </div>
   );
