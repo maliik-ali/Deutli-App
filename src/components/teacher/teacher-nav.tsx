@@ -7,6 +7,7 @@ import { Building2, ClipboardCheck, FileText, GraduationCap, Layers, FolderOpen,
 
 import { signOut } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/avatar";
+import { PoweredBy } from "@/components/branding/brand-shell";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -95,6 +96,7 @@ export function TeacherSidebar(p: Props) {
         <Links todo={p.todo} isAdmin={p.isAdmin} showSchool={p.showSchool} />
       </div>
       <Footer name={p.name} email={p.email} avatarUrl={p.avatarUrl} />
+      <PoweredBy />
     </div>
   );
 }

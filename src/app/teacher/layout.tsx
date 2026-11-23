@@ -1,4 +1,4 @@
-import { BrandShell, PoweredBy } from "@/components/branding/brand-shell";
+import { BrandShell } from "@/components/branding/brand-shell";
 import { Logo } from "@/components/logo";
 import { TeacherMobileNav, TeacherSidebar } from "@/components/teacher/teacher-nav";
 import { getAvatarUrl } from "@/lib/account/avatar";
@@ -33,7 +33,6 @@ export default async function TeacherLayout({ children }: LayoutProps<"/teacher"
       {!user.timeZoneSaved && <TimeZoneSync />}
       <aside className="hidden border-r border-border bg-card md:block">
         <TeacherSidebar {...props} />
-        <div className="px-6 pb-4"><PoweredBy /></div>
       </aside>
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/95 px-2 backdrop-blur md:hidden">
         <TeacherMobileNav {...props} />

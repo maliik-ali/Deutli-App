@@ -20,7 +20,7 @@ expected_funcs(f) as (values
 ),
 expected_buckets(b) as (values ('academy-logos'),('materials'))
 
-select 'table ' || t as check, case when exists (select 1 from information_schema.tables where table_schema='public' and table_name=t) then 'OK' else 'MISSING' end as result from expected_tables
+select 'table ' || t as item, case when exists (select 1 from information_schema.tables where table_schema='public' and table_name=t) then 'OK' else 'MISSING' end as result from expected_tables
 union all
 select 'column ' || t || '.' || c, case when exists (select 1 from information_schema.columns where table_schema='public' and table_name=t and column_name=c) then 'OK' else 'MISSING' end from expected_cols
 union all
