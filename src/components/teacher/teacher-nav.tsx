@@ -11,16 +11,17 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
+/** In the order a teacher works: set up a batch, add students, teach, then review. */
 const ITEMS = [
   { href: "/teacher", label: "Overview", icon: LayoutDashboard },
-  { href: "/teacher/reviews", label: "Writing reviews", icon: PenLine, badge: true },
-  { href: "/teacher/students", label: "My students", icon: Users },
   { href: "/teacher/batches", label: "Batches", icon: Layers },
+  { href: "/teacher/students", label: "My students", icon: Users },
+  { href: "/teacher/classes", label: "My classes", icon: Video },
+  { href: "/teacher/materials", label: "Material", icon: FolderOpen },
   { href: "/teacher/tests", label: "Chapter tests", icon: ClipboardCheck },
   { href: "/teacher/papers", label: "My papers", icon: FileText },
   { href: "/teacher/lessons", label: "1:1 lessons", icon: GraduationCap },
-  { href: "/teacher/materials", label: "Material", icon: FolderOpen },
-  { href: "/teacher/classes", label: "My classes", icon: Video },
+  { href: "/teacher/reviews", label: "Writing reviews", icon: PenLine, badge: true },
   { href: "/teacher/branding", label: "Branding", icon: Palette },
 ] as const;
 
