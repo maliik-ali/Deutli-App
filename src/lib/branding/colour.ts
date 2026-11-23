@@ -31,13 +31,19 @@ export function contrast(a: string, b: string): number {
   return (l1 + 0.05) / (l2 + 0.05);
 }
 
+/** Deutli's own purple and violet. Always accepted, so a school can change its name or logo without picking colours. */
+export const DEFAULT_PRIMARY = "#7161ff";
+export const DEFAULT_ACCENT = "#cb3cff";
+
 /** The main colour carries white button text, so it must reach 4.5:1 (WCAG AA). Returns a plain message if not. */
 export function primaryProblem(hex: string): string | null {
+  if (hex === DEFAULT_PRIMARY) return null;
   const c = contrast(hex, "#ffffff");
   return c >= 4.5 ? null : `White text on this colour is hard to read (contrast ${c.toFixed(1)}, needs 4.5). Choose a darker colour.`;
 }
 /** The accent only colours the end of the gradient and small details, so 3:1 is enough. */
 export function accentProblem(hex: string): string | null {
+  if (hex === DEFAULT_ACCENT) return null;
   const c = contrast(hex, "#ffffff");
   return c >= 3 ? null : `This accent is too light next to white (contrast ${c.toFixed(1)}, needs 3). Choose a darker colour.`;
 }

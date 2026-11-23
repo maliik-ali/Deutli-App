@@ -33,10 +33,12 @@ export type StudentOverview = {
   writing: { id: string; status: string; total: number | null; teacherName: string | null; createdAt: string }[];
   batches: { id: string; name: string }[];
   homework: { done: number; total: number };
+  /** Chapter tests the student handed in. A teacher sees only the tests they made; admins see all. */
+  chapterTests: { id: string; title: string; submittedAt: string; score: number; max: number }[];
 };
 
 /** Everything a teacher sees about one student. Call only after canSeeStudent. */
-export async function getStudentOverview(studentId: string): Promise<StudentOverview | null> {
+export async function getStudentOverview(studentId: string, viewer: { id: string; isAdmin: boolean }): Promise<StudentOverview | null> {
   const admin = createAdminClient();
   if (!admin) return null;
   const { data: p } = await admin.from("profiles").select("full_name").eq("id", studentId).maybeSingle();
@@ -72,6 +74,11 @@ export async function getStudentOverview(studentId: string): Promise<StudentOver
       done = ((dn ?? []) as { material_id: string }[]).filter((d) => hwIds.has(d.material_id)).length;
     }
   }
+  let testQuery = admin.from("test_attempts").select("id, submitted_at, score, max_score, tests!inner(title, owner_id)").eq("student_id", studentId).not("submitted_at", "is", null).order("submitted_at", { ascending: false }).limit(20);
+  if (!viewer.isAdmin) testQuery = testQuery.eq("tests.owner_id", viewer.id);
+  const tests = ((await testQuery).data ?? []) as unknown as { id: string; submitted_at: string; score: number | null; max_score: number | null; tests: { title: string } }[];
+  const chapterTests = tests.map((t) => ({ id: t.id, title: t.tests.title, submittedAt: t.submitted_at, score: Number(t.score ?? 0), max: Number(t.max_score ?? 0) }));
+
   return {
     name: p.full_name ?? "Student",
     readiness,
@@ -79,5 +86,6 @@ export async function getStudentOverview(studentId: string): Promise<StudentOver
     writing: reviews.map((r) => ({ id: r.id, status: r.status, total: r.total, teacherName: r.teacher_id ? (names.get(r.teacher_id) ?? null) : null, createdAt: r.created_at })),
     batches,
     homework: { done, total },
+    chapterTests,
   };
 }

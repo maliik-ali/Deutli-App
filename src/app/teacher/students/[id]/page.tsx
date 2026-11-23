@@ -14,7 +14,7 @@ export default async function TeacherStudentPage(props: PageProps<"/teacher/stud
   const user = await requireUser(["teacher", "academy_admin", "super_admin"]);
   const { id } = await props.params;
   if (!/^[0-9a-f-]{36}$/i.test(id) || !(await canSeeStudent(user.id, user.role, id))) notFound();
-  const o = await getStudentOverview(id);
+  const o = await getStudentOverview(id, { id: user.id, isAdmin: user.role !== "teacher" });
   if (!o) notFound();
   const day = (d: string) => new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: user.timeZone });
 
@@ -46,6 +46,24 @@ export default async function TeacherStudentPage(props: PageProps<"/teacher/stud
         <CardTitle>Mock exams</CardTitle>
         {o.attempts.length === 0 ? <p className="text-[14px] text-muted-foreground">Nothing finished yet.</p> : (
           <ul className="divide-y divide-border">{o.attempts.map((a) => <li key={a.id} className="flex items-center justify-between gap-3 py-2.5 text-[15px]"><span><span className="font-semibold">{a.title}</span> <span className="text-muted-foreground">· {day(a.submittedAt)}</span></span><span className="font-semibold">{a.total} / {a.max}</span></li>)}</ul>
+        )}
+      </Card>
+
+      <Card>
+        <CardTitle>Chapter tests</CardTitle>
+        {o.chapterTests.length === 0 ? (
+          <p className="text-[14px] text-muted-foreground">No chapter test handed in yet.</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {o.chapterTests.map((t) => (
+              <li key={t.id} className="flex items-center justify-between gap-3 py-2.5 text-[15px]">
+                <span>
+                  <span className="font-semibold">{t.title}</span> <span className="text-muted-foreground">· {day(t.submittedAt)}</span>
+                </span>
+                <span className="font-semibold">{t.score} / {t.max}</span>
+              </li>
+            ))}
+          </ul>
         )}
       </Card>
 
