@@ -117,6 +117,7 @@ export function NewMaterialForm({ batches, defaultBatch }: { batches: { id: stri
       </fieldset>
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={busy || picked.length === 0}>{status ?? "Share with students"}</Button>
+        {picked.length === 0 && <p className="text-[13px] text-muted-foreground">Tick at least one batch to share with.</p>}
         {error && <p role="alert" className="text-[13px] text-destructive">{error}</p>}
       </div>
     </form>

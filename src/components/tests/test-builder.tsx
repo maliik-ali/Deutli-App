@@ -134,6 +134,7 @@ export function TestBuilder({ batches }: { batches: { id: string; name: string }
       <div className="flex flex-wrap items-center gap-3">
         <Button type="button" variant="outline" onClick={() => setQs((l) => [...l, blank("mc")])}><Plus aria-hidden /> Add a question</Button>
         <Button type="button" onClick={save} disabled={busy || picked.length === 0}>{busy ? "Saving…" : "Save test"}</Button>
+        {picked.length === 0 && batches.length > 0 && <p className="text-[13px] text-muted-foreground">Tick at least one batch above to save.</p>}
         {error && <p role="alert" className="text-[13px] text-destructive">{error}</p>}
       </div>
       <p className="text-[13px] text-muted-foreground">The test is saved as a draft. Publish it on the next page when you are ready. Correct answers are kept on the server and students only see them after they hand in.</p>

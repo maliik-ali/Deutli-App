@@ -48,7 +48,9 @@ export async function AccountView({ user }: { user: CurrentUser }) {
     <>
       <header className="grid gap-2">
         <h1 className="text-[28px] leading-tight font-extrabold sm:text-[32px]">Account</h1>
-        <p className="text-[15px] text-muted-foreground">Your photo, name, plan, contact details, password, languages and time zone.</p>
+        <p className="text-[15px] text-muted-foreground">
+          {user.role === "student" ? "Your photo, name, plan, contact details, password, languages and time zone." : "Your photo, name, contact details, password and time zone."}
+        </p>
       </header>
       <div className="max-w-[960px]">
         <AccountSettings
