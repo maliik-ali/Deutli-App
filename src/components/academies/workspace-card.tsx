@@ -3,6 +3,7 @@ import { Building2 } from "lucide-react";
 import { UsageMeter } from "@/components/academies/usage-meter";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardTitle } from "@/components/ui/card";
+import { SUPPORT } from "@/lib/support/contact";
 
 export type WorkspaceCardData = {
   name: string;
@@ -43,7 +44,18 @@ export function WorkspaceCard({ data }: { data: WorkspaceCardData }) {
         {showTeachers && <UsageMeter label="Teachers" used={data.teachers} limit={data.maxTeachers} />}
       </div>
       <p className="text-[13px] text-muted-foreground">
-        {data.priceLabel}. {data.isOwner ? "To change your plan, write to us on the Support page." : "Only the workspace owner can change the plan."}
+        {data.priceLabel}.{" "}
+        {data.isOwner ? (
+          <>
+            To change your plan, email{" "}
+            <a href={`mailto:${SUPPORT.email}`} className="underline underline-offset-4 hover:text-foreground">
+              {SUPPORT.email}
+            </a>
+            .
+          </>
+        ) : (
+          "Only the workspace owner can change the plan."
+        )}
       </p>
     </Card>
   );
