@@ -36,7 +36,7 @@ export function GettingStarted({ steps }: { steps: SetupStep[] }) {
             >
               {s.done ? <Check className="size-4" strokeWidth={3} /> : i + 1}
             </span>
-            <span className="grid min-w-0 flex-1 gap-0.5">
+            <span className="grid min-w-0 flex-1 basis-48 gap-0.5">
               <span className={cn("text-[15px] font-semibold", s.done && "text-muted-foreground line-through decoration-1")}>
                 {s.title}
                 <span className="sr-only">{s.done ? " (done)" : ""}</span>
@@ -44,7 +44,7 @@ export function GettingStarted({ steps }: { steps: SetupStep[] }) {
               {!s.done && <span className="text-[13px] text-muted-foreground">{s.hint}</span>}
             </span>
             {!s.done && (
-              <Button asChild size="sm" variant={i === next ? "default" : "outline"} className="h-11 sm:h-9">
+              <Button asChild size="sm" variant={i === next ? "default" : "outline"} className="ml-11 h-11 sm:ml-0 sm:h-9">
                 <Link href={s.href}>{i === next ? "Start" : "Open"}</Link>
               </Button>
             )}
