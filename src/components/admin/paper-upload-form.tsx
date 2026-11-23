@@ -14,6 +14,7 @@ import { createTeacherPaper, createTeacherUploadUrls, setTeacherPaperText } from
 import { extractPageText, openPdf, pageToJpeg, renderPage, type TextItem } from "@/lib/papers/render";
 import { COVER_TONES } from "@/lib/exam/catalog";
 import { SECTIONS, TELC_B1_PARTS, type PaperPart } from "@/lib/papers/template";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { OptionSelect } from "@/components/ui/option-select";
 
@@ -49,14 +50,28 @@ export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string
   const [rights, setRights] = useState(false);
   const router = useRouter();
   const [doc, setDoc] = useState<PDFDocumentProxy | null>(null);
-  const [parts, setParts] = useState<PaperPart[]>(TELC_B1_PARTS);
+  const [allParts, setParts] = useState<PaperPart[]>(TELC_B1_PARTS);
+  // Not every paper has every section (a teacher may only have the Reading part).
+  const [included, setIncluded] = useState<Set<PaperPart["section"]>>(new Set(SECTIONS.map((s) => s.id)));
+  const parts = allParts.filter((p) => included.has(p.section));
+  const hasQuestions = parts.some((p) => p.kind !== "write");
+  const hasListening = included.has("hoeren");
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
-  function setPage(i: number, key: "fromPage" | "toPage", value: string) {
-    setParts((ps) => ps.map((p, j) => (j === i ? { ...p, [key]: Number(value) || 0 } : p)));
+  function setPage(id: string, key: "fromPage" | "toPage", value: string) {
+    setParts((ps) => ps.map((p) => (p.id === id ? { ...p, [key]: Number(value) || 0 } : p)));
+  }
+
+  function toggleSection(id: PaperPart["section"], on: boolean) {
+    setIncluded((cur) => {
+      const next = new Set(cur);
+      if (on) next.add(id);
+      else next.delete(id);
+      return next;
+    });
   }
 
   async function onPdf(file: File | undefined) {
@@ -79,12 +94,14 @@ export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string
     setError(null);
     setDone(null);
     if (!doc) return setError("Choose the paper PDF first.");
+    if (parts.length === 0) return setError("Switch on at least one section that this paper has.");
     for (const p of parts) {
       if (p.fromPage < 1 || p.toPage < p.fromPage || p.toPage > doc.numPages)
         return setError(`${p.title} (${SECTIONS.find((s) => s.id === p.section)?.title}): enter the PDF pages it sits on (1–${doc.numPages}).`);
     }
     const audio = f.get("audio") as File | null;
     const hasAudio = !!audio && audio.size > 0;
+    if (hasListening && !hasAudio) return setError("Add the listening audio, or switch Listening off if this paper has no audio.");
     start(async () => {
       const id = crypto.randomUUID();
       const pages = [...new Set(parts.flatMap((p) => Array.from({ length: p.toPage - p.fromPage + 1 }, (_, i) => p.fromPage + i)))].sort((a, b) => a - b);
@@ -157,6 +174,7 @@ export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string
         formEl.reset();
         setDoc(null);
         setParts(TELC_B1_PARTS);
+        setIncluded(new Set(SECTIONS.map((x) => x.id)));
         router.refresh();
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -243,6 +261,24 @@ export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string
         </p>
       </div>
 
+      <section className="grid gap-3" aria-label="Sections in this paper">
+        <div className="grid gap-1">
+          <h3 className="text-base font-bold">What does this paper have?</h3>
+          <p className="text-sm text-muted-foreground">Switch off the sections you don&apos;t have. Students only see and are marked on the sections that are on.</p>
+        </div>
+        <ul className="grid gap-2 sm:grid-cols-2">
+          {SECTIONS.map((sec) => (
+            <li key={sec.id} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
+              <label htmlFor={`sec-${sec.id}`} className="grid min-w-0 cursor-pointer">
+                <span className="text-[15px] font-semibold">{sec.english}</span>
+                <span className="text-[13px] text-muted-foreground">{sec.title}</span>
+              </label>
+              <Switch id={`sec-${sec.id}`} checked={included.has(sec.id)} onCheckedChange={(on) => toggleSection(sec.id, on)} />
+            </li>
+          ))}
+        </ul>
+      </section>
+
       {doc && (
         <>
           <section className="grid gap-3" aria-label="PDF pages">
@@ -258,14 +294,14 @@ export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string
             <h3 className="text-base font-bold">On which PDF pages does each part sit?</h3>
             <p className="text-sm text-muted-foreground">Use the page numbers shown above. A part on one page: from and to are the same.</p>
             <div className="grid gap-2">
-              {parts.map((p, i) => (
+              {parts.map((p) => (
                 <div key={p.id} className="grid grid-cols-[minmax(0,1fr)_88px_88px] items-center gap-3 rounded-xl border border-border bg-card px-4 py-2.5">
                   <span className="min-w-0 text-[15px]">
                     <span className="font-semibold">{SECTIONS.find((s) => s.id === p.section)?.title}</span> · {p.title}
                     <span className="block truncate text-[13px] text-muted-foreground">{p.task}</span>
                   </span>
-                  <Input aria-label={`${p.title} from page`} inputMode="numeric" placeholder="from" value={p.fromPage || ""} onChange={(e) => setPage(i, "fromPage", e.target.value)} />
-                  <Input aria-label={`${p.title} to page`} inputMode="numeric" placeholder="to" value={p.toPage || ""} onChange={(e) => setPage(i, "toPage", e.target.value)} />
+                  <Input aria-label={`${p.title} from page`} inputMode="numeric" placeholder="from" value={p.fromPage || ""} onChange={(e) => setPage(p.id, "fromPage", e.target.value)} />
+                  <Input aria-label={`${p.title} to page`} inputMode="numeric" placeholder="to" value={p.toPage || ""} onChange={(e) => setPage(p.id, "toPage", e.target.value)} />
                 </div>
               ))}
             </div>
@@ -273,13 +309,14 @@ export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string
         </>
       )}
 
-      <div className="grid gap-2">
-        <Label htmlFor="p-audio">
-          Listening audio <span className="font-normal text-subtle-foreground">(MP3, optional)</span>
-        </Label>
-        <input id="p-audio" name="audio" type="file" accept="audio/*" className={cn(FIELD, "h-11 py-2")} />
-      </div>
+      {hasListening && (
+        <div className="grid gap-2">
+          <Label htmlFor="p-audio">Listening audio (MP3)</Label>
+          <input id="p-audio" name="audio" type="file" accept="audio/*" className={cn(FIELD, "h-11 py-2")} />
+        </div>
+      )}
 
+      {hasQuestions && (
       <div className="grid gap-2">
         <Label htmlFor="p-answers">Answer key</Label>
         <textarea
@@ -290,8 +327,9 @@ export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string
           placeholder="Paste the Lösungsschlüssel from the PDF, e.g. 1 i 2 d 3 b … 41 + 42 – 43 –"
           className={cn(FIELD, "py-3")}
         />
-        <p className="text-sm text-muted-foreground">Copy the whole page of solutions from the PDF. We pick out the numbers and answers (all 60 are needed).</p>
+        <p className="text-sm text-muted-foreground">Copy the whole page of solutions from the PDF. We pick out the numbers and answers (every question of the sections above is needed).</p>
       </div>
+      )}
 
       <Button type="submit" disabled={pending} className="w-full sm:w-fit">
         {pending && <Loader2 className="animate-spin" aria-hidden />}

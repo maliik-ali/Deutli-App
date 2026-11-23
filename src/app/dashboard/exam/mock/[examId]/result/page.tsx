@@ -17,7 +17,7 @@ import { hasPro, requireUser } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { certDate, certScores } from "@/lib/papers/certificate";
 import { getAttempt, getPaperById } from "@/lib/papers/data";
-import { SECTIONS, WRITTEN_MAX, WRITTEN_PASS, partQuestions } from "@/lib/papers/template";
+import { SECTIONS, WRITTEN_MAX, WRITTEN_PASS, contentsLabel, partQuestions, sectionsInStructure } from "@/lib/papers/template";
 import { getWritingFeedback } from "@/lib/writing/data";
 import { getReviewForStudent, getTeacherName } from "@/lib/writing/teacher";
 
@@ -48,11 +48,17 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
   const skipped = questions.length > 0 && answeredCount / questions.length < 0.5;
 
   const scores = certScores({ name: user.fullName, title: paper.title, structure: paper.structure, result: r, date: certDate(attempt.submitted_at ?? attempt.started_at, user.timeZone), review, feedback });
+  // Only the sections this paper really has (a teacher's paper may have just Reading).
+  const have = sectionsInStructure(paper.structure).map((s) => s.id);
+  const contents = contentsLabel(paper.structure);
+  const hasWriting = have.includes("schreiben");
   const skills = [
-    { label: "Lesen", ...scores.lesen },
-    { label: "Sprachbausteine", ...scores.sprach },
-    { label: "Hören", ...scores.hoeren },
-  ];
+    { id: "lesen", label: "Lesen", ...scores.lesen },
+    { id: "sprachbausteine", label: "Sprachbausteine", ...scores.sprach },
+    { id: "hoeren", label: "Hören", ...scores.hoeren },
+  ]
+    .filter((x) => have.includes(x.id as (typeof have)[number]))
+    .map(({ label, got, max }) => ({ label, got, max }));
 
   const dots: PartDots[] = parts
     .filter((p) => p.kind !== "write")
@@ -82,7 +88,11 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
         max={r.max}
         passLine={Math.round(r.max * 0.6)}
         skills={skills}
-        caption={`Reading, grammar and listening. The pass line is ${Math.round(r.max * 0.6)}. The telc written exam has ${WRITTEN_MAX} points including 45 for writing, and you pass with ${WRITTEN_PASS}.`}
+        caption={
+          contents
+            ? `This paper has: ${contents}. The pass line is ${Math.round(r.max * 0.6)} (60%).`
+            : `Reading, grammar and listening. The pass line is ${Math.round(r.max * 0.6)}. The telc written exam has ${WRITTEN_MAX} points including 45 for writing, and you pass with ${WRITTEN_PASS}.`
+        }
       />
 
       {skipped && (
@@ -94,15 +104,17 @@ export default async function MockResultPage(props: PageProps<"/dashboard/exam/m
         </Card>
       )}
 
-      <WritingResult
-        attemptId={attempt.id}
-        text={attempt.writing}
-        words={r.writingWords}
-        initial={feedback}
-        canCheck={!hasTeacher}
-        teacher={<TeacherCheckCard attemptId={attempt.id} words={r.writingWords} hasTeacher={hasTeacher} teacherName={teacherName} review={review} />}
-        certificate={<CertificateCard attemptId={attempt.id} scores={scores} />}
-      />
+      {hasWriting && (
+        <WritingResult
+          attemptId={attempt.id}
+          text={attempt.writing}
+          words={r.writingWords}
+          initial={feedback}
+          canCheck={!hasTeacher}
+          teacher={<TeacherCheckCard attemptId={attempt.id} words={r.writingWords} hasTeacher={hasTeacher} teacherName={teacherName} review={review} />}
+          certificate={<CertificateCard attemptId={attempt.id} scores={scores} />}
+        />
+      )}
 
       {user.role === "student" && !hasPro(user) && !skipped && paper.is_free && <ProNudgeCard skills={skills} />}
 

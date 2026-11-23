@@ -116,3 +116,21 @@ export function grade(
   const max = parts.reduce((s, p) => s + p.max, 0);
   return { parts, total, max, review, writingWords: countWords(writing) };
 }
+
+/** The sections a paper really contains, in exam order. A teacher may upload only some (e.g. Reading without Listening). */
+export function sectionsInStructure(structure: PaperStructure): PaperSection[] {
+  return SECTIONS.filter((s) => structure.parts.some((p) => p.section === s.id));
+}
+
+/** How many questions the student answers (writing excluded). */
+export function questionCount(structure: PaperStructure): number {
+  return structure.parts.reduce((n, p) => n + p.count, 0);
+}
+
+/** Short plain label of what is inside, e.g. "Reading only" or "Reading + Listening"; null for the full paper. */
+export function contentsLabel(structure: PaperStructure): string | null {
+  const have = sectionsInStructure(structure);
+  if (have.length === SECTIONS.length) return null;
+  const names = have.map((s) => s.english);
+  return names.length === 1 ? `${names[0]} only` : names.join(" + ");
+}

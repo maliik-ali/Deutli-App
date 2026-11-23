@@ -14,7 +14,7 @@ import type { LanguageCode } from "@/lib/languages";
 import { saveAttempt, saveTimer, submitAttempt } from "@/lib/papers/actions";
 import type { TextItem } from "@/lib/papers/render";
 import type { SavedWord } from "@/lib/practice/plan";
-import { SECTIONS, countWords, partQuestions, type PaperPart, type PaperStructure } from "@/lib/papers/template";
+import { SECTIONS, countWords, partQuestions, questionCount, type PaperPart, type PaperStructure } from "@/lib/papers/template";
 import { cn } from "@/lib/utils";
 import { OptionSelect } from "@/components/ui/option-select";
 
@@ -142,7 +142,8 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
   }
 
   const pages = Array.from({ length: part.toPage - part.fromPage + 1 }, (_, i) => part.fromPage + i);
-  const unanswered = 60 - answered;
+  const totalQuestions = questionCount(structure);
+  const unanswered = totalQuestions - answered;
 
   return (
     <div className="flex min-h-dvh flex-col lg:h-dvh lg:overflow-hidden">
@@ -199,7 +200,7 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
           <div className="border-t border-border px-6 py-4">
             <p className="text-3xl font-extrabold">
               {answered}
-              <span className="text-lg font-semibold text-muted-foreground"> / 60</span>
+              <span className="text-lg font-semibold text-muted-foreground"> / {totalQuestions}</span>
             </p>
             <p className="text-[12px] font-semibold tracking-[0.14em] text-subtle-foreground uppercase">Answered</p>
           </div>
@@ -355,7 +356,7 @@ export function ExamPlayer({ slug, title, attemptId, structure, pageUrls, audioU
               Submit your exam?
             </h2>
             <p className="text-muted-foreground">
-              {unanswered > 0 ? `You have not answered ${unanswered} of 60 questions. ` : "You answered all 60 questions. "}
+              {unanswered > 0 ? `You have not answered ${unanswered} of ${totalQuestions} questions. ` : `You answered all ${totalQuestions} questions. `}
               After you submit, you cannot change your answers.
             </p>
             {submitError && (

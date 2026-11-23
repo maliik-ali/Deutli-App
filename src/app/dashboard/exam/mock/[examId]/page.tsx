@@ -12,9 +12,10 @@ import { ReportPaper } from "@/components/exam/report-paper";
 import { isTeacherPaper } from "@/lib/papers/teacher-data";
 import { getActivePlans, getFxRates } from "@/lib/pro/data";
 import { fromLabel, getDisplayCurrency } from "@/lib/pro/display";
-import { examShortName, getExamFormat } from "@/lib/exam/catalog";
+import { examShortName, getExamFormat, type SkillSlug } from "@/lib/exam/catalog";
 import { getLastResult, getPaperBySlug } from "@/lib/papers/data";
 import { listMocks } from "@/lib/papers/mocks";
+import { contentsLabel, sectionsInStructure } from "@/lib/papers/template";
 
 export async function generateMetadata(props: PageProps<"/dashboard/exam/mock/[examId]">): Promise<Metadata> {
   const { examId } = await props.params;
@@ -32,7 +33,18 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
   const paper = await getPaperBySlug(examId);
   const last = paper ? await getLastResult(user.id, paper.id) : null;
   const teacherPaper = paper ? await isTeacherPaper(paper.id) : false;
-  const skills = getExamFormat(user.exam).skills;
+  const format = getExamFormat(user.exam).skills;
+  // A real paper shows what it really contains (a teacher's paper may have only some sections); a cover without a paper shows the exam format.
+  const contents = paper ? contentsLabel(paper.structure) : null;
+  const skills = paper
+    ? sectionsInStructure(paper.structure).map((sec) => ({
+        slug: (sec.id === "hoeren" ? "listening" : sec.id === "schreiben" ? "writing" : "reading") as SkillSlug,
+        english: sec.english,
+        german: sec.title,
+        parts: paper.structure.parts.filter((p) => p.section === sec.id),
+        minutes: sec.minutes,
+      }))
+    : format;
   const total = skills.reduce((sum, s) => sum + s.minutes, 0);
 
   return (
@@ -55,9 +67,12 @@ export default async function MockExamPage(props: PageProps<"/dashboard/exam/moc
             </p>
             <h1 className="text-[28px] font-extrabold sm:text-[32px]">{exam.city} Modellprüfung</h1>
             <p className="text-muted-foreground">Topics: {exam.topics}</p>
-            <Badge className="mt-1">
-              <Clock aria-hidden /> About {Math.round((total / 60) * 2) / 2} hours with breaks between parts
-            </Badge>
+            <div className="mt-1 flex flex-wrap gap-2">
+              <Badge>
+                <Clock aria-hidden /> About {Math.round((total / 60) * 2) / 2} hours with breaks between parts
+              </Badge>
+              {contents && <Badge>This paper has: {contents}</Badge>}
+            </div>
           </div>
 
           <ul className="grid gap-3 sm:grid-cols-2">
