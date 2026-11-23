@@ -29,20 +29,22 @@ export function GettingStarted({ steps }: { steps: SetupStep[] }) {
       <Progress value={(done / steps.length) * 100} tone="gold" aria-label={`${done} of ${steps.length} steps done`} />
       <ol className="grid gap-2">
         {steps.map((s, i) => (
-          <li key={s.key} className={cn("flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl px-3 py-3 sm:flex-nowrap", i === next && "bg-gold-soft")}>
-            <span
-              aria-hidden
-              className={cn("grid size-7 shrink-0 place-items-center rounded-full border text-[13px] font-bold", s.done ? "border-transparent bg-success-soft text-success" : "border-border text-muted-foreground")}
-            >
-              {s.done ? <Check className="size-4" strokeWidth={3} /> : i + 1}
-            </span>
-            <span className="grid min-w-0 flex-1 basis-48 gap-0.5">
-              <span className={cn("text-[15px] font-semibold", s.done && "text-muted-foreground line-through decoration-1")}>
-                {s.title}
-                <span className="sr-only">{s.done ? " (done)" : ""}</span>
+          <li key={s.key} className={cn("flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl px-3 py-3", i === next && "bg-gold-soft")}>
+            <div className="flex min-w-0 flex-1 basis-60 items-center gap-4">
+              <span
+                aria-hidden
+                className={cn("grid size-7 shrink-0 place-items-center rounded-full border text-[13px] font-bold", s.done ? "border-transparent bg-success-soft text-success" : "border-border text-muted-foreground")}
+              >
+                {s.done ? <Check className="size-4" strokeWidth={3} /> : i + 1}
               </span>
-              {!s.done && <span className="text-[13px] text-muted-foreground">{s.hint}</span>}
-            </span>
+              <span className="grid min-w-0 gap-0.5">
+                <span className={cn("text-[15px] font-semibold", s.done && "text-muted-foreground line-through decoration-1")}>
+                  {s.title}
+                  <span className="sr-only">{s.done ? " (done)" : ""}</span>
+                </span>
+                {!s.done && <span className="text-[13px] text-muted-foreground">{s.hint}</span>}
+              </span>
+            </div>
             {!s.done && (
               <Button asChild size="sm" variant={i === next ? "default" : "outline"} className="ml-11 h-11 sm:ml-0 sm:h-9">
                 <Link href={s.href}>{i === next ? "Start" : "Open"}</Link>
