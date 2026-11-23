@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
 import { getTeacherData } from "@/lib/teachers/data";
@@ -35,9 +36,14 @@ export default async function StudentsPage() {
           </Link>
         </Card>
       ) : rows.length === 0 ? (
-        <Card className="grid gap-1 p-6">
-          <p className="font-semibold">No students yet</p>
-          <p className="text-[14px] text-muted-foreground">Share your teacher code from the Overview page, or ask the academy admin to assign students to you.</p>
+        <Card className="gap-4 p-6">
+          <div className="grid gap-1">
+            <p className="font-semibold">No students yet</p>
+            <p className="text-[14px] text-muted-foreground">Create a batch first, then add students to it or give them your join code from the Overview page.</p>
+          </div>
+          <Button asChild className="w-fit">
+            <Link href="/teacher/batches">Create a batch</Link>
+          </Button>
         </Card>
       ) : (
         <Card className="p-2 sm:p-4">

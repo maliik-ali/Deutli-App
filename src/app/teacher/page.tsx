@@ -4,12 +4,14 @@ import { CheckCircle2, Clock, Inbox, Users, type LucideIcon } from "lucide-react
 
 import { JoinCodeCard } from "@/components/join/join-code-card";
 import { WorkspaceCard } from "@/components/academies/workspace-card";
+import { GettingStarted } from "@/components/teacher/getting-started";
 import { CheckedCard, ToCheckCard } from "@/components/teacher/review-lists";
 import { Card, CardTitle } from "@/components/ui/card";
 import { formatMinor, getMyWorkspace } from "@/lib/academies/data";
 import { getOrCreateJoinCode, joinLink, qrSvg } from "@/lib/join/codes";
 import { requireUser } from "@/lib/auth/dal";
 import { getTeacherData } from "@/lib/teachers/data";
+import { getTeacherSetup } from "@/lib/teachers/setup";
 import { ensureTeacherCode } from "@/lib/writing/teacher";
 
 export const metadata: Metadata = { title: "Teacher dashboard" };
@@ -27,7 +29,7 @@ function Stat({ icon: Icon, label, value, href }: { icon: LucideIcon; label: str
 export default async function TeacherPage() {
   const user = await requireUser(["teacher", "academy_admin", "super_admin"]);
   const isAdmin = user.role !== "teacher";
-  const [data, code, workspace] = await Promise.all([getTeacherData(user.id, isAdmin), isAdmin ? null : ensureTeacherCode(user.id), isAdmin ? null : getMyWorkspace(user.id)]);
+  const [data, code, workspace, setup] = await Promise.all([getTeacherData(user.id, isAdmin), isAdmin ? null : ensureTeacherCode(user.id), isAdmin ? null : getMyWorkspace(user.id), isAdmin ? [] : getTeacherSetup(user.id)]);
   const join = workspace ? await getOrCreateJoinCode(user.id, workspace.workspace.id) : null;
   const link = join ? await joinLink(join.code) : null;
   const qr = link ? await qrSvg(link) : null;
@@ -42,6 +44,8 @@ export default async function TeacherPage() {
         <p className="text-sm font-medium text-muted-foreground">Hello {user.fullName ?? "there"}</p>
         <h1 className="text-3xl font-extrabold">Teacher dashboard</h1>
       </div>
+
+      <GettingStarted steps={setup} />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat icon={Clock} label="Waiting for you" value={todo.length} href="/teacher/reviews" />
