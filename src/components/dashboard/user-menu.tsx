@@ -7,7 +7,6 @@ import { ChevronUp, IdCard, LifeBuoy, LogOut, ShieldCheck, SlidersHorizontal, Sp
 
 import { signOut } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/avatar";
-import { ThemeSwitch } from "@/components/theme/theme-switch";
 import { cn } from "@/lib/utils";
 
 export type UserMenuItem = {
@@ -30,6 +29,7 @@ export const STUDENT_MENU: UserMenuItem[] = [
 export const TEACHER_MENU: UserMenuItem[] = [
   { href: "/teacher/profile", label: "My profile", icon: IdCard },
   { href: "/teacher/account", label: "Account", icon: UserRound },
+  { href: "/teacher/settings", label: "Advanced settings", icon: SlidersHorizontal },
 ];
 
 /** What an admin sees (the way back to the admin panel is not needed here). */
@@ -102,9 +102,6 @@ export function UserMenu({ name, email, avatarUrl, items = STUDENT_MENU, isAdmin
               </Link>
             );
           })}
-          <div className="px-2 py-1">
-            <ThemeSwitch />
-          </div>
           {isAdmin && (
             <Link href="/admin" onClick={() => setOpen(false)} className={itemClass}>
               <ShieldCheck className="size-[18px]" aria-hidden /> Admin panel

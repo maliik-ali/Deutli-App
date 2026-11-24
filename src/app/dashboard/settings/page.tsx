@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { AppearanceSettings } from "@/components/settings/appearance-settings";
 import { ExamSettings } from "@/components/settings/exam-settings";
 import { requireUser } from "@/lib/auth/dal";
 
@@ -14,8 +15,9 @@ export default async function AdvancedSettingsPage() {
         <h1 className="text-[28px] leading-tight font-extrabold sm:text-[32px]">Advanced settings</h1>
         <p className="text-[15px] text-muted-foreground">Choose the exam and level you are preparing for.</p>
       </header>
-      <div className="max-w-[960px]">
+      <div className="grid max-w-[960px] gap-6">
         <ExamSettings exam={user.exam} />
+        <AppearanceSettings />
       </div>
     </main>
   );
