@@ -30,6 +30,8 @@ export const TEACHER_MENU: UserMenuItem[] = [
   { href: "/teacher/profile", label: "My profile", icon: IdCard },
   { href: "/teacher/account", label: "Account", icon: UserRound },
   { href: "/teacher/settings", label: "Advanced settings", icon: SlidersHorizontal },
+  { href: "/teacher/plan", label: "Plan", icon: Sparkles },
+  { href: "/teacher/support", label: "Support", icon: LifeBuoy },
 ];
 
 /** What an admin sees (the way back to the admin panel is not needed here). */

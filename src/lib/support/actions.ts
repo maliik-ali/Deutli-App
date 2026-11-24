@@ -10,7 +10,7 @@ import { allow } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MAX_FEEDBACK, MIN_FEEDBACK, SUPPORT } from "./contact";
 
-const LEARNERS = ["student", "academy_admin", "super_admin"] as const;
+const LEARNERS = ["student", "teacher", "academy_admin", "super_admin"] as const;
 const ADMINS = ["academy_admin", "super_admin"] as const;
 const GENERIC = "That didn't work. Please wait a moment and try again.";
 type Result = { error: string } | { ok: true };
@@ -22,7 +22,7 @@ const input = z.object({
   page: z.string().trim().max(200).regex(/^\/[^\s]*$/).optional(),
 });
 
-/** A student sends a message to Deutli. Limited to 5 an hour so the inbox stays readable. */
+/** A student or teacher sends a message to Deutli. Limited to 5 an hour so the inbox stays readable. */
 export async function sendFeedback(raw: unknown): Promise<Result> {
   const user = await requireUser(LEARNERS);
   const p = input.safeParse(raw);
@@ -33,6 +33,7 @@ export async function sendFeedback(raw: unknown): Promise<Result> {
   const { error } = await admin.from("feedback").insert({ user_id: user.id, kind: p.data.kind, message: p.data.message, page: p.data.page ?? null, email: user.email });
   if (error) return { error: GENERIC };
   revalidatePath("/dashboard/support");
+  revalidatePath("/teacher/support");
   revalidatePath("/admin/feedback");
   // Tell the Deutli inbox (best effort), so nobody has to keep checking the admin page.
   await sendEmail({ to: SUPPORT.email, replyTo: user.email ?? undefined, ...adminNewFeedbackEmail({ kind: p.data.kind, name: user.fullName, email: user.email, message: p.data.message, page: p.data.page ?? null }) });
