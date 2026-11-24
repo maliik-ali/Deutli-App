@@ -8,14 +8,6 @@
  */
 :root {
   /* Brand (from the Deutli Figma file) */
-  --ink: #12245c; /* raised navy panel */
-  --ink-foreground: #ffffff;
-  --gold: #7161ff; /* Brand/Primary purple (token name kept for compatibility) */
-  --gold-foreground: #ffffff;
-  --gold-ink: #a79fff; /* readable purple for links on dark */
-  --gold-soft: #1d2560; /* active nav fill */
-  --brand-cyan: #00c2ff; /* Brand/Secondary */
-  --brand-magenta: #cb3cff; /* Brand/Territory */
   --brand-gradient: linear-gradient(135deg, #7f25fb 30%, #cb3cff 91%);
   /* Mock exam cover tones */
   --cover-navy: #1b2c78;
@@ -27,6 +19,26 @@
   --cover-ocean: #0a4f8a;
   --cover-paper: #eef0ff; /* light lower half of a cover */
   --cover-paper-ink: #0b1739;
+
+  --gold-foreground: #ffffff;
+  --radius: 1rem; /* 16px cards */
+}
+
+/*
+ * Colour themes. Dark is the default (and what a forced-dark area such as the sign-in showcase uses);
+ * light switches on with <html data-theme="light"> (see src/components/theme/). Every light pair was
+ * checked for WCAG AA: text 4.5:1, icons/borders of controls 3:1 (see docs/light-theme-contrast.md).
+ */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #12245c; /* raised navy panel */
+  --ink-foreground: #ffffff;
+  --gold: #7161ff; /* Brand/Primary purple (token name kept for compatibility) */
+  --gold-ink: #a79fff; /* readable purple for links on dark */
+  --gold-soft: #1d2560; /* active nav fill */
+  --brand-cyan: #00c2ff; /* Brand/Secondary */
+  --brand-magenta: #cb3cff; /* Brand/Territory */
   --success: #39ffac;
   --success-soft: #0e3b33;
 
@@ -58,8 +70,45 @@
   --answer-right-soft: var(--success-soft);
   --answer-wrong: #ff7d9c;
   --answer-wrong-soft: rgb(255 125 156 / 0.08);
+}
 
-  --radius: 1rem; /* 16px cards */
+[data-theme="light"] {
+  color-scheme: light;
+  --ink: #eceffa; /* raised panel and popovers */
+  --ink-foreground: #0b1739;
+  --gold: #6552f5; /* white text on it is 5.2:1 (the dark-theme purple is 4.3:1) */
+  --gold-ink: #4f3fd8; /* purple text and icons on white */
+  --gold-soft: #e6e3ff;
+  --brand-cyan: #0678a3;
+  --brand-magenta: #a32bd1;
+  --success: #0a7a4c;
+  --success-soft: #dcf5e9;
+
+  --background: #f4f6fc;
+  --foreground: #0b1739;
+  --card: #ffffff;
+  --card-foreground: #0b1739;
+  --popover: #ffffff;
+  --popover-foreground: #0b1739;
+  --muted: #eceffa;
+  --muted-foreground: #4a5578;
+  --subtle-foreground: #4a5578;
+  --border: #d3d9ea;
+  --input: #7b86a8; /* control outlines need 3:1 */
+  --ring: #5b49e6;
+
+  --primary: var(--gold);
+  --primary-foreground: var(--gold-foreground);
+  --secondary: #eceffa;
+  --secondary-foreground: #0b1739;
+  --accent: var(--gold-soft);
+  --accent-foreground: #0b1739;
+  --destructive: #c42b3d;
+  --destructive-soft: #fde9ec;
+  --answer-right: var(--success);
+  --answer-right-soft: var(--success-soft);
+  --answer-wrong: #b8234a;
+  --answer-wrong-soft: rgb(184 35 74 / 0.08);
 }
 
 @theme inline {
@@ -163,7 +212,6 @@
   }
   html {
     -webkit-text-size-adjust: 100%;
-    color-scheme: dark;
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;

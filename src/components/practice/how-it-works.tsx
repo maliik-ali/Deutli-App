@@ -43,7 +43,7 @@ export function HowItWorksCard({ steps }: { steps: { title: string; body: string
                   transition={{ duration: 0.6, delay: 0.5 + i * 0.35 }}
                 />
               )}
-              <span className="relative z-10 grid size-10 place-items-center rounded-full border border-white/20 bg-[#0b1739] text-[13px] font-bold tabular-nums">{String(i + 1).padStart(2, "0")}</span>
+              <span className="relative z-10 grid size-10 place-items-center rounded-full border border-border bg-card text-[13px] font-bold tabular-nums">{String(i + 1).padStart(2, "0")}</span>
               <div className="grid gap-1 pt-0.5">
                 <p className="text-[19px] leading-tight font-bold">{s.title}</p>
                 <p className="text-[14px] text-ink-foreground/70">{s.body}</p>

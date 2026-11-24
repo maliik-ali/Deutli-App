@@ -43,7 +43,7 @@ const PRO: { t: string }[] = [
   { t: "A2, B1 and B2 vocabulary lists" },
 ];
 
-const TICK = "mt-0.5 size-4 shrink-0 text-[#39ffac]";
+const TICK = "mt-0.5 size-4 shrink-0 text-success";
 
 export function PlanCompare({ plans, isPro, requested, cardReady }: { plans: PlanView[]; isPro: boolean; requested: boolean; cardReady: boolean }) {
   // Start on the second plan (usually the 3-month exam pass).
@@ -123,7 +123,7 @@ export function PlanCompare({ plans, isPro, requested, cardReady }: { plans: Pla
         </BlurFade>
 
         <BlurFade inView delay={0.1} className="order-first md:order-none">
-          <div className="relative flex h-full flex-col overflow-hidden rounded-[20px] border border-[#7161ff]/60 bg-[#0d1a45] p-6 shadow-[0_0_80px_rgba(113,97,255,0.25)] sm:p-8">
+          <div data-theme="dark" className="relative flex h-full flex-col overflow-hidden rounded-[20px] border border-[#7161ff]/60 bg-[#0d1a45] text-foreground p-6 shadow-[0_0_80px_rgba(113,97,255,0.25)] sm:p-8">
             <ShineBorder shineColor={["#7f25fb", "#cb3cff", "#00c2ff"]} borderWidth={2} />
             <span className="absolute top-5 right-5 rounded-full bg-brand-gradient px-3 py-1 text-[11px] font-bold tracking-wide text-white sm:top-6 sm:right-6">BEST FOR EXAM PREP</span>
             <h2 className="text-xl font-bold">Pro</h2>

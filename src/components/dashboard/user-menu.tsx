@@ -7,6 +7,7 @@ import { ChevronUp, IdCard, LifeBuoy, LogOut, ShieldCheck, SlidersHorizontal, Sp
 
 import { signOut } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/avatar";
+import { ThemeSwitch } from "@/components/theme/theme-switch";
 import { cn } from "@/lib/utils";
 
 export type UserMenuItem = {
@@ -101,6 +102,9 @@ export function UserMenu({ name, email, avatarUrl, items = STUDENT_MENU, isAdmin
               </Link>
             );
           })}
+          <div className="px-2 py-1">
+            <ThemeSwitch />
+          </div>
           {isAdmin && (
             <Link href="/admin" onClick={() => setOpen(false)} className={itemClass}>
               <ShieldCheck className="size-[18px]" aria-hidden /> Admin panel

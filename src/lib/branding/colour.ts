@@ -53,11 +53,16 @@ export function themeVars(primary: string, accent: string): Record<string, strin
   // Readable text colour on the dark card: lighten the main colour until it reaches 4.5:1.
   let ink = primary;
   for (let t = 0; t <= 1 && contrast(ink, NAVY_CARD) < 4.5; t += 0.05) ink = mix(primary, "#ffffff", t);
+  // Light theme: the same colour, darkened until it reads on a pale purple tint (4.5:1).
+  const softLight = mix("#ffffff", primary, 0.14);
+  let inkLight = primary;
+  for (let t = 0; t <= 1 && contrast(inkLight, softLight) < 4.5; t += 0.05) inkLight = mix(primary, "#000000", t);
+  // light-dark() picks the right value for the theme the element is in (color-scheme is set by the theme).
   return {
     "--gold": primary,
-    "--gold-ink": ink,
-    "--gold-soft": mix(NAVY_BG, primary, 0.28),
-    "--ring": ink,
+    "--gold-ink": `light-dark(${inkLight}, ${ink})`,
+    "--gold-soft": `light-dark(${softLight}, ${mix(NAVY_BG, primary, 0.28)})`,
+    "--ring": `light-dark(${inkLight}, ${ink})`,
     "--brand-magenta": accent,
     "--brand-gradient": `linear-gradient(135deg, ${primary} 30%, ${accent} 91%)`,
   };

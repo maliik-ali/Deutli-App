@@ -263,17 +263,17 @@ export function ExamPlayer({ slug, title, examLabel, attemptId, structure, pageU
           <div className="absolute top-1/2 right-2 z-10 flex -translate-y-1/2 flex-col items-center gap-3 sm:right-[18px]">
           <div role="group" aria-label="Mark the paper" className="flex flex-col items-center gap-0.5 rounded-full bg-ink px-1.5 py-1.5 text-ink-foreground shadow-lg shadow-black/40">
             {([["move", Hand, "Scroll and read"], ["highlight", Highlighter, "Highlight"], ["note", StickyNote, "Add a note"], ["erase", Eraser, "Remove a mark"]] as const).map(([id, Icon, label]) => (
-              <button key={id} type="button" aria-label={label} title={label} aria-pressed={tool === id} onClick={() => setTool(id)} className={cn("grid size-9 place-items-center rounded-full transition-colors", tool === id ? "bg-gold text-gold-foreground" : "hover:bg-white/10")}>
+              <button key={id} type="button" aria-label={label} title={label} aria-pressed={tool === id} onClick={() => setTool(id)} className={cn("grid size-9 place-items-center rounded-full transition-colors", tool === id ? "bg-gold text-gold-foreground" : "hover:bg-foreground/10")}>
                 <Icon className="size-4" aria-hidden />
               </button>
             ))}
           </div>
           <div role="group" aria-label="Zoom" className="flex flex-col items-center gap-0.5 rounded-full bg-ink px-1.5 py-1.5 text-ink-foreground shadow-lg shadow-black/40">
-            <button type="button" aria-label="Zoom in" onClick={() => setZoom((z) => Math.min(1.5, +(z + 0.1).toFixed(1)))} className="grid size-9 place-items-center rounded-full hover:bg-white/10">
+            <button type="button" aria-label="Zoom in" onClick={() => setZoom((z) => Math.min(1.5, +(z + 0.1).toFixed(1)))} className="grid size-9 place-items-center rounded-full hover:bg-foreground/10">
               <Plus className="size-4" aria-hidden />
             </button>
             <span className="py-0.5 text-center text-[12px] font-semibold tabular-nums" aria-live="polite">{Math.round(zoom * 100)}%</span>
-            <button type="button" aria-label="Zoom out" onClick={() => setZoom((z) => Math.max(0.6, +(z - 0.1).toFixed(1)))} className="grid size-9 place-items-center rounded-full hover:bg-white/10">
+            <button type="button" aria-label="Zoom out" onClick={() => setZoom((z) => Math.max(0.6, +(z - 0.1).toFixed(1)))} className="grid size-9 place-items-center rounded-full hover:bg-foreground/10">
               <Minus className="size-4" aria-hidden />
             </button>
           </div>

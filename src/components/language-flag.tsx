@@ -29,7 +29,7 @@ export function LanguageFlag({ code, className }: { code: string; className?: st
     <span
       aria-hidden
       className={cn(
-        "inline-grid size-6 shrink-0 place-items-center overflow-hidden rounded-full ring-1 ring-white/15",
+        "inline-grid size-6 shrink-0 place-items-center overflow-hidden rounded-full ring-1 ring-foreground/15",
         className,
       )}
     >
