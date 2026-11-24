@@ -48,14 +48,16 @@ export async function signUp(input: unknown): Promise<ActionResult> {
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   if (!getSupabaseEnv()) return { error: NOT_CONFIGURED_MESSAGE };
 
-  const { fullName, email, phone, password, joinCode } = parsed.data;
+  const { fullName, email, phone, password, joinCode, intent } = parsed.data;
+  // New teachers set up their workspace next; new students answer the student questions.
+  const next = intent === "teacher" ? "/onboarding/teacher" : "/onboarding";
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       // New students answer the onboarding questions right after confirming their email.
-      emailRedirectTo: `${await siteUrl()}/auth/confirm?next=/onboarding`,
+      emailRedirectTo: `${await siteUrl()}/auth/confirm?next=${next}`,
       // Only name and phone are sent. The role is always set to "student"
       // by the database, never from this form.
       data: { full_name: fullName, phone: phone || null, ...(joinCode ? { join_code: joinCode } : {}) },
@@ -66,7 +68,7 @@ export async function signUp(input: unknown): Promise<ActionResult> {
   // If email confirmation is switched off in Supabase, the user is logged in now.
   if (data.session) {
     if (data.user) await redeemFromSignup(data.user);
-    redirect("/onboarding");
+    redirect(next);
   }
 
   redirect(`/check-email?type=signup&email=${encodeURIComponent(email)}`);
@@ -113,7 +115,7 @@ export async function updatePassword(input: unknown): Promise<ActionResult> {
 export type SocialProvider = "google";
 
 /** Continue with Google. Sends the browser to Google; they come back to /auth/confirm. */
-export async function signInWithProvider(provider: unknown): Promise<ActionResult> {
+export async function signInWithProvider(provider: unknown, nextPage?: unknown): Promise<ActionResult> {
   if (provider !== "google") return { error: GENERIC_ERROR };
   if (!getSupabaseEnv()) return { error: NOT_CONFIGURED_MESSAGE };
 
@@ -121,7 +123,7 @@ export async function signInWithProvider(provider: unknown): Promise<ActionResul
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     // "/" sends the user to the right page for their role; new students land in onboarding from the dashboard.
-    options: { redirectTo: `${await siteUrl()}/auth/confirm?next=/` },
+    options: { redirectTo: `${await siteUrl()}/auth/confirm?next=${nextPage === "/onboarding/teacher" ? "/onboarding/teacher" : "/"}` },
   });
   if (error || !data.url) {
     return { error: "Sign-in with Google isn't available yet. Use your email and password for now." };

@@ -11,7 +11,7 @@ import { SubmitButton } from "@/components/auth/submit-button";
 import { signupSchema, type SignupInput } from "@/lib/validation/auth";
 import { signUp } from "../actions";
 
-export function SignupForm({ joinCode = "" }: { joinCode?: string }) {
+export function SignupForm({ joinCode = "", intent = "student" }: { joinCode?: string; intent?: "student" | "teacher" }) {
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
   // The code field stays hidden unless the student has a code (from a join link) or asks for it.
@@ -23,7 +23,7 @@ export function SignupForm({ joinCode = "" }: { joinCode?: string }) {
     formState: { errors },
   } = useForm<SignupInput>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { fullName: "", email: "", phone: "", password: "", joinCode },
+    defaultValues: { fullName: "", email: "", phone: "", password: "", joinCode, intent },
   });
   const password = useWatch({ control, name: "password" });
 
@@ -66,7 +66,7 @@ export function SignupForm({ joinCode = "" }: { joinCode?: string }) {
         hint={password ? <PasswordStrength password={password} showRule={false} /> : undefined}
         {...register("password")}
       />
-      {showCode ? (
+      {intent === "teacher" ? null : showCode ? (
         <FormField
           id="joinCode"
           label="Teacher or school code"
@@ -86,7 +86,7 @@ export function SignupForm({ joinCode = "" }: { joinCode?: string }) {
         </button>
       )}
       <SubmitButton pending={pending} pendingText="Creating account…">
-        Create account
+        {intent === "teacher" ? "Create teacher account" : "Create account"}
       </SubmitButton>
     </form>
   );

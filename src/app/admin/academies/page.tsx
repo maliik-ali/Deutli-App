@@ -6,6 +6,7 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { countWorkspaceStudents, formatMinor, getWorkspacePlans, WORKSPACE_COLUMNS, type Workspace } from "@/lib/academies/data";
 import { requireUser } from "@/lib/auth/dal";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { signupSummary, type SignupRow } from "@/lib/teachers/signup-summary";
 
 export const metadata: Metadata = { title: "Workspaces" };
 
@@ -26,11 +27,13 @@ export default async function AdminAcademiesPage() {
       priceLabel: p.code === "institute" ? `from ${formatMinor(p.eur_cents, "EUR")}` : p.eur_cents ? `${formatMinor(p.eur_cents, "EUR")} / month` : "Free",
       removeBranding: p.features.includes("remove_branding"),
     }));
-    const [counts, owners, teacherCounts] = await Promise.all([
+    const [counts, owners, teacherCounts, signups] = await Promise.all([
       countWorkspaceStudents(academies.map((a) => a.id)),
       admin.from("profiles").select("id, full_name").in("id", academies.map((a) => a.owner_id).filter((x): x is string => !!x)),
       admin.from("academy_members").select("academy_id").in("academy_id", academies.map((a) => a.id)),
+      admin.from("workspace_signups").select("academy_id, account_type, exams, levels, student_count, tools, wants").in("academy_id", academies.map((a) => a.id)),
     ]);
+    const answers = new Map(((signups.data ?? []) as (SignupRow & { academy_id: string })[]).map((r) => [r.academy_id, r]));
     const ownerName = new Map(((owners.data ?? []) as { id: string; full_name: string | null }[]).map((o) => [o.id, o.full_name ?? "Unnamed"]));
     const tCount = new Map<string, number>();
     for (const r of (teacherCounts.data ?? []) as { academy_id: string }[]) tCount.set(r.academy_id, (tCount.get(r.academy_id) ?? 0) + 1);
@@ -58,6 +61,7 @@ export default async function AdminAcademiesPage() {
         discountPercent: a.discount_percent,
         discountUntil: a.discount_until ?? "",
         showPoweredBy: a.show_powered_by,
+        signupSummary: answers.has(a.id) ? signupSummary(answers.get(a.id)!) : null,
       };
     });
   }

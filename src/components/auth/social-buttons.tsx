@@ -19,7 +19,7 @@ export function GoogleMark() {
 }
 
 /** "Continue with Google" for the login and signup pages. */
-export function SocialButtons() {
+export function SocialButtons({ next }: { next?: "/onboarding/teacher" }) {
   const [pending, start] = useTransition();
   const [which, setWhich] = useState<SocialProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +28,7 @@ export function SocialButtons() {
     setError(null);
     setWhich(provider);
     start(async () => {
-      const r = await signInWithProvider(provider);
+      const r = await signInWithProvider(provider, next);
       if (r?.error) {
         setError(r.error);
         setWhich(null);

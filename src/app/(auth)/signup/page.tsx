@@ -5,6 +5,7 @@ import { BrandShell } from "@/components/branding/brand-shell";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { getBrandForSignup } from "@/lib/branding/data";
 import { redirectIfLoggedIn } from "@/lib/auth/dal";
+import { RoleChoice } from "@/components/auth/role-choice";
 import { SocialButtons } from "@/components/auth/social-buttons";
 import { SignupForm } from "./signup-form";
 
@@ -15,6 +16,10 @@ export default async function SignupPage(props: PageProps<"/signup">) {
   const sp = await props.searchParams;
   const join = typeof sp.join === "string" && /^[A-Za-z0-9]{6}$/.test(sp.join) ? sp.join.toUpperCase() : "";
   const academy = typeof sp.academy === "string" ? sp.academy.toLowerCase() : undefined;
+  const as = sp.as === "teacher" ? "teacher" : sp.as === "student" ? "student" : null;
+  // No join link and no choice yet: ask who is signing up.
+  if (!join && !academy && !as) return <RoleChoice />;
+  const teacher = as === "teacher" && !join && !academy;
   // A join code or a school link decides whose look the signup page has (colours, name, logo).
   const brand = await getBrandForSignup({ join: join || undefined, academy });
   return (
@@ -27,16 +32,24 @@ export default async function SignupPage(props: PageProps<"/signup">) {
         </p>
       )}
       <AuthHeading
-        title="Create your account"
-        subtitle="Free student account — start preparing for German B1 today."
+        title={teacher ? "Create your teacher account" : "Create your account"}
+        subtitle={teacher ? "Free to start. Set up your workspace and invite your students in a minute." : "Free student account — start preparing for German B1 today."}
       />
-      <SocialButtons />
-      <SignupForm joinCode={join} />
+      <SocialButtons next={teacher ? "/onboarding/teacher" : undefined} />
+      <SignupForm joinCode={join} intent={teacher ? "teacher" : "student"} />
       <p className="text-center text-[13px] text-muted-foreground">
         By creating an account you agree to our{" "}
         <Link href="/terms" className="underline underline-offset-4 hover:text-foreground">Terms</Link> and{" "}
         <Link href="/privacy" className="underline underline-offset-4 hover:text-foreground">Privacy policy</Link>.
       </p>
+      {!join && !academy && (
+        <p className="text-center text-sm text-muted-foreground">
+          {teacher ? "Not a teacher?" : "Teach German?"}{" "}
+          <Link href={teacher ? "/signup?as=student" : "/signup?as=teacher"} className="py-3 font-semibold text-foreground underline underline-offset-4 hover:text-gold-ink">
+            {teacher ? "Sign up as a student" : "Sign up as a teacher or school"}
+          </Link>
+        </p>
+      )}
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
         <Link href="/login" className="py-3 font-semibold text-foreground underline underline-offset-4 hover:text-gold-ink">

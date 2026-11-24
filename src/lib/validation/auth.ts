@@ -37,6 +37,8 @@ export const signupSchema = z.object({
   email: emailRules,
   phone: phoneRules,
   password: passwordRules,
+  /** Which signup button was used. Only decides the next page; the role is never taken from it. */
+  intent: z.enum(["student", "teacher"]).optional(),
   /** Optional teacher or school code (6 letters/digits). */
   joinCode: z
     .string()

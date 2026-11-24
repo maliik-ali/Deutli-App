@@ -29,6 +29,8 @@ export type WorkspaceItem = {
   discountPercent: number;
   discountUntil: string;
   showPoweredBy: boolean;
+  /** What the owner told us when they signed up on their own (null for workspaces made by hand). */
+  signupSummary: string | null;
 };
 
 function useRun() {
@@ -154,6 +156,7 @@ export function WorkspaceRow({ item, plans }: { item: WorkspaceItem; plans: Plan
             Owner {item.ownerName}
             {item.ownerEmail ? ` · ${item.ownerEmail}` : ""}
           </p>
+          {item.signupSummary && <p className="mt-1 text-[13px] text-muted-foreground">They told us: {item.signupSummary}</p>}
         </div>
         <div className="flex gap-2">
           <Badge variant="outline">{item.kind === "school" ? "School" : "Solo teacher"}</Badge>
