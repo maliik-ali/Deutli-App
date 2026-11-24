@@ -54,6 +54,7 @@ export default async function TeacherPage() {
         <Stat icon={CheckCircle2} label={avg != null ? `Checked · average ${avg} / 45` : "Checked"} value={done.length} href="/teacher/reviews" />
       </div>
 
+      <div className={join && link && qr ? "grid items-stretch gap-6 lg:grid-cols-2" : "grid gap-6"}>
       {workspace && (
         <WorkspaceCard
           data={{
@@ -73,6 +74,7 @@ export default async function TeacherPage() {
       )}
 
       {join && link && qr && <JoinCodeCard code={join.code} active={join.active} link={link} qr={qr} />}
+      </div>
 
       {code && !join && (
         <Card className="grid gap-1 p-6">

@@ -23,7 +23,7 @@ export type WorkspaceCardData = {
 export function WorkspaceCard({ data }: { data: WorkspaceCardData }) {
   const showTeachers = data.kind === "school";
   return (
-    <Card className="grid gap-4 p-6">
+    <Card className="h-full content-start gap-4 p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-gold-soft text-gold-ink">
@@ -41,10 +41,10 @@ export function WorkspaceCard({ data }: { data: WorkspaceCardData }) {
       </div>
       <div className={showTeachers ? "grid gap-4 sm:grid-cols-2" : "grid gap-4"}>
         <UsageMeter label="Students" used={data.students} limit={data.maxStudents} />
-        {showTeachers && <UsageMeter label="Teachers" used={data.teachers} limit={data.maxTeachers} />}
+        {showTeachers && <UsageMeter label="Teachers" used={data.teachers} limit={data.maxTeachers} alert={false} />}
       </div>
       <p className="text-[13px] text-muted-foreground">
-        {data.priceLabel}.{" "}
+        {data.priceLabel !== "Free plan" && `${data.priceLabel}. `}
         {data.isOwner ? (
           <>
             To change your plan, email{" "}
