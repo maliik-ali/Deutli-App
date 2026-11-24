@@ -37,7 +37,7 @@ export default async function TeacherLayout({ children }: LayoutProps<"/teacher"
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/95 px-2 backdrop-blur md:hidden">
         <TeacherMobileNav {...props} />
         <Logo href="/teacher" />
-        <span className="size-11" aria-hidden />
+        <span className="size-11 shrink-0" aria-hidden />
       </header>
       <div className="flex min-w-0 flex-col">
         <div className="min-w-0">{children}</div>

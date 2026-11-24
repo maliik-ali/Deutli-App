@@ -20,18 +20,19 @@ export function Logo({
   return (
     <Link
       href={href}
-      className={cn("inline-flex items-center gap-2.5 rounded-lg", className)}
+      className={cn("inline-flex max-w-full min-w-0 items-center gap-2.5 rounded-lg", className)}
       aria-label={`${name} home`}
+      title={name}
     >
       {brand?.logoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- the school's own logo from our storage, any size
-        <img src={brand.logoUrl} alt="" className="h-9 w-auto max-w-[120px] rounded-md object-contain" />
+        <img src={brand.logoUrl} alt="" className="h-9 w-auto max-w-[120px] shrink-0 rounded-md object-contain" />
       ) : brand?.name ? null : (
         <Image src="/deutli-owl.png" alt="" width={36} height={38} priority className="h-9 w-auto" />
       )}
       <span
         className={cn(
-          "font-heading text-[18px] font-bold",
+          "min-w-0 truncate font-heading text-[18px] font-bold",
           tone === "light" ? "text-ink-foreground" : "text-foreground"
         )}
       >
