@@ -19,7 +19,7 @@ export function GoogleMark() {
 }
 
 /** "Continue with Google" for the login and signup pages. */
-export function SocialButtons({ next }: { next?: "/onboarding/teacher" }) {
+export function SocialButtons({ next, layout = "top" }: { next?: "/onboarding/teacher"; layout?: "top" | "bottom" }) {
   const [pending, start] = useTransition();
   const [which, setWhich] = useState<SocialProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,19 +37,23 @@ export function SocialButtons({ next }: { next?: "/onboarding/teacher" }) {
   }
 
   const busy = (p: SocialProvider) => pending && which === p;
+  const divider = (
+    <div className="flex items-center gap-3 text-[13px] text-subtle-foreground" role="separator" aria-label="or">
+      <span className="h-px flex-1 bg-border" />
+      {layout === "bottom" ? "or" : "or use your email"}
+      <span className="h-px flex-1 bg-border" />
+    </div>
+  );
   return (
     <div className="grid gap-4">
       <FormError message={error} />
+      {layout === "bottom" && divider}
       <div className="grid gap-3">
         <Button type="button" variant="outline" size="lg" className="w-full" disabled={pending} onClick={() => go("google")}>
           {busy("google") ? <Loader2 className="animate-spin" aria-hidden /> : <GoogleMark />} Continue with Google
         </Button>
       </div>
-      <div className="flex items-center gap-3 text-[13px] text-subtle-foreground" role="separator" aria-label="or">
-        <span className="h-px flex-1 bg-border" />
-        or use your email
-        <span className="h-px flex-1 bg-border" />
-      </div>
+      {layout === "top" && divider}
     </div>
   );
 }

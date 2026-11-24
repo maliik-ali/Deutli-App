@@ -30,7 +30,7 @@ export function SignupForm({ joinCode = "", intent = "student" }: { joinCode?: s
   const onSubmit = handleSubmit((values) => {
     setServerError(null);
     startTransition(async () => {
-      const result = await signUp(values);
+      const result = await signUp({ ...values, intent });
       if (result?.error) setServerError(result.error);
     });
   });
