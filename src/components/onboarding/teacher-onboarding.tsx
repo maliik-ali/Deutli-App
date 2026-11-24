@@ -110,11 +110,11 @@ export function TeacherOnboarding({ defaultName, email }: { defaultName: string;
         </div>
       </header>
 
-      <main className="mx-auto grid w-full max-w-[640px] content-start gap-8 px-4 py-8 sm:px-6 sm:py-12">
+      <main className="mx-auto grid w-full max-w-[1040px] content-start gap-8 px-4 py-8 sm:px-6 sm:py-10">
         {ready ? (
           <>
             <Heading title="Your workspace is ready" text="Share this code with your students. They join your workspace when they sign up." />
-            <div className="grid gap-4 rounded-2xl border border-border bg-ink p-5 text-ink-foreground sm:p-6">
+            <div className="mx-auto grid w-full max-w-xl gap-4 rounded-2xl border border-border bg-ink p-5 text-ink-foreground sm:p-6">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-lg font-bold">{ready.name}</p>
                 <span className="rounded-full bg-gold-soft px-3 py-1 text-[13px] font-semibold text-gold-ink">Free plan</span>
@@ -132,9 +132,9 @@ export function TeacherOnboarding({ defaultName, email }: { defaultName: string;
                 </div>
               )}
             </div>
-            <div className="grid justify-items-center">
+            <div className={cn("sticky bottom-0 -mx-4 grid justify-items-center gap-2 bg-gradient-to-t from-background from-70% to-transparent px-4 pt-6 pb-3 sm:static sm:mx-0 sm:bg-none sm:p-0")}>
               <Button
-                className="h-12 text-base"
+                className="h-12 text-base w-full sm:w-80"
                 onClick={() => {
                   router.push("/teacher");
                   router.refresh();
@@ -163,7 +163,7 @@ export function TeacherOnboarding({ defaultName, email }: { defaultName: string;
             {step === 1 && (
               <>
                 <Heading title="Tell us about your teaching" text="We use this to set up your workspace. It takes a minute." />
-                <div className="grid gap-7">
+                <div className="mx-auto grid w-full max-w-2xl gap-7">
                   <FormField id="workspace-name" label={accountType === "school" ? "School or academy name" : "Your name or class name"} value={name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder={accountType === "school" ? "Berlin German Academy" : "Frau Schneider German Classes"} autoComplete="organization" />
                   <Group title="Which exams do you prepare students for?">
                     {EXAMS.map((x) => (
@@ -187,7 +187,7 @@ export function TeacherOnboarding({ defaultName, email }: { defaultName: string;
             {step === 2 && (
               <>
                 <Heading title="What would help you most?" text="Pick as many as you like. We will switch on the right tools first." />
-                <div className="grid gap-7">
+                <div className="mx-auto grid w-full max-w-2xl gap-7">
                   <Group title="How do you teach today?">
                     {TOOLS.map((x) => (
                       <Chip key={x.id} kind="check" selected={tools.includes(x.id)} onClick={() => setTools(toggle(tools, x.id))}>{x.label}</Chip>
@@ -202,14 +202,14 @@ export function TeacherOnboarding({ defaultName, email }: { defaultName: string;
               </>
             )}
 
-            <FormError message={error} />
-            <div className="grid justify-items-center gap-2">
+            <div className="mx-auto w-full max-w-2xl"><FormError message={error} /></div>
+            <div className={cn("sticky bottom-0 -mx-4 grid justify-items-center gap-2 bg-gradient-to-t from-background from-70% to-transparent px-4 pt-6 pb-3 sm:static sm:mx-0 sm:bg-none sm:p-0")}>
               {step < STEPS - 1 ? (
-                <Button className="h-12 text-base" disabled={!canContinue} aria-describedby={canContinue ? undefined : "continue-hint"} onClick={() => setStep(step + 1)}>
+                <Button className="h-12 text-base w-full sm:w-80" disabled={!canContinue} aria-describedby={canContinue ? undefined : "continue-hint"} onClick={() => setStep(step + 1)}>
                   Continue <ArrowRight aria-hidden />
                 </Button>
               ) : (
-                <Button className="h-12 text-base" disabled={pending} onClick={create}>
+                <Button className="h-12 text-base w-full sm:w-80" disabled={pending} onClick={create}>
                   {pending ? "Creating…" : "Create my workspace"} <ArrowRight aria-hidden />
                 </Button>
               )}

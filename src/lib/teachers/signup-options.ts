@@ -3,7 +3,7 @@ import { z } from "zod";
 /** Answers a new teacher or school gives while setting up a free workspace (shown on /onboarding/teacher). */
 export const ACCOUNT_TYPES = [
   { id: "solo", title: "I teach on my own", text: "Your own students, classes and material. Free for up to 5 active students." },
-  { id: "school", title: "I run a school or academy", text: "Several teachers in one workspace, with your own logo and colours later." },
+  { id: "school", title: "I run a school or academy", text: "Several teachers in one workspace, with your own logo and colours." },
 ] as const;
 
 export const EXAMS = [
