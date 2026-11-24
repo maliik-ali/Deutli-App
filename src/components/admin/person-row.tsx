@@ -2,9 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { assignTeacher, setTeacherRole } from "@/lib/teachers/actions";
+import { assignTeacher, deleteUserAccount, setTeacherRole } from "@/lib/teachers/actions";
 import { OptionSelect } from "@/components/ui/option-select";
 
 export type Person = { id: string; name: string; email: string | null; role: "student" | "teacher"; teacherId: string | null; code: string | null; students: number };
@@ -13,6 +14,8 @@ export function PersonRow({ person, teachers }: { person: Person; teachers: { id
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [confirm, setConfirm] = useState("");
 
   function run(fn: () => Promise<{ error: string } | { ok: true }>) {
     setError(null);
@@ -59,7 +62,49 @@ export function PersonRow({ person, teachers }: { person: Person; teachers: { id
         <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => run(() => setTeacherRole(person.id, person.role !== "teacher"))}>
           {person.role === "teacher" ? "Make student" : "Make teacher"}
         </Button>
+        {!deleting && (
+          <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => setDeleting(true)} className="text-destructive hover:text-destructive">
+            <Trash2 aria-hidden /> Delete
+          </Button>
+        )}
       </div>
+      {deleting && (
+        <form
+          className="grid gap-3 rounded-xl border border-destructive/40 bg-destructive-soft/40 p-4 sm:col-span-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            run(() => deleteUserAccount(person.id, confirm));
+          }}
+        >
+          <p className="text-[14px]">
+            Delete <strong>{person.name}</strong> for good? Their profile, progress and results are removed and they can&apos;t log in again.
+            {person.role === "teacher" && ` Their workspace, classes and join code are removed too${person.students ? `, and their ${person.students} student${person.students === 1 ? "" : "s"} become standalone` : ""}.`} Payment records are kept without a name.
+          </p>
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="grid gap-1">
+              <label htmlFor={`d-${person.id}`} className="text-[13px] font-semibold">
+                Type DELETE to confirm
+              </label>
+              <input
+                id={`d-${person.id}`}
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                autoComplete="off"
+                autoCapitalize="characters"
+                spellCheck={false}
+                autoFocus
+                className="h-11 w-44 rounded-lg border border-input bg-background px-3 text-[14px]"
+              />
+            </div>
+            <Button type="button" variant="ghost" disabled={pending} onClick={() => { setDeleting(false); setConfirm(""); setError(null); }}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="ink" disabled={pending || confirm.trim().toUpperCase() !== "DELETE"} className="bg-destructive font-semibold text-background hover:bg-destructive/90">
+              {pending ? "Deleting…" : "Delete account"}
+            </Button>
+          </div>
+        </form>
+      )}
     </li>
   );
 }

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { AVATAR_BUCKET } from "@/lib/account/avatar";
 import { requireUser } from "@/lib/auth/dal";
 import { ensurePersonalAcademy } from "@/lib/academies/personal";
 import { allow } from "@/lib/rate-limit";
@@ -90,6 +91,43 @@ export async function inviteTeacher(input: unknown): Promise<Result> {
   const { error: roleError } = await admin.from("profiles").update({ role: "teacher", teacher_id: null, onboarded_at: new Date().toISOString() }).eq("id", data.user.id);
   if (roleError) return { error: "The invite was sent, but the teacher role could not be set. Find them below and press Make teacher." };
   await ensurePersonalAcademy(admin, data.user.id);
+  revalidatePath("/admin/teachers");
+  return { ok: true };
+}
+
+/**
+ * Admin: permanently delete a student or teacher account (same clean-up as a student deleting themselves).
+ * A teacher's own workspace, classes and join code go with them; their students become standalone.
+ * Paid orders are kept without the link to the person (legal retention). Admins can't be deleted here.
+ */
+export async function deleteUserAccount(userId: unknown, confirmation: unknown): Promise<Result> {
+  const me = await requireUser(ADMINS);
+  const uid = z.string().uuid().safeParse(userId);
+  const admin = createAdminClient();
+  if (!uid.success || !admin) return { error: GENERIC };
+  if (typeof confirmation !== "string" || confirmation.trim().toUpperCase() !== "DELETE") return { error: "Type DELETE to confirm." };
+  if (uid.data === me.id) return { error: "You can't delete your own account here." };
+
+  const { data: target } = await admin.from("profiles").select("role").eq("id", uid.data).maybeSingle();
+  if (!target || (target.role !== "student" && target.role !== "teacher")) return { error: "Only students and teachers can be deleted here." };
+
+  if (target.role === "teacher") {
+    // A school with other people in it must not disappear by accident.
+    const { data: schools } = await admin.from("academies").select("id").eq("owner_id", uid.data).eq("kind", "school");
+    for (const s of schools ?? []) {
+      const { count } = await admin.from("academy_members").select("user_id", { count: "exact", head: true }).eq("academy_id", s.id).neq("user_id", uid.data);
+      if (count) return { error: "This person owns a school with other teachers. Move the school to another owner first." };
+    }
+    // Their own workspace goes with them (batches, material, join codes cascade from it).
+    await admin.from("academies").delete().eq("owner_id", uid.data).eq("kind", "teacher");
+  }
+
+  const { data: files } = await admin.storage.from(AVATAR_BUCKET).list(uid.data);
+  if (files?.length) await admin.storage.from(AVATAR_BUCKET).remove(files.map((f) => `${uid.data}/${f.name}`));
+  await admin.from("orders").delete().eq("user_id", uid.data).neq("status", "paid");
+
+  const { error } = await admin.auth.admin.deleteUser(uid.data);
+  if (error) return { error: "The account could not be deleted. Please try again." };
   revalidatePath("/admin/teachers");
   return { ok: true };
 }
