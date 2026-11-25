@@ -36,7 +36,7 @@ export function NewSlotsForm({ defaultDate }: { defaultDate: string }) {
         <label className={field}>Repeat weekly<Input type="number" inputMode="numeric" min={1} max={12} value={v.repeatWeeks} onChange={(e) => setV({ ...v, repeatWeeks: e.target.value })} /></label>
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" disabled={busy}>{busy ? "Adding…" : "Add free slot"}</Button>
+        <Button type="submit" disabled={busy}>{busy ? "Adding…" : "Add slot"}</Button>
         {error && <p role="alert" className="text-[13px] text-destructive">{error}</p>}
       </div>
     </form>
