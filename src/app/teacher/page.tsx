@@ -70,6 +70,7 @@ export default async function TeacherPage() {
             discountUntil: workspace.workspace.discount_until,
             isOwner: workspace.role === "owner",
           }}
+          planHref="/teacher/plan"
         />
       )}
 
