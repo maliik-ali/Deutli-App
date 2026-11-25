@@ -55,6 +55,17 @@ export async function setBatchArchived(batchId: unknown, archived: unknown): Pro
   return { ok: true };
 }
 
+/** Deletes the batch itself. Students, classes and material stay; only their link to this batch, its announcements and its codes go. */
+export async function deleteBatch(batchId: unknown): Promise<Result> {
+  const { user, admin } = await teacher();
+  const id = uuid.safeParse(batchId);
+  if (!id.success || !admin || !(await getManagedBatch(id.data, user.id))) return { error: GENERIC };
+  const { error } = await admin.from("batches").delete().eq("id", id.data);
+  if (error) return { error: GENERIC };
+  revalidatePath("/teacher/batches");
+  return { ok: true };
+}
+
 export async function addStudentsToBatch(batchId: unknown, studentIds: unknown): Promise<Result> {
   const { user, admin } = await teacher();
   const id = uuid.safeParse(batchId);

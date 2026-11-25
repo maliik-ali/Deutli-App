@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { addStudentsToBatch, createBatch, deleteAnnouncement, makeBatchJoinCode, postAnnouncement, removeStudentFromBatch, setBatchArchived } from "@/lib/batches/actions";
+import { addStudentsToBatch, createBatch, deleteAnnouncement, deleteBatch, makeBatchJoinCode, postAnnouncement, removeStudentFromBatch, setBatchArchived } from "@/lib/batches/actions";
 
 type Res = { error: string } | { ok: true };
 function useRun() {
@@ -162,8 +162,20 @@ export function RemoveMember({ batchId, studentId, name }: { batchId: string; st
 }
 
 export function ArchiveBatch({ batchId, archived }: { batchId: string; archived: boolean }) {
-  const { busy, run } = useRun();
-  return <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => run(() => setBatchArchived(batchId, !archived))}>{archived ? "Bring back" : "Archive batch"}</Button>;
+  const router = useRouter();
+  const { error, busy, run } = useRun();
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => run(() => setBatchArchived(batchId, !archived))}>{archived ? "Bring back" : "Archive batch"}</Button>
+      <Button
+        type="button" size="sm" variant="outline" disabled={busy}
+        onClick={() => { if (window.confirm("Delete this batch? Its announcements and codes are removed. Your students, classes and material stay. This can't be undone.")) run(() => deleteBatch(batchId), () => router.push("/teacher/batches")); }}
+      >
+        <Trash2 aria-hidden /> Delete batch
+      </Button>
+      <Err text={error} />
+    </div>
+  );
 }
 
 export function BatchCode({ batchId }: { batchId: string }) {
