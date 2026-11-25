@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import Link from "next/link";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Trash2, UserPlus, X } from "lucide-react";
 
@@ -13,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { addStudentsToBatch, createBatch, deleteAnnouncement, deleteBatch, makeBatchJoinCode, postAnnouncement, removeStudentFromBatch, setBatchArchived } from "@/lib/batches/actions";
 
+const OPEN_ADD_STUDENTS = "deutli-open-add-students";
 type Res = { error: string } | { ok: true };
 function useRun() {
   const router = useRouter();
@@ -71,7 +71,7 @@ export function PostAnnouncementForm({ batchId, hasStudents }: { batchId: string
     return (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-muted/60 px-4 py-3">
         <p className="text-[14px] text-muted-foreground">No students in this batch yet, so nobody would see a post. Add students first.</p>
-        <Button asChild size="sm" variant="outline"><Link href={`/teacher/batches/${batchId}?add=1#students`}>Add students</Link></Button>
+        <Button type="button" size="sm" variant="outline" onClick={() => window.dispatchEvent(new Event(OPEN_ADD_STUDENTS))}>Add students</Button>
       </div>
     );
   }
@@ -125,6 +125,12 @@ export function AddStudents({ batchId, students }: { batchId: string; students: 
 /** Students of a batch, with one "Add students" button that opens the picker and the batch join code. */
 export function StudentsCard({ batchId, members, addable, openAtStart }: { batchId: string; members: { id: string; name: string }[]; addable: { id: string; name: string }[]; openAtStart: boolean }) {
   const [open, setOpen] = useState(openAtStart);
+  // The "Add students" button in Announcements asks this card to open and come into view.
+  useEffect(() => {
+    const show = () => { setOpen(true); document.getElementById("students")?.scrollIntoView({ behavior: "smooth", block: "start" }); };
+    window.addEventListener(OPEN_ADD_STUDENTS, show);
+    return () => window.removeEventListener(OPEN_ADD_STUDENTS, show);
+  }, []);
   return (
     <Card id="students" className="scroll-mt-6">
       <div className="flex items-center justify-between gap-3">
