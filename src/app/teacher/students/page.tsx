@@ -3,7 +3,9 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { getMyWorkspace } from "@/lib/academies/data";
 import { requireUser } from "@/lib/auth/dal";
+import { listTeacherBatches } from "@/lib/batches/data";
 import { getTeacherData } from "@/lib/teachers/data";
 
 export const metadata: Metadata = { title: "My students" };
@@ -12,6 +14,14 @@ export default async function StudentsPage() {
   const user = await requireUser(["teacher", "academy_admin", "super_admin"]);
   const isAdmin = user.role !== "teacher";
   const data = await getTeacherData(user.id, isAdmin);
+
+  let batches: Awaited<ReturnType<typeof listTeacherBatches>> = [];
+  if (!isAdmin) {
+    const ws = await getMyWorkspace(user.id);
+    if (ws) batches = (await listTeacherBatches(user.id, ws.workspace.id, ws.role !== "teacher")).filter((b) => !b.archived);
+  }
+  const hasBatch = batches.length > 0;
+  const batchHref = batches.length === 1 ? `/teacher/batches/${batches[0].id}` : "/teacher/batches";
 
   const rows = data.students.map((s) => {
     const mine = data.mine.filter((r) => r.student_id === s.id);
@@ -39,10 +49,10 @@ export default async function StudentsPage() {
         <Card className="gap-4 p-6">
           <div className="grid gap-1">
             <p className="font-semibold">No students yet</p>
-            <p className="text-[14px] text-muted-foreground">Create a batch first, then add students to it or give them your join code from the Overview page.</p>
+            <p className="text-[14px] text-muted-foreground">{hasBatch ? "Add students to your batch, or give them your join code from the Overview page." : "Create a batch first, then add students to it or give them your join code from the Overview page."}</p>
           </div>
           <Button asChild className="w-fit">
-            <Link href="/teacher/batches">Create a batch</Link>
+            <Link href={hasBatch ? batchHref : "/teacher/batches"}>{hasBatch ? (batches.length === 1 ? "Open your batch" : "Open your batches") : "Create a batch"}</Link>
           </Button>
         </Card>
       ) : (
