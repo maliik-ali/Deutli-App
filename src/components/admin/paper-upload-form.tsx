@@ -59,6 +59,9 @@ export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string
   const hasQuestions = parts.some((p) => p.kind !== "write");
   const hasListening = included.has("hoeren");
   const [error, setError] = useState<string | null>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
+  // The message sits next to the Upload button; bring it into view so it is never missed.
+  useEffect(() => { if (error) errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }); }, [error]);
   const [status, setStatus] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -189,7 +192,6 @@ export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string
 
   return (
     <form onSubmit={onSubmit} className="grid gap-6" noValidate>
-      <FormError message={error} />
       {done && (
         <p role="status" className="rounded-xl border border-success/40 bg-success/10 px-4 py-3 text-[15px] font-medium">
           {done}
@@ -259,9 +261,9 @@ export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string
               ))}
             </ul>
           )}
-          <label className="relative flex min-h-11 cursor-pointer items-start gap-3 text-[14px]">
+          <label className="relative flex min-h-11 cursor-pointer items-start gap-3 rounded-lg px-2 py-2 text-[14px] hover:bg-muted">
             <input type="checkbox" className="peer sr-only" checked={rights} onChange={(e) => setRights(e.target.checked)} />
-            <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-md border border-input bg-card text-transparent peer-checked:border-gold-ink peer-checked:bg-gold-ink peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring"><Check className="size-3.5" aria-hidden /></span>
+            <span className="grid size-5 shrink-0 place-items-center rounded-md border border-input bg-card text-transparent peer-checked:border-gold-ink peer-checked:bg-gold-ink peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring"><Check className="size-3.5" aria-hidden /></span>
             <span>I own this paper or have the right to use it with my students. Students can report papers that should not be here.</span>
           </label>
         </section>
@@ -345,6 +347,7 @@ export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string
       </div>
       )}
 
+      <div ref={errorRef} className="scroll-mt-24"><FormError message={error} /></div>
       <Button type="submit" disabled={pending} className="w-full sm:w-fit">
         {pending && <Loader2 className="animate-spin" aria-hidden />}
         {pending ? (status ?? "Working…") : "Upload paper"}
