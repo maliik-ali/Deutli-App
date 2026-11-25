@@ -25,7 +25,7 @@ export async function getTeacherSetup(teacherId: string): Promise<SetupStep[]> {
   }
   return [
     { key: "batch", title: "Create your first batch", hint: "A batch is one group of students. Classes, material and tests are shared with a batch.", href: "/teacher/batches", done: batchIds.length > 0 },
-    { key: "students", title: "Add your students", hint: "Give them your join code below, or add them to the batch.", href: batchIds[0] ? `/teacher/batches/${batchIds[0]}` : "/teacher/batches", done: (own.count ?? 0) + inBatches > 0 },
+    { key: "students", title: "Add your students", hint: "Give them your join code below, or add them to the batch.", href: batchIds[0] ? `/teacher/batches/${batchIds[0]}?add=1#students` : "/teacher/batches", done: (own.count ?? 0) + inBatches > 0 },
     { key: "material", title: "Share homework or material", hint: "Add it once and share it with as many batches as you like.", href: "/teacher/materials", done: (mats.count ?? 0) > 0 },
     { key: "class", title: "Schedule a class", hint: "Students register, and get the join link when the class opens.", href: "/teacher/classes/new", done: (classes.count ?? 0) > 0 },
     { key: "profile", title: "Fill in your teacher profile", hint: "Students see your photo and headline next to your classes.", href: "/teacher/profile", done: !!prof.data?.headline?.trim() },

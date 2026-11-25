@@ -6,6 +6,7 @@ import { TimeZoneSync } from "@/components/account/time-zone-sync";
 import { getMyWorkspace } from "@/lib/academies/data";
 import { getBrandForUser } from "@/lib/branding/data";
 import { requireUser } from "@/lib/auth/dal";
+import { getTeacherSetup } from "@/lib/teachers/setup";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export default async function TeacherLayout({ children }: LayoutProps<"/teacher">) {
@@ -25,7 +26,8 @@ export default async function TeacherLayout({ children }: LayoutProps<"/teacher"
   // The school tools are for the owner or an admin of a school workspace.
   const ws = isAdmin ? null : await getMyWorkspace(user.id);
   const showSchool = !!ws && ws.workspace.kind === "school" && ws.role !== "teacher";
-  const props = { todo, isAdmin, showSchool, name: user.fullName ?? "Teacher", email: user.email, avatarUrl };
+  const setup = isAdmin ? undefined : await getTeacherSetup(user.id);
+  const props = { setup, todo, isAdmin, showSchool, name: user.fullName ?? "Teacher", email: user.email, avatarUrl };
 
   return (
     <BrandShell brand={brand ? { name: brand.name, logoUrl: brand.logoUrl, showPoweredBy: brand.showPoweredBy } : null} vars={brand?.vars ?? {}}>

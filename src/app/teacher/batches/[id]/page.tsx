@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 
-import { AddStudents, ArchiveBatch, BatchCode, DeleteAnnouncement, PostAnnouncementForm, RemoveMember } from "@/components/batches/batch-forms";
+import { ArchiveBatch, DeleteAnnouncement, PostAnnouncementForm, StudentsCard } from "@/components/batches/batch-forms";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -17,6 +17,7 @@ export const metadata: Metadata = { title: "Batch" };
 export default async function TeacherBatchPage(props: PageProps<"/teacher/batches/[id]">) {
   const user = await requireUser(["teacher"]);
   const { id } = await props.params;
+  const { add } = await props.searchParams;
   const batch = await getManagedBatch(id, user.id);
   if (!batch) notFound();
   const [members, announcements, addable, classes, attendance] = await Promise.all([listBatchMembers(batch.id), listAnnouncements(batch.id), listAddableStudents(batch.teacher_id, batch.id), listBatchClasses(batch.id), getBatchAttendance(batch.id)]);
@@ -41,7 +42,7 @@ export default async function TeacherBatchPage(props: PageProps<"/teacher/batche
         <div className="grid gap-6">
           <Card>
             <div className="grid gap-1"><CardTitle>Announcements</CardTitle><CardDescription>Students see it in the app and get an email. It is a post, not a chat.</CardDescription></div>
-            <PostAnnouncementForm batchId={batch.id} />
+            <PostAnnouncementForm batchId={batch.id} hasStudents={members.length > 0} />
             {announcements.length > 0 && (
               <ul className="divide-y divide-border">
                 {announcements.map((a) => (
@@ -65,24 +66,13 @@ export default async function TeacherBatchPage(props: PageProps<"/teacher/batche
         </div>
 
         <div className="grid gap-6">
-          <Card>
-            <div className="grid gap-1"><CardTitle>Students ({members.length})</CardTitle></div>
-            {members.length === 0 ? <p className="text-[14px] text-muted-foreground">No students yet.</p> : <ul className="divide-y divide-border">{members.map((m) => <li key={m.id} className="flex items-center justify-between gap-3 py-2"><span>{m.name}</span><RemoveMember batchId={batch.id} studentId={m.id} name={m.name} /></li>)}</ul>}
-          </Card>
+          <StudentsCard key={add ? "add" : "view"} batchId={batch.id} members={members} addable={addable} openAtStart={!!add} />
           {attendance.held > 0 && (
             <Card>
               <div className="grid gap-1"><CardTitle>Attendance</CardTitle><CardDescription>{attendance.held} class{attendance.held === 1 ? "" : "es"} held. Tick Present on each class to keep this right.</CardDescription></div>
               <ul className="divide-y divide-border">{attendance.rows.map((r) => <li key={r.studentId} className="flex justify-between gap-3 py-2 text-[15px]"><span>{r.name}</span><span className="font-semibold">{r.attended}/{r.held}{r.pct != null ? ` · ${r.pct}%` : ""}</span></li>)}</ul>
             </Card>
           )}
-          <Card>
-            <CardTitle>Add your students</CardTitle>
-            <AddStudents batchId={batch.id} students={addable} />
-          </Card>
-          <Card>
-            <div className="grid gap-1"><CardTitle>Join with a code</CardTitle><CardDescription>New students can join this batch directly.</CardDescription></div>
-            <BatchCode batchId={batch.id} />
-          </Card>
         </div>
       </div>
     </main>

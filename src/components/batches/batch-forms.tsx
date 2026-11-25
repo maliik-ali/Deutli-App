@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Trash2 } from "lucide-react";
+import { Check, Trash2, UserPlus, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Card, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -61,10 +63,18 @@ export function NewBatchForm() {
   );
 }
 
-export function PostAnnouncementForm({ batchId }: { batchId: string }) {
+export function PostAnnouncementForm({ batchId, hasStudents }: { batchId: string; hasStudents: boolean }) {
   const { error, busy, run } = useRun();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  if (!hasStudents) {
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-muted/60 px-4 py-3">
+        <p className="text-[14px] text-muted-foreground">No students in this batch yet, so nobody would see a post. Add students first.</p>
+        <Button asChild size="sm" variant="outline"><Link href={`/teacher/batches/${batchId}?add=1#students`}>Add students</Link></Button>
+      </div>
+    );
+  }
   return (
     <form className="grid gap-3" onSubmit={(e) => { e.preventDefault(); run(() => postAnnouncement({ batchId, title, body }), () => { setTitle(""); setBody(""); }); }}>
       <label className={field}>Title<Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder="Class moved to 7 pm tomorrow" /></label>
@@ -109,6 +119,38 @@ export function AddStudents({ batchId, students }: { batchId: string; students: 
         <Err text={error} />
       </div>
     </div>
+  );
+}
+
+/** Students of a batch, with one "Add students" button that opens the picker and the batch join code. */
+export function StudentsCard({ batchId, members, addable, openAtStart }: { batchId: string; members: { id: string; name: string }[]; addable: { id: string; name: string }[]; openAtStart: boolean }) {
+  const [open, setOpen] = useState(openAtStart);
+  return (
+    <Card id="students" className="scroll-mt-6">
+      <div className="flex items-center justify-between gap-3">
+        <CardTitle>Students ({members.length})</CardTitle>
+        <Button type="button" size="sm" variant="outline" aria-expanded={open} aria-controls="add-students-panel" onClick={() => setOpen(!open)}>
+          {open ? <X aria-hidden /> : <UserPlus aria-hidden />}
+          {open ? "Close" : "Add students"}
+        </Button>
+      </div>
+      {open && (
+        <div id="add-students-panel" className="grid gap-5 rounded-xl bg-muted/50 p-4">
+          {addable.length > 0 && (
+            <div className="grid gap-2">
+              <p className="text-[14px] font-semibold">Your students</p>
+              <AddStudents batchId={batchId} students={addable} />
+            </div>
+          )}
+          <div className="grid gap-2">
+            <p className="text-[14px] font-semibold">Share a code</p>
+            <p className="text-[14px] text-muted-foreground">New students who sign up with this code land in this batch.</p>
+            <BatchCode batchId={batchId} />
+          </div>
+        </div>
+      )}
+      {members.length === 0 ? <p className="text-[14px] text-muted-foreground">No students yet.</p> : <ul className="divide-y divide-border">{members.map((m) => <li key={m.id} className="flex items-center justify-between gap-3 py-2"><span>{m.name}</span><RemoveMember batchId={batchId} studentId={m.id} name={m.name} /></li>)}</ul>}
+    </Card>
   );
 }
 

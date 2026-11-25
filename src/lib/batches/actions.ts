@@ -92,6 +92,8 @@ export async function postAnnouncement(input: unknown): Promise<Result> {
   if (!admin) return { error: GENERIC };
   const batch = await getManagedBatch(p.data.batchId, user.id);
   if (!batch) return { error: GENERIC };
+  const { count } = await admin.from("batch_members").select("student_id", { count: "exact", head: true }).eq("batch_id", batch.id);
+  if (!count) return { error: "Add students to this batch first. Nobody would see this post." };
   const { error } = await admin.from("announcements").insert({ batch_id: batch.id, academy_id: batch.academy_id, author_id: user.id, title: p.data.title, body: p.data.body });
   if (error) return { error: GENERIC };
 

@@ -9,6 +9,8 @@ import { TEACHER_MENU, UserMenu } from "@/components/dashboard/user-menu";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { SetupSidebarCard } from "@/components/teacher/setup-sidebar-card";
+import type { SetupStep } from "@/lib/setup-step";
 import { cn } from "@/lib/utils";
 
 /** In the order a teacher works: set up a batch, add students, teach, then review. */
@@ -65,7 +67,7 @@ function Links({ todo, isAdmin, showSchool, onNavigate }: { todo: number; isAdmi
   );
 }
 
-type Props = { todo: number; isAdmin: boolean; showSchool?: boolean; name: string; email: string | null; avatarUrl: string | null };
+type Props = { todo: number; isAdmin: boolean; showSchool?: boolean; name: string; email: string | null; avatarUrl: string | null; setup?: SetupStep[] };
 
 export function TeacherSidebar(p: Props) {
   return (
@@ -74,6 +76,7 @@ export function TeacherSidebar(p: Props) {
       <div className="flex-1 overflow-y-auto">
         <Links todo={p.todo} isAdmin={p.isAdmin} showSchool={p.showSchool} />
       </div>
+      {p.setup && <SetupSidebarCard steps={p.setup} />}
       <UserMenu name={p.name} email={p.email} avatarUrl={p.avatarUrl} items={TEACHER_MENU} />
     </div>
   );
@@ -95,6 +98,7 @@ export function TeacherMobileNav(p: Props) {
         <div className="flex-1 overflow-y-auto">
           <Links todo={p.todo} isAdmin={p.isAdmin} showSchool={p.showSchool} onNavigate={() => setOpen(false)} />
         </div>
+        {p.setup && <SetupSidebarCard steps={p.setup} onNavigate={() => setOpen(false)} />}
         <UserMenu name={p.name} email={p.email} avatarUrl={p.avatarUrl} items={TEACHER_MENU} />
       </SheetContent>
     </Sheet>

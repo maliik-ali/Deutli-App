@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 const HIDE_KEY = "deutli-getting-started-hidden";
 const HIDE_EVENT = "deutli-getting-started";
 
-const subscribe = (cb: () => void) => {
+export const subscribe = (cb: () => void) => {
   window.addEventListener("storage", cb);
   window.addEventListener(HIDE_EVENT, cb);
   return () => {
@@ -19,7 +19,7 @@ const subscribe = (cb: () => void) => {
     window.removeEventListener(HIDE_EVENT, cb);
   };
 };
-const isHidden = () => {
+export const isHidden = () => {
   try {
     return localStorage.getItem(HIDE_KEY) === "1";
   } catch {
