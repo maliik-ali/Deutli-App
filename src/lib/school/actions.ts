@@ -41,11 +41,13 @@ export async function addTeacherByEmail(input: unknown): Promise<{ error: string
   if (!email.success) return { error: email.error.issues[0].message };
   if (o.ws.workspace.kind !== "school") return { error: "Teachers can be added on a School plan. Upgrade your workspace first." };
   if (o.ws.plan?.max_teachers != null && o.ws.teachers >= o.ws.plan.max_teachers) return { error: "Your plan's teacher limit is reached. Upgrade to add more teachers." };
+  if (!(await allow(`add-teacher:${o.user.id}`, 20, 3600))) return { error: "Too many tries. Please wait a while and try again." };
+  // Same answer for "no account" and "not a teacher", so this can't be used to find out who has an account.
+  const NOT_TEACHER = "We can't add that email. The person needs a teacher account first.";
   const uid = await findUserId(o.admin, email.data);
-  if (!uid) return { error: "No account with that email. Ask them to sign up first." };
+  if (!uid) return { error: NOT_TEACHER };
   const { data: prof } = await o.admin.from("profiles").select("role").eq("id", uid).maybeSingle();
-  if (prof?.role !== "teacher" && prof?.role !== "student") return { error: "That account can't be added as a teacher." };
-  if (prof.role === "student") await o.admin.from("profiles").update({ role: "teacher", teacher_id: null }).eq("id", uid);
+  if (prof?.role !== "teacher") return { error: NOT_TEACHER };
   await o.admin.from("academy_members").upsert({ academy_id: o.ws.workspace.id, user_id: uid, role: "teacher" }, { onConflict: "academy_id,user_id", ignoreDuplicates: true });
   revalidatePath("/teacher/school");
   return { ok: true };
@@ -57,7 +59,11 @@ export async function removeTeacher(userId: unknown): Promise<{ error: string } 
   const id = z.string().uuid().safeParse(userId);
   if (!id.success || id.data === o.user.id) return { error: "You can't remove yourself." };
   // Their students and everything made in the school stay with the school.
-  await o.admin.from("academy_members").delete().eq("academy_id", o.ws.workspace.id).eq("user_id", id.data).neq("role", "owner");
+  const { data: gone } = await o.admin.from("academy_members").delete().eq("academy_id", o.ws.workspace.id).eq("user_id", id.data).neq("role", "owner").select("user_id");
+  if (!gone?.length) return { error: "That person isn't a teacher in your workspace." };
+  // Hand their batches and students to the person removing them, so they lose access to them.
+  await o.admin.from("batches").update({ teacher_id: o.user.id }).eq("academy_id", o.ws.workspace.id).eq("teacher_id", id.data);
+  await o.admin.from("profiles").update({ teacher_id: o.user.id }).eq("academy_id", o.ws.workspace.id).eq("teacher_id", id.data).eq("role", "student");
   revalidatePath("/teacher/school");
   return { ok: true };
 }
