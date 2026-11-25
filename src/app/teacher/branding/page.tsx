@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { BrandingEditor } from "@/components/branding/branding-editor";
-import { getMyWorkspace } from "@/lib/academies/data";
+import { getMyWorkspace, getWorkspacePlans } from "@/lib/academies/data";
 import { requireUser } from "@/lib/auth/dal";
 import { logoPublicUrl } from "@/lib/branding/data";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -12,6 +12,7 @@ export default async function BrandingPage() {
   const user = await requireUser(["teacher", "academy_admin", "super_admin"]);
   const ws = user.role === "teacher" ? await getMyWorkspace(user.id) : null;
   const admin = createAdminClient();
+  const plans = (await getWorkspacePlans()).filter((p) => p.eur_cents).map((p) => ({ name: p.name, eur_cents: p.eur_cents as number, features: p.features }));
   const { data: a } = ws && admin ? await admin.from("academies").select("display_name, logo_path, primary_color, accent_color, font_key").eq("id", ws.workspace.id).maybeSingle() : { data: null };
 
   return (
@@ -28,6 +29,7 @@ export default async function BrandingPage() {
         <BrandingEditor
           workspaceName={ws.workspace.name}
           features={ws.plan?.features ?? []}
+          plans={plans}
           initial={{ displayName: a?.display_name ?? "", primary: a?.primary_color ?? "#7161ff", accent: a?.accent_color ?? "#cb3cff", fontKey: (a?.font_key as "inter" | "poppins" | "nunito" | null) ?? "default", logoUrl: logoPublicUrl(a?.logo_path ?? null) }}
         />
       )}
