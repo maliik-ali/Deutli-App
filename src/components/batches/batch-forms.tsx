@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { InviteStudentsForm } from "@/components/students/invite-form";
 import { addStudentsToBatch, createBatch, deleteAnnouncement, deleteBatch, makeBatchJoinCode, postAnnouncement, removeStudentFromBatch, setBatchArchived } from "@/lib/batches/actions";
 
 const OPEN_ADD_STUDENTS = "deutli-open-add-students";
@@ -148,6 +149,11 @@ export function StudentsCard({ batchId, members, addable, openAtStart }: { batch
               <AddStudents batchId={batchId} students={addable} />
             </div>
           )}
+          <div className="grid gap-2">
+            <p className="text-[14px] font-semibold">Invite by email</p>
+            <p className="text-[14px] text-muted-foreground">They get an email, set a password and join this batch.</p>
+            <InviteStudentsForm batchId={batchId} />
+          </div>
           <div className="grid gap-2">
             <p className="text-[14px] font-semibold">Share a code</p>
             <p className="text-[14px] text-muted-foreground">New students who sign up with this code land in this batch.</p>

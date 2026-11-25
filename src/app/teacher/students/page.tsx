@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
+import { InviteStudentsToggle } from "@/components/students/invite-form";
 import { Card } from "@/components/ui/card";
 import { getMyWorkspace } from "@/lib/academies/data";
 import { requireUser } from "@/lib/auth/dal";
@@ -15,13 +15,11 @@ export default async function StudentsPage() {
   const isAdmin = user.role !== "teacher";
   const data = await getTeacherData(user.id, isAdmin);
 
-  let batches: Awaited<ReturnType<typeof listTeacherBatches>> = [];
+  let batches: { id: string; name: string }[] = [];
   if (!isAdmin) {
     const ws = await getMyWorkspace(user.id);
-    if (ws) batches = (await listTeacherBatches(user.id, ws.workspace.id, ws.role !== "teacher")).filter((b) => !b.archived);
+    if (ws) batches = (await listTeacherBatches(user.id, ws.workspace.id, ws.role !== "teacher")).filter((b) => !b.archived).map((b) => ({ id: b.id, name: b.name }));
   }
-  const hasBatch = batches.length > 0;
-  const batchHref = batches.length === 1 ? `/teacher/batches/${batches[0].id}` : "/teacher/batches";
 
   const rows = data.students.map((s) => {
     const mine = data.mine.filter((r) => r.student_id === s.id);
@@ -49,14 +47,13 @@ export default async function StudentsPage() {
         <Card className="gap-4 p-6">
           <div className="grid gap-1">
             <p className="font-semibold">No students yet</p>
-            <p className="text-[14px] text-muted-foreground">{hasBatch ? "Add students to your batch, or give them your join code from the Overview page." : "Create a batch first, then add students to it or give them your join code from the Overview page."}</p>
+            <p className="text-[14px] text-muted-foreground">Invite them by email, or give them your join code from the <Link href="/teacher" className="font-medium text-gold-ink">Overview page</Link>.</p>
           </div>
-          <Button asChild className="w-fit">
-            <Link href={hasBatch ? batchHref : "/teacher/batches"}>{hasBatch ? (batches.length === 1 ? "Open your batch" : "Open your batches") : "Create a batch"}</Link>
-          </Button>
+          <InviteStudentsToggle batches={batches} defaultOpen />
         </Card>
       ) : (
         <Card className="p-2 sm:p-4">
+          <div className="px-3 pt-3 sm:pt-1"><InviteStudentsToggle batches={batches} defaultOpen={false} /></div>
           <ul className="divide-y divide-border">
             {rows.map((s) => (
               <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 px-3 py-3">
