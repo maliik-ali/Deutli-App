@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Trash2, UserPlus, X } from "lucide-react";
 
@@ -13,7 +13,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { InviteStudentsForm } from "@/components/students/invite-form";
 import { addStudentsToBatch, createBatch, deleteAnnouncement, deleteBatch, makeBatchJoinCode, postAnnouncement, removeStudentFromBatch, setBatchArchived } from "@/lib/batches/actions";
 
-const OPEN_ADD_STUDENTS = "deutli-open-add-students";
 type Res = { error: string } | { ok: true };
 function useRun() {
   const router = useRouter();
@@ -70,9 +69,12 @@ export function PostAnnouncementForm({ batchId, hasStudents }: { batchId: string
   const [body, setBody] = useState("");
   if (!hasStudents) {
     return (
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-muted/60 px-4 py-3">
-        <p className="text-[14px] text-muted-foreground">No students in this batch yet, so nobody would see a post. Add students first.</p>
-        <Button type="button" size="sm" variant="outline" onClick={() => window.dispatchEvent(new Event(OPEN_ADD_STUDENTS))}>Add students</Button>
+      <div className="grid gap-3 rounded-xl bg-muted/60 p-4">
+        <div className="grid gap-1">
+          <p className="text-[14px] font-semibold">Invite your students first</p>
+          <p className="text-[14px] text-muted-foreground">Nobody is in this batch yet, so nobody would see a post. Invite students by email: they set a password and join this batch.</p>
+        </div>
+        <InviteStudentsForm batchId={batchId} />
       </div>
     );
   }
@@ -126,12 +128,6 @@ export function AddStudents({ batchId, students }: { batchId: string; students: 
 /** Students of a batch, with one "Add students" button that opens the picker and the batch join code. */
 export function StudentsCard({ batchId, members, addable, openAtStart }: { batchId: string; members: { id: string; name: string }[]; addable: { id: string; name: string }[]; openAtStart: boolean }) {
   const [open, setOpen] = useState(openAtStart);
-  // The "Add students" button in Announcements asks this card to open and come into view.
-  useEffect(() => {
-    const show = () => { setOpen(true); document.getElementById("students")?.scrollIntoView({ behavior: "smooth", block: "start" }); };
-    window.addEventListener(OPEN_ADD_STUDENTS, show);
-    return () => window.removeEventListener(OPEN_ADD_STUDENTS, show);
-  }, []);
   return (
     <Card id="students" className="scroll-mt-6">
       <div className="flex items-center justify-between gap-3">
