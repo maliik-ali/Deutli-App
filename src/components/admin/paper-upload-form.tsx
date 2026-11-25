@@ -60,10 +60,10 @@ export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string
   const hasListening = included.has("hoeren");
   const [error, setError] = useState<string | null>(null);
   const errorRef = useRef<HTMLDivElement>(null);
-  // The message sits next to the Upload button; bring it into view so it is never missed.
-  useEffect(() => { if (error) errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }); }, [error]);
   const [status, setStatus] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
+  // The message sits next to the Upload button; bring it into view so it is never missed.
+  useEffect(() => { if (error || done) errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }); }, [error, done]);
   const [pending, start] = useTransition();
 
   function setPage(id: string, key: "fromPage" | "toPage", value: string) {
@@ -192,11 +192,6 @@ export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string
 
   return (
     <form onSubmit={onSubmit} className="grid gap-6" noValidate>
-      {done && (
-        <p role="status" className="rounded-xl border border-success/40 bg-success/10 px-4 py-3 text-[15px] font-medium">
-          {done}
-        </p>
-      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
@@ -347,7 +342,13 @@ export function PaperUploadForm({ teacher }: { teacher?: { batches: { id: string
       </div>
       )}
 
-      <div ref={errorRef} className="scroll-mt-24"><FormError message={error} /></div>
+      <div ref={errorRef} className="scroll-mt-24 grid gap-3"><FormError message={error} />
+      {done && (
+        <p role="status" className="rounded-xl border border-success/40 bg-success/10 px-4 py-3 text-[15px] font-medium">
+          {done}
+        </p>
+      )}
+</div>
       <Button type="submit" disabled={pending} className="w-full sm:w-fit">
         {pending && <Loader2 className="animate-spin" aria-hidden />}
         {pending ? (status ?? "Working…") : "Upload paper"}

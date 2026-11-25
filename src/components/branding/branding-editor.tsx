@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ImagePlus, Mail, MessageCircle } from "lucide-react";
+import { BookOpen, ImagePlus, LayoutDashboard, MessageCircle, MessageSquare, Timer, Video } from "lucide-react";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -10,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { accentProblem, FONT_OPTIONS, normaliseHex, primaryProblem, themeVars, type FontKey } from "@/lib/branding/colour";
 import { removeLogo, saveBranding, uploadLogo } from "@/lib/branding/actions";
-import { SUPPORT, whatsappLink } from "@/lib/support/contact";
+import { whatsappLink } from "@/lib/support/contact";
 
 export type BrandingValues = { displayName: string; primary: string; accent: string; fontKey: FontKey; logoUrl: string | null };
 
@@ -207,7 +208,7 @@ export function BrandingEditor({ initial, features, plans, workspaceName }: { in
                 <a href={whatsappLink(`Hi Deutli, I'd like to upgrade ${workspaceName} to ${plan?.name ?? "a plan"} to use my own branding.`)} target="_blank" rel="noopener noreferrer"><MessageCircle aria-hidden /> Upgrade on WhatsApp</a>
               </Button>
               <Button asChild size="sm" variant="outline">
-                <a href={`mailto:${SUPPORT.email}?subject=${encodeURIComponent(`Upgrade ${workspaceName}`)}`}><Mail aria-hidden /> Email us</a>
+                <Link href="/teacher/support?kind=question&from=/teacher/branding"><MessageSquare aria-hidden /> Message us</Link>
               </Button>
               {needed.length > missing.length && <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => save(true)}>Save only what my plan includes</Button>}
               <Button type="button" size="sm" variant="outline" onClick={reset}>Go back to normal</Button>
@@ -216,21 +217,51 @@ export function BrandingEditor({ initial, features, plans, workspaceName }: { in
         )}
       </Card>
 
-      {/* Live preview: the real colour variables and font, so what you see is what students get. */}
-      <div aria-label="Preview" style={{ ...(vars as React.CSSProperties), fontFamily: font }} className="grid gap-3 rounded-2xl border border-border bg-background p-4 text-foreground">
+      {/* Live preview: the real colour variables, font and logo, so what you see is what students get. */}
+      <div aria-label="Preview" style={{ ...(vars as React.CSSProperties), fontFamily: font }} className="grid gap-4 rounded-2xl border border-border bg-background p-4 text-foreground">
         <p className="text-[12px] font-semibold tracking-wide text-muted-foreground uppercase">Preview</p>
-        <div className="flex items-center gap-2.5">
-          {logoShown && <span className="grid size-9 place-items-center overflow-hidden rounded-md">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={logoShown} alt="" className="size-full object-contain" /></span>}
-          <span className="text-[18px] font-bold">{shownName}</span>
+
+        <div className="grid gap-1.5">
+          <p className="text-[12px] font-semibold text-muted-foreground">Your students&apos; app</p>
+          <div className="grid grid-cols-[116px_minmax(0,1fr)] overflow-hidden rounded-xl border border-border">
+            <div className="grid min-w-0 content-start gap-3 overflow-hidden border-r border-border bg-card p-2.5">
+              <div className="flex min-h-7 min-w-0 items-center gap-1.5">
+                {logoShown && /* eslint-disable-next-line @next/next/no-img-element */ <img src={logoShown} alt="" className="h-6 w-auto max-w-[36px] shrink-0 rounded object-contain" />}
+                <span className="min-w-0 truncate text-[12px] font-bold">{shownName}</span>
+              </div>
+              <div className="grid gap-0.5 text-[12px]">
+                {([[LayoutDashboard, "Dashboard", true], [Timer, "My Exam", false], [Video, "Classes", false], [BookOpen, "Vocabulary", false]] as const).map(([Icon, label, on]) => (
+                  <span key={label} className={`flex items-center gap-1.5 rounded-full px-2 py-1.5 ${on ? "bg-gold-soft font-semibold text-foreground" : "text-muted-foreground"}`}>
+                    <Icon className={`size-3.5 shrink-0 ${on ? "text-gold-ink" : ""}`} aria-hidden /> <span className="truncate">{label}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="grid min-w-0 content-start gap-3 p-3">
+              <div>
+                <p className="text-[14px] font-bold">Welcome back</p>
+                <p className="text-[12px] text-muted-foreground">Next class today at 18:00. <span className="text-gold-ink">See details</span></p>
+              </div>
+              <div className="grid gap-1.5 rounded-lg border border-border bg-card p-2.5">
+                <div className="flex items-center justify-between text-[12px]"><span className="font-semibold">Exam readiness</span><span className="rounded-full bg-gold-soft px-2 py-0.5 text-[11px] font-semibold text-gold-ink">72%</span></div>
+                <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full w-[72%] rounded-full bg-brand-gradient" /></div>
+              </div>
+              <span className="inline-flex h-9 w-fit items-center rounded-full bg-brand-gradient px-4 text-[13px] font-semibold text-white">Join class</span>
+            </div>
+          </div>
         </div>
-        <div className="grid gap-1 rounded-xl bg-card p-3">
-          <span className="rounded-full bg-gold-soft px-3 py-2 text-[14px] font-semibold">My Exam</span>
-          <span className="px-3 py-2 text-[14px] text-muted-foreground">Classes</span>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <p className="font-bold">Welcome back</p>
-          <p className="mb-3 text-[13px] text-muted-foreground">Next class today at 18:00. <span className="text-gold-ink">See details</span></p>
-          <span className="inline-flex h-10 items-center rounded-full bg-brand-gradient px-5 text-[14px] font-semibold text-white">Join class</span>
+
+        <div className="grid gap-1.5">
+          <p className="text-[12px] font-semibold text-muted-foreground">Your signup page</p>
+          <div className="grid justify-items-center gap-2.5 rounded-xl border border-border bg-card p-4 text-center">
+            <div className="flex items-center gap-2">
+              {logoShown && /* eslint-disable-next-line @next/next/no-img-element */ <img src={logoShown} alt="" className="h-8 w-auto max-w-[56px] rounded object-contain" />}
+              <span className="text-[16px] font-bold">{shownName}</span>
+            </div>
+            <p className="text-[12px] text-muted-foreground">Create your account to join {shownName}.</p>
+            <span className="h-9 w-full rounded-lg border border-input bg-background" aria-hidden />
+            <span className="inline-flex h-9 w-full items-center justify-center rounded-full bg-brand-gradient text-[13px] font-semibold text-white">Create account</span>
+          </div>
         </div>
       </div>
     </div>
