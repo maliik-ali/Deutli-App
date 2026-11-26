@@ -11,7 +11,7 @@ import { Meaning } from "./meanings";
 import { speakGerman } from "./speak";
 
 const PAGE = 50;
-type Filter = "all" | "prep" | "dat" | "akk" | "weak";
+type Filter = "all" | "prep" | "dat" | "akk" | "due" | "weak";
 
 /** The verbs list: search, a few filters, and a tap on a verb shows its example sentence. */
 export function VerbList({ verbs, languages }: { verbs: VerbItem[]; languages: LanguageCode[] }) {
@@ -20,12 +20,14 @@ export function VerbList({ verbs, languages }: { verbs: VerbItem[]; languages: L
   const [shown, setShown] = useState(PAGE);
   const [open, setOpen] = useState<string | null>(null);
   const hasWeak = verbs.some((v) => v.wrong > v.right);
+  const hasDue = verbs.some((v) => v.due);
 
   const filters: { id: Filter; label: string }[] = [
     { id: "all", label: "All" },
     { id: "prep", label: "With a preposition" },
     { id: "dat", label: "Dative" },
     { id: "akk", label: "Accusative" },
+    ...(hasDue ? [{ id: "due" as const, label: "Due today" }] : []),
     ...(hasWeak ? [{ id: "weak" as const, label: "Need practice" }] : []),
   ];
 
@@ -35,6 +37,7 @@ export function VerbList({ verbs, languages }: { verbs: VerbItem[]; languages: L
       if (filter === "prep" && !v.preposition) return false;
       if (filter === "dat" && !(v.verbCase ?? "").includes("Dat")) return false;
       if (filter === "akk" && !(v.verbCase ?? "").includes("Akk")) return false;
+      if (filter === "due" && !v.due) return false;
       if (filter === "weak" && !(v.wrong > v.right)) return false;
       if (!needle) return true;
       return v.german.toLowerCase().includes(needle) || Object.values(v.translations).some((t) => t.toLowerCase().includes(needle));

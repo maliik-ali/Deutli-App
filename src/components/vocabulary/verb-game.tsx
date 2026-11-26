@@ -99,8 +99,8 @@ export function VerbGame({ questions, languages, label, backHref }: { questions:
         <div className="mx-auto flex min-h-full w-full max-w-[560px] flex-col px-5 py-8">
           {round.length === 0 ? (
             <div className="m-auto grid max-w-sm gap-3 text-center">
-              <h1 className="text-xl font-bold">No verbs to play with yet</h1>
-              <p className="text-muted-foreground">The verbs list is empty. Please check back soon.</p>
+              <h1 className="text-xl font-bold">Nothing to practise right now</h1>
+              <p className="text-muted-foreground">No verbs are due today. Try the other game, or come back tomorrow.</p>
             </div>
           ) : done ? (
             <div className="grid gap-6">

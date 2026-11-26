@@ -5,15 +5,16 @@ import { ChevronLeft } from "lucide-react";
 import { VerbList } from "@/components/vocabulary/verb-list";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { requireUser } from "@/lib/auth/dal";
+import { requireUser, todayForUser } from "@/lib/auth/dal";
 import { listVerbs } from "@/lib/verbs/data";
 
 export const metadata: Metadata = { title: "Verbs" };
 
 export default async function VerbsPage() {
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
-  const verbs = await listVerbs(user.id);
+  const verbs = await listVerbs(user.id, await todayForUser());
   const withPrep = verbs.filter((v) => v.preposition).length;
+  const due = verbs.filter((v) => v.due && v.praeteritum && v.perfekt).length;
 
   return (
     <main className="mx-auto grid max-w-[960px] gap-6 px-4 py-6 sm:px-6 md:px-8 md:py-8">
@@ -34,6 +35,15 @@ export default async function VerbsPage() {
         </Card>
       ) : (
         <>
+          {due > 0 && (
+            <Card className="flex-row items-center gap-4 border-gold-ink/60 bg-gold-soft p-4">
+              <div className="grid min-w-0 flex-1 gap-0.5">
+                <h2 className="font-bold">{due} {due === 1 ? "verb is" : "verbs are"} due today</h2>
+                <p className="text-sm text-muted-foreground">A short review so they stay in your memory.</p>
+              </div>
+              <Button asChild className="shrink-0"><Link href="/vocabulary/play/verbs?mode=forms&due=1">Review</Link></Button>
+            </Card>
+          )}
           <section aria-label="Games" className="grid gap-3 sm:grid-cols-2">
             <Card className="flex-row items-center gap-4 p-4">
               <div className="grid min-w-0 flex-1 gap-0.5">

@@ -181,13 +181,16 @@ export async function recordVerbAnswer(verbId: unknown, right: unknown): Promise
   const id = uuid.safeParse(verbId);
   if (!id.success || typeof right !== "boolean") return { error: ERROR };
   const supabase = await createClient();
-  const { data: row } = await supabase.from("verb_progress").select("right_count, wrong_count").eq("user_id", user.id).eq("verb_id", id.data).maybeSingle();
+  const { data: row } = await supabase.from("verb_progress").select("right_count, wrong_count, box").eq("user_id", user.id).eq("verb_id", id.data).maybeSingle();
+  const step = nextReview(row?.box ?? 0, right, await todayForUser());
   const { error } = await supabase.from("verb_progress").upsert(
     {
       user_id: user.id,
       verb_id: id.data,
       right_count: (row?.right_count ?? 0) + (right ? 1 : 0),
       wrong_count: (row?.wrong_count ?? 0) + (right ? 0 : 1),
+      box: step.box,
+      due_on: step.dueOn,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id,verb_id" },
