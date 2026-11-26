@@ -23,7 +23,14 @@ export default async function MyBatchPage(props: PageProps<"/dashboard/batches/[
       <Link href="/dashboard/batches" className="inline-flex w-fit items-center gap-1 py-2 pr-3 text-[14px] font-medium text-muted-foreground hover:text-foreground"><ChevronLeft className="size-4" aria-hidden /> My batches</Link>
       <header className="grid gap-1">
         <h1 className="text-[28px] leading-tight font-extrabold sm:text-[32px]">{batch.name}</h1>
-        <p className="text-[14px] text-muted-foreground">{batch.teacherName ? `Teacher: ${batch.teacherName}` : ""}{batch.level ? ` · ${batch.level}` : ""}</p>
+        <p className="text-[14px] text-muted-foreground">
+          {batch.teacherName && (
+            <>
+              Teacher: <Link href={`/dashboard/teachers/${batch.teacher_id}`} className="font-medium text-foreground underline underline-offset-4 hover:text-gold-ink">{batch.teacherName}</Link>
+            </>
+          )}
+          {batch.level ? ` · ${batch.level}` : ""}
+        </p>
       </header>
       <Card>
         <div className="grid gap-1"><CardTitle>Upcoming classes</CardTitle><CardDescription>Times in your time zone. Open Classes to register and join.</CardDescription></div>

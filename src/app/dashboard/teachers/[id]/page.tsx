@@ -30,7 +30,8 @@ export default async function TeacherProfilePage(props: PageProps<"/dashboard/te
   if (!admin) notFound();
 
   const teacher = await getTeacherDetails(admin, id);
-  if (!teacher || (!teacher.isPublic && user.role === "student")) notFound();
+  // A teacher who hides their profile is still shown to their own students.
+  if (!teacher || (!teacher.isPublic && user.role === "student" && user.teacherId !== id)) notFound();
   const [courses, upcoming, mine, slots] = await Promise.all([getCoursesNow(admin, id), listTeacherUpcoming(id, user.id), listMyTimetable(user.id), listOneToOneSlots(id, false)]);
   const mineWithTeacher = mine.filter((c) => c.teacher.id === id);
   const academyLink = teacher.academy && (await canViewAcademy(admin, user, teacher.academy.id)) ? teacher.academy : null;

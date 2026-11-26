@@ -32,7 +32,7 @@ export default async function TakeTestPage(props: PageProps<"/dashboard/tests/[i
         <Card className="gap-4">
           <h1 className="text-[28px] leading-tight font-extrabold sm:text-[32px]">{t.test.title}</h1>
           {t.test.instructions && <p className="whitespace-pre-line text-[15px]">{t.test.instructions}</p>}
-          <p className="text-[14px] text-muted-foreground">{t.questions.length} questions{t.test.time_limit_min ? ` · ${t.test.time_limit_min} minutes. The timer starts when you press the button and cannot be paused.` : " · no time limit"}. Your answers are saved as you go. You can take the test once.</p>
+          <p className="text-[14px] text-muted-foreground">{t.questions.length} {t.questions.length === 1 ? "question" : "questions"}{t.test.time_limit_min ? ` · ${t.test.time_limit_min} minutes. The timer starts when you press the button and cannot be paused` : " · no time limit"}. Your answers are saved as you go. You can take the test once.</p>
           <StartTestButton testId={id} resume={!!t.attempt} />
         </Card>
       )}
