@@ -13,6 +13,7 @@ Owner: Malik Ali (designer, not a developer — explain decisions in plain words
 7. **Keep replies short and plain.** Malik is a designer, not a developer: a few clear lines, no walls of text.
 8. **Never make careless mistakes.** Re-read the request, check the result, and only then report.
 9. **Student feature = check the other roles too.** Whenever a student-side feature is built or changed, always ask: does a teacher, an academy/school admin or Deutli admin need to see, manage or get notified about it (results, content, settings, limits, reports)? If yes, build that side in the same step or list it clearly and ask. Malik may forget to ask; checking is your job. Say in the verdict what each role gets (or "nothing needed").
+10. **The learner test (standing rule, 26 Nov 2026).** For every feature ask as a real learner of German: does this help me learn, or is it one more burden, subscription or distraction? If a student cannot learn German through Deutli they will not come, and then no teacher or school will either. Say the answer in the verdict. Learning (vocabulary, practice, exams, classes) always stays one tap away; discovery and marketing never sit in its way.
 
 ## Product direction (from 22 Nov 2026): read before planning any feature
 **Who we sell to now.** German-language schools, academies and individual German teachers. They bring their own students. Deutli replaces the platform they would otherwise build themselves, or the mix of WhatsApp groups, Zoom links and shared drives. Individual learners can still sign up on their own (Free/Pro); keep that working.
@@ -44,6 +45,23 @@ Owner: Malik Ali (designer, not a developer — explain decisions in plain words
 10. Student timetable per teacher.
 11. 1:1 lessons.
 12. School admin dashboard (bulk CSV upload, attendance %, reports; fees later).
+
+## Marketplace direction (26 Nov 2026)
+**The idea (the trust loop of Upwork, not a copy of it).** A teacher registers, opens an academy (a workspace, `academies.kind = 'teacher'`), sets up a teacher profile and an academy profile (about, languages, links to website and social pages), brings their own students, teaches them on Deutli and collects reviews. Reputation lets standalone students (no teacher) find them in "Find a teacher": they see teachers, academies, classes, 1:1 slots and open batches, and join through Deutli. So a teacher gets clients through Deutli. Schools and academies work the same way and add administration (attendance, reports); the school side comes later. German only for now; other languages come after German works.
+
+**First real use:** a friend's academy with 100 students teaches on Deutli. Their students are the test users; then we market to other teachers.
+
+**Business:** students pay for Pro, teachers and academies pay for plans, and later a small commission on students Deutli brings (never on students a teacher brings). Students a teacher brings pay the teacher directly, outside Deutli. For a standalone student who finds a teacher on Deutli (decided 26 Nov 2026): the student taps "Request to join" and writes a short message; the request goes to the admin queue; Malik sends a payment link; after payment Malik assigns the teacher and pays the teacher by bank transfer, all by hand at first (later automatic, like Upwork). Check with a lawyer or Stripe Connect before this grows: collecting money for other people can count as a payment service in Germany and the EU. Do not build automatic payouts without asking Malik.
+
+**Built so far:** teacher profile (headline, bio, topics, languages, public or not), class ratings, workspaces with plans and branding, join codes, batches, classes and 1:1 slots.
+**Missing:** public academy profile, links on profiles, written reviews (verified students only, teacher can reply, report button), "Find a teacher" directory, listed batches that a student can join, rules so a school's students see only their own school's content, trial lessons, reputation badges.
+
+**Rules for building it**
+- Reviews come only from verified students (member of the batch for some weeks, or attended a class), one per student per teacher or academy, with a short reply from the teacher, a report button and admin moderation. Show the average only from 3 reviews. Ask what helped the learner (clear explanations, patience, exam progress), not only stars.
+- Listing is opt-in: a teacher or academy chooses "List me for new students". Private school content never appears in the directory.
+- A student of a school sees that school's classes and batches; a standalone student sees listed ones.
+- Fit before fame: show level, exam goal, explanation language, price, time zone and a trial lesson. No dark patterns, no pressure to subscribe.
+- Order: profiles, reviews, "Find a teacher", listed batches, trial lessons. One small step at a time, Malik confirms each.
 
 ## Teacher tools: what to build
 Status on 22 Nov 2026. "Built" is checked against the code and git log, not guessed.
@@ -99,7 +117,7 @@ Status on 22 Nov 2026. "Built" is checked against the code and git log, not gues
 - **A small teacher grows into a school without rebuilding.** Upgrade = change the same academy's `kind` and plan. Students, join codes, batches and material stay. The owner can then invite teachers.
 - **When a teacher leaves a school:** the students and everything made inside the school stay with the school. His own personal workspace and its students stay with him.
 - **Who pays:** the workspace owner. Students keep the free and Pro student plans unless Malik decides school plans include Pro.
-- **Marketplace (students finding teachers on Deutli) is phase 2, not built.** If it comes, take a commission only on students Deutli brings, clearly below Preply's 18 to 33%.
+- **Marketplace (students finding teachers on Deutli): now the direction (26 Nov 2026), see "Marketplace direction" below.** Take a commission only on students Deutli brings, clearly below Preply's 18 to 33%.
 - **Phase 1, the first customers are set up by Malik by hand** (concierge): an admin creates the workspace, assigns the owner and the plan, and sets the founding discount. No self-service checkout for teacher or school plans yet. Do not change the live student payment flow (PKR, Stripe) while doing this.
 
 ## German schools: data protection (check before the first school goes live)
