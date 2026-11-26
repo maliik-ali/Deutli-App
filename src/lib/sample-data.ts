@@ -21,6 +21,7 @@ export const NAV_ITEMS = [
     ],
   },
   { href: "/dashboard/classes", label: "Classes", icon: "video" },
+  { href: "/dashboard/find-teacher", label: "Find a teacher", icon: "search" },
   { href: "/dashboard/batches", label: "My batches", icon: "layers" },
   { href: "/dashboard/timetable", label: "Timetable", icon: "calendar" },
   { href: "/dashboard/homework", label: "Homework", icon: "pen" },
@@ -33,6 +34,9 @@ export const NAV_ITEMS = [
 
 /** Menu items that only make sense for a student with a teacher or school. */
 export const TEACHER_TOOL_HREFS: readonly string[] = ["/dashboard/batches", "/dashboard/timetable", "/dashboard/tests", "/dashboard/homework"];
+
+/** Menu items only for a learner on their own (no teacher or school yet): they are the ones who look for a teacher. */
+export const STANDALONE_ONLY_HREFS: readonly string[] = ["/dashboard/find-teacher"];
 
 export type NavIcon = (typeof NAV_ITEMS)[number]["icon"];
 

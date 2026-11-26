@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2 } from "lucide-react";
+import { Check, CheckCircle2 } from "lucide-react";
 
 import { AcademyProfileView, type AcademyView } from "@/components/academies/academy-profile-view";
 import { LanguageChips } from "@/components/language-chips";
@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { AcademyProfileValues } from "@/lib/academies/profile";
 import { saveAcademyProfile } from "@/lib/academies/profile-actions";
 import { toProfileLinks } from "@/lib/profile/links";
+import { cn } from "@/lib/utils";
 
 /** The owner's form for the academy's public profile, with a live preview of what students see. */
 export function AcademyProfileForm({ initial, name, logoUrl, teachers, solo }: { initial: AcademyProfileValues; name: string; logoUrl: string | null; teachers: AcademyView["teachers"]; solo: boolean }) {
@@ -81,6 +82,23 @@ export function AcademyProfileForm({ initial, name, logoUrl, teachers, solo }: {
             <Input id="country" value={v.country} onChange={(e) => touch(setV)({ ...v, country: e.target.value })} placeholder="Lahore, Pakistan" maxLength={60} />
           </div>
           <LanguageChips value={v.languages} onChange={(x) => touch(setV)({ ...v, languages: x })} legend="Languages you explain in (up to 3)" />
+        </Card>
+
+        <Card className="gap-4">
+          <div className="grid gap-1">
+            <CardTitle className="text-lg">Find a teacher</CardTitle>
+            <CardDescription>Students who are learning on their own look for a teacher here. Switch this on to appear in their list and let them ask to join you. It is off until you choose.</CardDescription>
+          </div>
+          <label className="flex min-h-11 cursor-pointer items-start gap-3 text-[15px]">
+            <input type="checkbox" checked={v.isListed} onChange={(e) => touch(setV)({ ...v, isListed: e.target.checked })} className="peer sr-only" />
+            <span aria-hidden className={cn("mt-0.5 grid size-6 shrink-0 place-items-center rounded-md border-2 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-gold-ink peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-card", v.isListed ? "border-gold bg-gold text-white" : "border-border")}>
+              {v.isListed && <Check className="size-3.5" strokeWidth={3} />}
+            </span>
+            <span>
+              List {name} in Find a teacher
+              <span className="mt-0.5 block text-[13px] text-muted-foreground">Needs a tagline, an about text and at least one language. Your teachers show up if their own profile is public.</span>
+            </span>
+          </label>
         </Card>
 
         <Card className="gap-5">

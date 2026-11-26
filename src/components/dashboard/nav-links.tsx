@@ -15,13 +15,14 @@ import {
   MessageCircleQuestion,
   Mic,
   PenLine,
+  Search,
   Speech,
   Timer,
   Video,
   type LucideIcon,
 } from "lucide-react";
 
-import { NAV_ITEMS, TEACHER_TOOL_HREFS, type NavIcon } from "@/lib/sample-data";
+import { NAV_ITEMS, STANDALONE_ONLY_HREFS, TEACHER_TOOL_HREFS, type NavIcon } from "@/lib/sample-data";
 import { cn } from "@/lib/utils";
 
 const ICONS: Record<NavIcon, LucideIcon> = {
@@ -38,6 +39,7 @@ const ICONS: Record<NavIcon, LucideIcon> = {
   message: MessageCircleQuestion,
   award: Award,
   skills: GraduationCap,
+  search: Search,
 };
 
 type WithLabel<T> = T extends unknown ? Omit<T, "label"> & { label: string } : never;
@@ -56,7 +58,7 @@ export function NavLinks({ onNavigate, examTitle, teacherTools = true }: { onNav
   return (
     <nav aria-label="Main">
       <ul className="grid gap-1">
-        {NAV_ITEMS.filter((base) => teacherTools || !TEACHER_TOOL_HREFS.includes(base.href)).map((base) => {
+        {NAV_ITEMS.filter((base) => (teacherTools || !TEACHER_TOOL_HREFS.includes(base.href)) && (!teacherTools || !STANDALONE_ONLY_HREFS.includes(base.href))).map((base) => {
           const item: Item = base.href === "/dashboard/exam" && examTitle ? { ...base, label: examTitle } : base;
           return (
           "children" in item ? (

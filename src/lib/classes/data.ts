@@ -160,7 +160,7 @@ export type TeacherDetails = TeacherBrief & {
   links: ProfileLink[];
   qualifications: string[];
   /** The academy they teach at, if it has a short name. */
-  academy: { id: string; name: string; slug: string } | null;
+  academy: { id: string; name: string; slug: string; listed: boolean } | null;
 };
 
 /** A teacher's public profile. Null if this person is not a teacher/admin or has no profile row. */

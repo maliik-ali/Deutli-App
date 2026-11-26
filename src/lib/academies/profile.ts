@@ -17,6 +17,8 @@ export type AcademyProfileValues = {
   languages: LanguageCode[];
   website: string;
   social: SocialLinks;
+  /** Shown in "Find a teacher" for students who have no teacher yet. Off until the owner switches it on. */
+  isListed: boolean;
 };
 
 export type AcademyTeacher = { id: string; name: string; avatarUrl: string | null; headline: string | null };
@@ -36,7 +38,7 @@ export type AcademyProfile = {
   teachers: AcademyTeacher[];
 };
 
-const COLS = "id, slug, name, kind, tagline, about, country, languages, website_url, social_links";
+const COLS = "id, slug, name, kind, tagline, about, country, languages, website_url, social_links, is_listed";
 
 type Row = {
   id: string;
@@ -49,6 +51,7 @@ type Row = {
   languages: string[] | null;
   website_url: string | null;
   social_links: unknown;
+  is_listed: boolean | null;
 };
 
 /** The editable values of one academy (for the owner's form). */
@@ -64,6 +67,7 @@ export async function getAcademyProfileValues(admin: Admin, academyId: string): 
     languages: r?.languages?.length ? cleanLanguages(r.languages) : [],
     website: r?.website_url ?? "",
     social,
+    isListed: !!r?.is_listed,
   };
 }
 
@@ -108,11 +112,14 @@ export async function getAcademyProfileBySlug(admin: Admin, slug: string): Promi
 }
 
 /**
- * Who may open an academy's page. For now only people who belong to it: its own students, students of its teachers,
- * its teachers, and Deutli admins. (The public directory comes later, and only for academies that choose to be listed.)
+ * Who may open an academy's page: anyone, if the academy chose to be listed in "Find a teacher"; otherwise only people who
+ * belong to it (its students, students of its teachers, its teachers) and Deutli admins.
  */
 export async function canViewAcademy(admin: Admin, user: Pick<CurrentUser, "id" | "role" | "teacherId">, academyId: string): Promise<boolean> {
   if (user.role === "super_admin" || user.role === "academy_admin") return true;
+  // A listed academy is open to every student: that is the point of listing.
+  const { data: listed } = await admin.from("academies").select("is_listed").eq("id", academyId).maybeSingle();
+  if (listed?.is_listed) return true;
   const [mine, member] = await Promise.all([
     admin.from("profiles").select("academy_id").eq("id", user.id).maybeSingle(),
     admin.from("academy_members").select("user_id").eq("academy_id", academyId).in("user_id", [user.id, ...(user.teacherId ? [user.teacherId] : [])]).limit(1),
@@ -121,14 +128,14 @@ export async function canViewAcademy(admin: Admin, user: Pick<CurrentUser, "id" 
 }
 
 /** The academy a teacher belongs to (their own first), for the "Teaches at …" line. Null if they have none or no short name. */
-export async function getTeacherAcademy(admin: Admin, teacherId: string): Promise<{ id: string; name: string; slug: string } | null> {
+export async function getTeacherAcademy(admin: Admin, teacherId: string): Promise<{ id: string; name: string; slug: string; listed: boolean } | null> {
   const { data: rows } = await admin.from("academy_members").select("academy_id, role").eq("user_id", teacherId);
   const mine = (rows ?? []) as { academy_id: string; role: string }[];
   if (!mine.length) return null;
-  const { data } = await admin.from("academies").select("id, name, slug").in("id", mine.map((m) => m.academy_id));
-  const all = ((data ?? []) as { id: string; name: string; slug: string | null }[]).filter((a) => a.slug);
+  const { data } = await admin.from("academies").select("id, name, slug, is_listed").in("id", mine.map((m) => m.academy_id));
+  const all = ((data ?? []) as { id: string; name: string; slug: string | null; is_listed: boolean | null }[]).filter((a) => a.slug);
   const pick = all.find((a) => mine.find((m) => m.academy_id === a.id)?.role === "owner") ?? all[0];
   if (!pick || !pick.slug) return null;
   const brand = await getBrandById(pick.id);
-  return { id: pick.id, name: brand?.name ?? pick.name, slug: pick.slug };
+  return { id: pick.id, name: brand?.name ?? pick.name, slug: pick.slug, listed: !!pick.is_listed };
 }

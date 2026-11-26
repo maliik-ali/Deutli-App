@@ -6,6 +6,7 @@ import { ChevronLeft } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { ClassRow } from "@/components/classes/class-row";
 import { RatingBadge } from "@/components/classes/teacher-card";
+import { JoinRequestCard } from "@/components/directory/join-request-card";
 import { ProfileLinks } from "@/components/profile/profile-links";
 import { TeacherReviews } from "@/components/reviews/reviews-section";
 import { LanguageFlag } from "@/components/language-flag";
@@ -14,6 +15,7 @@ import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
 import { levelLabel, skillLabel } from "@/lib/classes/constants";
 import { canViewAcademy } from "@/lib/academies/profile";
+import { getMyJoinRequest, isStandalone } from "@/lib/directory/queue";
 import { getCoursesNow, getTeacherDetails, listMyTimetable, listOneToOneSlots, listTeacherUpcoming } from "@/lib/classes/data";
 import { getLanguage } from "@/lib/languages";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -35,6 +37,9 @@ export default async function TeacherProfilePage(props: PageProps<"/dashboard/te
   if (!teacher || (!teacher.isPublic && user.role === "student" && user.teacherId !== id)) notFound();
   const [courses, upcoming, mine, slots] = await Promise.all([getCoursesNow(admin, id), listTeacherUpcoming(id, user.id), listMyTimetable(user.id), listOneToOneSlots(id, false)]);
   const mineWithTeacher = mine.filter((c) => c.teacher.id === id);
+  // A learner without a teacher can ask to join a teacher who is listed in Find a teacher.
+  const canRequest = user.role === "student" && !!teacher.academy?.listed && teacher.isPublic && (await isStandalone(admin, user.id));
+  const myRequest = canRequest ? await getMyJoinRequest(admin, user.id, id) : null;
   const academyLink = teacher.academy && (await canViewAcademy(admin, user, teacher.academy.id)) ? teacher.academy : null;
   const tz = user.timeZone;
   const serverNow = new Date().getTime();
@@ -146,6 +151,8 @@ export default async function TeacherProfilePage(props: PageProps<"/dashboard/te
             </Card>
           </section>
         )}
+
+        {canRequest && teacher.academy && <JoinRequestCard teacherId={id} firstName={teacher.name.split(" ")[0]} academyName={teacher.academy.name} existing={myRequest} />}
 
         <TeacherReviews admin={admin} teacherId={id} firstName={teacher.name.split(" ")[0]} viewer={user} />
 

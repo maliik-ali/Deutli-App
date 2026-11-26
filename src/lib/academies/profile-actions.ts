@@ -18,6 +18,7 @@ const schema = z.object({
   languages: z.array(z.enum(LANGUAGE_CODES)).max(6).default([]),
   website: text(300).default(""),
   social: z.record(z.string(), text(300)).default({}),
+  isListed: z.boolean().default(false),
 });
 
 /**
@@ -33,8 +34,13 @@ export async function saveAcademyProfile(input: unknown): Promise<{ error: strin
   if (!p.success) return { error: p.error.issues[0].message };
   const links = checkLinks({ website: p.data.website, social: p.data.social });
   if ("error" in links) return links;
+  // Listing puts the academy in front of new students, so it needs enough to choose by.
+  if (p.data.isListed && (!p.data.tagline || !p.data.about || p.data.languages.length === 0)) {
+    return { error: "To list your academy, add a tagline, an about text and the languages you explain in." };
+  }
   const admin = createAdminClient();
   if (!admin) return { error: "We couldn't save this. Please try again in a few minutes." };
+  const { data: before } = await admin.from("academies").select("is_listed").eq("id", ws.workspace.id).maybeSingle();
 
   const { error } = await admin
     .from("academies")
@@ -45,6 +51,8 @@ export async function saveAcademyProfile(input: unknown): Promise<{ error: strin
       languages: [...new Set(p.data.languages)],
       website_url: links.website,
       social_links: links.social,
+      is_listed: p.data.isListed,
+      ...(p.data.isListed && !before?.is_listed ? { listed_at: new Date().toISOString() } : {}),
     })
     .eq("id", ws.workspace.id);
   if (error) return { error: "We couldn't save this. Check your internet and try again." };
