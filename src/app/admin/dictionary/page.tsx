@@ -4,6 +4,7 @@ import { Search } from "lucide-react";
 
 import { AdminShell } from "@/components/admin/admin-shell";
 import { DictionaryUpload } from "@/components/admin/dictionary-upload";
+import { VerbsUpload } from "@/components/admin/verbs-upload";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
@@ -55,6 +56,19 @@ export default async function AdminDictionaryPage(props: PageProps<"/admin/dicti
           </CardDescription>
         </div>
         <DictionaryUpload />
+      </Card>
+
+      <Card>
+        <div className="grid gap-1">
+          <CardTitle className="text-lg">Upload verbs</CardTitle>
+          <CardDescription>
+            The verbs list on the Vocabulary page. Columns: <code className="text-foreground">german</code>, <code className="text-foreground">praesens</code>,{" "}
+            <code className="text-foreground">praeteritum</code>, <code className="text-foreground">perfekt</code>, <code className="text-foreground">preposition</code>,{" "}
+            <code className="text-foreground">case</code>, one column per language (<code className="text-foreground">en</code>, <code className="text-foreground">ur</code>…),{" "}
+            <code className="text-foreground">example_de</code> and <code className="text-foreground">example_de_en</code>. The same verb and meaning uploaded again is updated.
+          </CardDescription>
+        </div>
+        <VerbsUpload />
       </Card>
 
       <Card>

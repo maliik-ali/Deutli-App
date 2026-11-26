@@ -174,3 +174,24 @@ export async function recordArticleAnswer(input: unknown, right: unknown): Promi
   if (error) return { error: ERROR };
   return { ok: true };
 }
+
+/** Save one answer from a verb game: the student's own right and wrong counts for that verb. */
+export async function recordVerbAnswer(verbId: unknown, right: unknown): Promise<VocabResult> {
+  const user = await requireUser(ROLES);
+  const id = uuid.safeParse(verbId);
+  if (!id.success || typeof right !== "boolean") return { error: ERROR };
+  const supabase = await createClient();
+  const { data: row } = await supabase.from("verb_progress").select("right_count, wrong_count").eq("user_id", user.id).eq("verb_id", id.data).maybeSingle();
+  const { error } = await supabase.from("verb_progress").upsert(
+    {
+      user_id: user.id,
+      verb_id: id.data,
+      right_count: (row?.right_count ?? 0) + (right ? 1 : 0),
+      wrong_count: (row?.wrong_count ?? 0) + (right ? 0 : 1),
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id,verb_id" },
+  );
+  if (error) return { error: ERROR };
+  return { ok: true };
+}
