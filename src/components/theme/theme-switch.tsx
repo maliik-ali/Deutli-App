@@ -1,36 +1,36 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { Moon, Sun } from "lucide-react";
+import { Monitor, Moon, Sun } from "lucide-react";
 
-import { applyTheme, currentTheme, subscribeTheme, type Theme } from "@/lib/theme";
+import { applyTheme, currentChoice, subscribeChoice, type ThemeChoice } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
-const OPTIONS: { id: Theme; label: string; icon: typeof Sun }[] = [
+const OPTIONS: { id: ThemeChoice; label: string; icon: typeof Sun }[] = [
   { id: "light", label: "Light", icon: Sun },
   { id: "dark", label: "Dark", icon: Moon },
+  { id: "system", label: "System", icon: Monitor },
 ];
 
-/** Light / Dark switch. The choice is remembered on this device and applied before the page paints (see ThemeScript). */
+/** Light / Dark / System switch. The choice is remembered on this device and applied before the page paints (see THEME_SCRIPT). */
 export function ThemeSwitch() {
-  const theme = useSyncExternalStore(subscribeTheme, currentTheme, () => "dark" as Theme);
-  const choose = applyTheme;
+  const choice = useSyncExternalStore(subscribeChoice, currentChoice, () => "dark" as ThemeChoice);
 
   return (
-    <div role="radiogroup" aria-label="Colour theme" className="grid grid-cols-2 gap-1 rounded-full bg-muted p-1">
+    <div role="radiogroup" aria-label="Colour theme" className="grid grid-cols-3 gap-1 rounded-full bg-muted p-1">
       {OPTIONS.map(({ id, label, icon: Icon }) => (
         <button
           key={id}
           type="button"
           role="radio"
-          aria-checked={theme === id}
-          onClick={() => choose(id)}
+          aria-checked={choice === id}
+          onClick={() => applyTheme(id)}
           className={cn(
             "flex h-9 items-center justify-center gap-1.5 rounded-full text-[14px] font-medium transition-colors",
-            theme === id ? "bg-gold-soft font-semibold text-foreground" : "text-muted-foreground hover:text-foreground",
+            choice === id ? "bg-gold-soft font-semibold text-foreground" : "text-muted-foreground hover:text-foreground",
           )}
         >
-          <Icon className={cn("size-4", theme === id && "text-gold-ink")} aria-hidden /> {label}
+          <Icon className={cn("size-4", choice === id && "text-gold-ink")} aria-hidden /> {label}
         </button>
       ))}
     </div>
