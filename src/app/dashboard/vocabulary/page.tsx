@@ -599,7 +599,6 @@ async function LevelView({
           <section aria-label="Topics" className="grid gap-3">
             <h2 className="text-[15px] font-semibold text-muted-foreground">Topics</h2>
             <TopicPicker
-              allHref={href({ list: level, topic: null })}
               items={[{ name: null as string | null, translations: {} as Record<string, string>, total: data.words.length, started: totalStarted }, ...data.topics].map((t) => {
                 const code = userLanguages.find((c) => t.translations?.[c]);
                 return {
