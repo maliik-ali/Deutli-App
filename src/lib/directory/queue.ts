@@ -29,15 +29,16 @@ export type QueueItem = {
   student: { id: string; name: string; email: string | null; phone: string | null };
   teacher: { id: string; name: string };
   academy: string | null;
+  batch: string | null;
 };
 
 /** The admin's queue: open requests first (oldest first), then finished ones (newest first). */
 export async function listJoinRequests(admin: Admin, show: "open" | "done" | "all"): Promise<QueueItem[]> {
-  let q = admin.from("join_requests").select("id, student_id, teacher_id, academy_id, message, status, admin_note, created_at").order("created_at", { ascending: show === "open" }).limit(200);
+  let q = admin.from("join_requests").select("id, student_id, teacher_id, academy_id, batch_id, message, status, admin_note, created_at").order("created_at", { ascending: show === "open" }).limit(200);
   if (show === "open") q = q.in("status", ["new", "payment_sent"]);
   if (show === "done") q = q.in("status", ["assigned", "declined"]);
   const { data } = await q;
-  const rows = (data ?? []) as { id: string; student_id: string; teacher_id: string; academy_id: string | null; message: string | null; status: JoinRequestStatus; admin_note: string | null; created_at: string }[];
+  const rows = (data ?? []) as { id: string; student_id: string; teacher_id: string; academy_id: string | null; batch_id: string | null; message: string | null; status: JoinRequestStatus; admin_note: string | null; created_at: string }[];
   if (!rows.length) return [];
   const peopleIds = [...new Set(rows.flatMap((r) => [r.student_id, r.teacher_id]))];
   const [people, acads] = await Promise.all([
@@ -46,6 +47,9 @@ export async function listJoinRequests(admin: Admin, show: "open" | "done" | "al
   ]);
   const p = new Map(((people.data ?? []) as { id: string; full_name: string | null; phone: string | null }[]).map((x) => [x.id, x]));
   const a = new Map(((acads.data ?? []) as { id: string; name: string }[]).map((x) => [x.id, x.name]));
+  const batchIds = [...new Set(rows.map((r) => r.batch_id).filter((x): x is string => !!x))];
+  const { data: bRows } = batchIds.length ? await admin.from("batches").select("id, name").in("id", batchIds) : { data: [] };
+  const batchNames = new Map(((bRows ?? []) as { id: string; name: string }[]).map((b) => [b.id, b.name]));
   const emails = new Map<string, string | null>();
   await Promise.all([...new Set(rows.map((r) => r.student_id))].map(async (id) => {
     const { data: u } = await admin.auth.admin.getUserById(id);
@@ -60,5 +64,6 @@ export async function listJoinRequests(admin: Admin, show: "open" | "done" | "al
     student: { id: r.student_id, name: p.get(r.student_id)?.full_name ?? "Student", email: emails.get(r.student_id) ?? null, phone: p.get(r.student_id)?.phone ?? null },
     teacher: { id: r.teacher_id, name: p.get(r.teacher_id)?.full_name ?? "Teacher" },
     academy: r.academy_id ? (a.get(r.academy_id) ?? null) : null,
+    batch: r.batch_id ? (batchNames.get(r.batch_id) ?? null) : null,
   }));
 }

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 
-import { ArchiveBatch, DeleteAnnouncement, PostAnnouncementForm, StudentsCard } from "@/components/batches/batch-forms";
+import { ArchiveBatch, DeleteAnnouncement, ListBatchCard, PostAnnouncementForm, StudentsCard } from "@/components/batches/batch-forms";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -33,6 +33,7 @@ export default async function TeacherBatchPage(props: PageProps<"/teacher/batche
             {batch.level && <Badge variant="gold">{batch.level}</Badge>}
             {batch.exam}{batch.starts_on ? ` · from ${formatDayMedium(batch.starts_on)}` : ""}{batch.ends_on ? ` to ${formatDayMedium(batch.ends_on)}` : ""}
             {batch.archived && <Badge variant="outline">Archived</Badge>}
+            {batch.is_listed && <Badge variant="outline">Listed</Badge>}
           </p>
         </div>
         <ArchiveBatch batchId={batch.id} archived={batch.archived} />
@@ -40,6 +41,7 @@ export default async function TeacherBatchPage(props: PageProps<"/teacher/batche
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <div className="grid gap-6">
+          <ListBatchCard batchId={batch.id} listed={batch.is_listed} seats={batch.seats} />
           <Card>
             <div className="grid gap-1"><CardTitle>Announcements</CardTitle><CardDescription>Students see it in the app and get an email. It is a post, not a chat.</CardDescription></div>
             <PostAnnouncementForm batchId={batch.id} hasStudents={members.length > 0} />

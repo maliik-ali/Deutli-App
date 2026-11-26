@@ -5,12 +5,13 @@ import { z } from "zod";
 
 import { requireUser } from "@/lib/auth/dal";
 import { allow } from "@/lib/rate-limit";
+import { listOpenBatches } from "@/lib/directory/batches";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type Result = { error: string } | { ok: true };
 const SAVE_ERROR = "We couldn't send this. Check your internet and try again.";
 
-const schema = z.object({ teacherId: z.uuid(), message: z.string().trim().max(300, "Keep your message under 300 characters.").default("") });
+const schema = z.object({ teacherId: z.uuid(), message: z.string().trim().max(300, "Keep your message under 300 characters.").default(""), batchId: z.uuid().optional() });
 
 /**
  * A student who is learning on their own asks to join a listed teacher. Deutli takes it from there by hand:
@@ -35,7 +36,13 @@ export async function requestToJoin(input: unknown): Promise<Result> {
   const { data: tp } = await admin.from("teacher_profiles").select("is_public").eq("user_id", p.data.teacherId).maybeSingle();
   if (!acad?.[0] || tp?.is_public === false) return { error: "This teacher isn't taking new students through Deutli right now." };
 
-  const { error } = await admin.from("join_requests").insert({ student_id: user.id, teacher_id: p.data.teacherId, academy_id: acad[0].id as string, message: p.data.message || null });
+  // A chosen batch must be one of this teacher's listed, running batches with a free seat.
+  if (p.data.batchId) {
+    const open = (await listOpenBatches(admin, p.data.teacherId)).find((b) => b.id === p.data.batchId);
+    if (!open) return { error: "That batch isn't open for new students any more." };
+    if (open.seatsLeft === 0) return { error: "That batch is full. Ask without choosing a batch, or pick another." };
+  }
+  const { error } = await admin.from("join_requests").insert({ student_id: user.id, teacher_id: p.data.teacherId, academy_id: acad[0].id as string, message: p.data.message || null, batch_id: p.data.batchId ?? null });
   if (error) return { error: /duplicate|unique/i.test(error.message) ? "You already sent a request to this teacher." : SAVE_ERROR };
   revalidatePath("/dashboard/teachers", "layout");
   revalidatePath("/admin/join-requests");
@@ -67,12 +74,17 @@ export async function updateJoinRequest(input: unknown): Promise<Result> {
   if (!p.success) return { error: SAVE_ERROR };
   const admin = createAdminClient();
   if (!admin) return { error: SAVE_ERROR };
-  const { data: req } = await admin.from("join_requests").select("student_id, teacher_id, academy_id, status").eq("id", p.data.id).maybeSingle();
+  const { data: req } = await admin.from("join_requests").select("student_id, teacher_id, academy_id, batch_id, status").eq("id", p.data.id).maybeSingle();
   if (!req) return { error: "That request no longer exists." };
 
   if (p.data.action === "assign") {
     const { error: e1 } = await admin.from("profiles").update({ teacher_id: req.teacher_id, academy_id: req.academy_id }).eq("id", req.student_id).eq("role", "student");
     if (e1) return { error: SAVE_ERROR };
+    // The student asked for a batch: put them in it (if it still exists and belongs to this teacher).
+    if (req.batch_id && req.academy_id) {
+      const { data: b } = await admin.from("batches").select("id").eq("id", req.batch_id).eq("teacher_id", req.teacher_id).maybeSingle();
+      if (b) await admin.from("batch_members").upsert({ batch_id: b.id, student_id: req.student_id, academy_id: req.academy_id }, { onConflict: "batch_id,student_id", ignoreDuplicates: true });
+    }
   }
   const status = p.data.action === "note" ? undefined : { payment_sent: "payment_sent", assign: "assigned", decline: "declined", reopen: "new" }[p.data.action];
   const { error } = await admin

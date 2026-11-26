@@ -5,14 +5,15 @@ import { useRouter } from "next/navigation";
 import { Check, Trash2, UserPlus, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { CopyButton } from "@/components/dashboard/copy-button";
 import { InviteStudentsForm } from "@/components/students/invite-form";
-import { addStudentsToBatch, createBatch, deleteAnnouncement, deleteBatch, makeBatchJoinCode, postAnnouncement, removeStudentFromBatch, setBatchArchived } from "@/lib/batches/actions";
+import { addStudentsToBatch, createBatch, deleteAnnouncement, deleteBatch, makeBatchJoinCode, postAnnouncement, removeStudentFromBatch, setBatchArchived, setBatchListing } from "@/lib/batches/actions";
 
 type Res = { error: string } | { ok: true };
 function useRun() {
@@ -184,6 +185,35 @@ export function ArchiveBatch({ batchId, archived }: { batchId: string; archived:
       </Button>
       <Err text={error} />
     </div>
+  );
+}
+
+/** Opt-in: show this batch to students who are learning on their own, with an optional seat limit. */
+export function ListBatchCard({ batchId, listed, seats }: { batchId: string; listed: boolean; seats: number | null }) {
+  const { error, busy, run } = useRun();
+  const [on, setOn] = useState(listed);
+  const [n, setN] = useState(seats ? String(seats) : "");
+  return (
+    <Card>
+      <div className="grid gap-1">
+        <CardTitle>Open for new students</CardTitle>
+        <CardDescription>Students who find you in Find a teacher see this batch and can ask to join. Deutli arranges the payment and adds them. Your own students are never affected. Your workspace must also be listed.</CardDescription>
+      </div>
+      <label className="flex cursor-pointer items-start gap-3">
+        <input type="checkbox" checked={on} onChange={(e) => setOn(e.target.checked)} className="peer sr-only" />
+        <span aria-hidden className={cn("mt-0.5 grid size-6 shrink-0 place-items-center rounded-md border-2 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-gold-ink peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-card", on ? "border-gold bg-gold text-white" : "border-border")}>
+          {on && <Check className="size-3.5" strokeWidth={3} />}
+        </span>
+        <span className="text-[15px] font-medium">List this batch for new students</span>
+      </label>
+      {on && (
+        <label className={cn(field, "max-w-48")}>Seats (optional)<Input inputMode="numeric" value={n} onChange={(e) => setN(e.target.value.replace(/\D/g, ""))} placeholder="No limit" maxLength={3} /></label>
+      )}
+      <div className="flex flex-wrap items-center gap-3">
+        <Button type="button" size="sm" disabled={busy} onClick={() => run(() => setBatchListing(batchId, on, n))}>{busy ? "Saving…" : "Save"}</Button>
+        <Err text={error} />
+      </div>
+    </Card>
   );
 }
 

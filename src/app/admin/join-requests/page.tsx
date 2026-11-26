@@ -50,7 +50,7 @@ export default async function JoinRequestsPage(props: PageProps<"/admin/join-req
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="grid gap-1">
                   <p className="text-[17px] font-bold">{r.student.name} <span className="font-normal text-muted-foreground">wants to join</span> {r.teacher.name}</p>
-                  <p className="text-[13px] text-muted-foreground">{r.academy ?? "No academy"} · {new Date(r.createdAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
+                  <p className="text-[13px] text-muted-foreground">{r.academy ?? "No academy"}{r.batch ? ` · batch: ${r.batch}` : ""} · {new Date(r.createdAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
                   <p className="text-[14px]">
                     {r.student.email ? <a className="underline underline-offset-4" href={`mailto:${r.student.email}`}>{r.student.email}</a> : "No email"}
                     {r.student.phone ? ` · ${r.student.phone}` : ""}

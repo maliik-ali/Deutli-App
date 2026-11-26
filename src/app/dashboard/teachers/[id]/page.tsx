@@ -6,6 +6,7 @@ import { ChevronLeft } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { ClassRow } from "@/components/classes/class-row";
 import { RatingBadge } from "@/components/classes/teacher-card";
+import { listOpenBatches } from "@/lib/directory/batches";
 import { JoinRequestCard } from "@/components/directory/join-request-card";
 import { ProfileLinks } from "@/components/profile/profile-links";
 import { TeacherBadges } from "@/components/reputation/teacher-badges";
@@ -47,6 +48,7 @@ export default async function TeacherProfilePage(props: PageProps<"/dashboard/te
   // A learner without a teacher can ask to join a teacher who is listed in Find a teacher.
   const canRequest = user.role === "student" && !!teacher.academy?.listed && teacher.isPublic && (await isStandalone(admin, user.id));
   const badges = earnedBadges((await getTeacherStats(admin, [id])).get(id)!);
+  const openBatches = canRequest ? await listOpenBatches(admin, id) : [];
   const myRequest = canRequest ? await getMyJoinRequest(admin, user.id, id) : null;
   const academyLink = teacher.academy && (await canViewAcademy(admin, user, teacher.academy.id)) ? teacher.academy : null;
   const tz = user.timeZone;
@@ -161,7 +163,7 @@ export default async function TeacherProfilePage(props: PageProps<"/dashboard/te
           </section>
         )}
 
-        {canRequest && teacher.academy && <JoinRequestCard teacherId={id} firstName={teacher.name.split(" ")[0]} academyName={teacher.academy.name} existing={myRequest} />}
+        {canRequest && teacher.academy && <JoinRequestCard teacherId={id} firstName={teacher.name.split(" ")[0]} academyName={teacher.academy.name} existing={myRequest} batches={openBatches} />}
 
         <TeacherReviews admin={admin} teacherId={id} firstName={teacher.name.split(" ")[0]} viewer={user} />
 

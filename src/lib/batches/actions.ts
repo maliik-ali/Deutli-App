@@ -55,6 +55,21 @@ export async function setBatchArchived(batchId: unknown, archived: unknown): Pro
   return { ok: true };
 }
 
+/** Lists the batch for students who are learning on their own (opt-in), with an optional number of seats. */
+export async function setBatchListing(batchId: unknown, listed: unknown, seats: unknown): Promise<Result> {
+  const { user, admin } = await teacher();
+  const id = uuid.safeParse(batchId);
+  const n = seats === "" || seats == null ? null : Number(seats);
+  if (!id.success || typeof listed !== "boolean" || !admin || !(await getManagedBatch(id.data, user.id))) return { error: GENERIC };
+  if (n !== null && (!Number.isInteger(n) || n < 1 || n > 500)) return { error: "Seats must be a whole number from 1 to 500, or empty for no limit." };
+  const { error } = await admin.from("batches").update({ is_listed: listed, seats: listed ? n : null }).eq("id", id.data);
+  if (error) return { error: GENERIC };
+  revalidatePath("/teacher/batches");
+  revalidatePath(`/teacher/batches/${id.data}`);
+  revalidatePath("/dashboard/teachers", "layout");
+  return { ok: true };
+}
+
 /** Deletes the batch itself. Students, classes and material stay; only their link to this batch, its announcements and its codes go. */
 export async function deleteBatch(batchId: unknown): Promise<Result> {
   const { user, admin } = await teacher();

@@ -13,9 +13,11 @@ export type Batch = {
   starts_on: string | null;
   ends_on: string | null;
   archived: boolean;
+  is_listed: boolean;
+  seats: number | null;
   created_at: string;
 };
-export const BATCH_COLS = "id, academy_id, teacher_id, name, level, exam, starts_on, ends_on, archived, created_at";
+export const BATCH_COLS = "id, academy_id, teacher_id, name, level, exam, starts_on, ends_on, archived, is_listed, seats, created_at";
 
 export type Announcement = { id: string; title: string; body: string; created_at: string; author_id: string | null };
 
