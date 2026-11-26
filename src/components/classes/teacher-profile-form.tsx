@@ -6,6 +6,7 @@ import { Camera, Check, CheckCircle2 } from "lucide-react";
 
 import { Avatar } from "@/components/avatar";
 import { LanguageChips } from "@/components/language-chips";
+import { LinksFields } from "@/components/profile/links-fields";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import { squarePhoto } from "@/lib/account/photo-crop";
 import { saveTeacherProfile } from "@/lib/classes/actions";
 import { SPECIALTIES } from "@/lib/classes/constants";
 import { cleanLanguages, type LanguageCode } from "@/lib/languages";
+import type { SocialLinks } from "@/lib/profile/links";
 import { cn } from "@/lib/utils";
 
 export type TeacherProfileValues = {
@@ -26,12 +28,16 @@ export type TeacherProfileValues = {
   specialties: string[];
   speaks: string[];
   isPublic: boolean;
+  website: string;
+  social: SocialLinks;
+  qualifications: string[];
 };
 
 /** The teacher's own profile: photo, one-line headline, bio, what they teach, languages they explain in. */
 export function TeacherProfileForm({ initial }: { initial: TeacherProfileValues }) {
   const router = useRouter();
   const [v, setV] = useState(initial);
+  const [qualText, setQualText] = useState(initial.qualifications.join("\n"));
   const [speaks, setSpeaks] = useState<LanguageCode[]>(() => (initial.speaks.length ? cleanLanguages(initial.speaks) : []));
   const [error, setError] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
@@ -92,6 +98,9 @@ export function TeacherProfileForm({ initial }: { initial: TeacherProfileValues 
         specialties: v.specialties,
         speaks,
         isPublic: v.isPublic,
+        website: v.website,
+        social: v.social,
+        qualifications: qualText.split("\n").map((q) => q.trim()).filter(Boolean),
       });
       if ("error" in r) setError(r.error);
       else {
@@ -196,6 +205,20 @@ export function TeacherProfileForm({ initial }: { initial: TeacherProfileValues 
           </span>
           <span>Show my profile page to students. Your name and classes stay visible either way.</span>
         </label>
+      </Card>
+
+      <Card className="gap-5">
+        <div className="grid gap-1">
+          <CardTitle className="text-lg">Qualifications and links</CardTitle>
+          <CardDescription>Students trust a teacher they can check. Add what you are certified in and where they can find you. All optional.</CardDescription>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="quals">
+            Qualifications <span className="font-normal text-subtle-foreground">(one per line, up to 5)</span>
+          </Label>
+          <Textarea id="quals" value={qualText} onChange={(e) => { setSaved(false); setQualText(e.target.value); }} placeholder={"Telc B1 certified examiner\nMA German as a foreign language"} rows={4} maxLength={460} />
+        </div>
+        <LinksFields idPrefix="tp" value={{ website: v.website, social: v.social }} onChange={(l) => { setSaved(false); setV({ ...v, website: l.website, social: l.social }); }} />
       </Card>
 
       {error && (

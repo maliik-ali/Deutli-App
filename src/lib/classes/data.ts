@@ -2,6 +2,8 @@ import "server-only";
 
 import { getAvatarUrls } from "@/lib/account/avatar";
 import { MIN_RATINGS_TO_SHOW } from "@/lib/classes/constants";
+import { getTeacherAcademy } from "@/lib/academies/profile";
+import { toProfileLinks, type ProfileLink, type SocialLinks } from "@/lib/profile/links";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type Admin = NonNullable<ReturnType<typeof createAdminClient>>;
@@ -152,13 +154,18 @@ export type TeacherDetails = TeacherBrief & {
   isPublic: boolean;
   /** Average of student ratings, only when enough students rated. */
   rating: { average: number; count: number } | null;
+  /** Website and social pages, already checked (https, known sites). */
+  links: ProfileLink[];
+  qualifications: string[];
+  /** The academy they teach at, if it has a short name. */
+  academy: { id: string; name: string; slug: string } | null;
 };
 
 /** A teacher's public profile. Null if this person is not a teacher/admin or has no profile row. */
 export async function getTeacherDetails(admin: Admin, teacherId: string): Promise<TeacherDetails | null> {
   const [{ data: profile }, { data: detail }, { data: classes }] = await Promise.all([
     admin.from("profiles").select("id, full_name, avatar_path, role").eq("id", teacherId).maybeSingle(),
-    admin.from("teacher_profiles").select("headline, bio, specialties, speaks, is_public").eq("user_id", teacherId).maybeSingle(),
+    admin.from("teacher_profiles").select("headline, bio, specialties, speaks, is_public, website_url, social_links, qualifications").eq("user_id", teacherId).maybeSingle(),
     admin.from("live_classes").select("id").eq("teacher_id", teacherId),
   ]);
   if (!profile || !["teacher", "academy_admin", "super_admin"].includes(profile.role as string)) return null;
@@ -188,6 +195,9 @@ export async function getTeacherDetails(admin: Admin, teacherId: string): Promis
     // A teacher who never filled in a profile is still shown.
     isPublic: detail ? (detail.is_public as boolean) : true,
     rating,
+    links: toProfileLinks(detail?.website_url, detail?.social_links),
+    qualifications: (detail?.qualifications as string[] | null) ?? [],
+    academy: await getTeacherAcademy(admin, teacherId),
   };
 }
 
@@ -362,8 +372,10 @@ export async function getOwnTeacherProfile(userId: string) {
   if (!admin) return null;
   const [{ data: profile }, { data: detail }] = await Promise.all([
     admin.from("profiles").select("full_name, avatar_path").eq("id", userId).maybeSingle(),
-    admin.from("teacher_profiles").select("headline, bio, specialties, speaks, is_public").eq("user_id", userId).maybeSingle(),
+    admin.from("teacher_profiles").select("headline, bio, specialties, speaks, is_public, website_url, social_links, qualifications").eq("user_id", userId).maybeSingle(),
   ]);
+  const social: SocialLinks = {};
+  for (const l of toProfileLinks(null, detail?.social_links)) if (l.key !== "website") social[l.key] = l.url;
   const urls = await getAvatarUrls([profile?.avatar_path as string | null]);
   return {
     name: (profile?.full_name as string | null) ?? "",
@@ -373,6 +385,9 @@ export async function getOwnTeacherProfile(userId: string) {
     specialties: (detail?.specialties as string[] | null) ?? [],
     speaks: (detail?.speaks as string[] | null) ?? [],
     isPublic: detail ? (detail.is_public as boolean) : true,
+    website: (detail?.website_url as string | null) ?? "",
+    social,
+    qualifications: (detail?.qualifications as string[] | null) ?? [],
   };
 }
 

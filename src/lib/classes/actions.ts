@@ -8,6 +8,7 @@ import { getManagedBatch } from "@/lib/batches/data";
 import { requireUser } from "@/lib/auth/dal";
 import { JOIN_GRACE_MIN, JOIN_OPENS_MIN, LEVEL_IDS, SKILL_IDS, SPECIALTIES } from "@/lib/classes/constants";
 import { LANGUAGE_CODES } from "@/lib/languages";
+import { checkLinks } from "@/lib/profile/links";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { addDays, zonedToUtc } from "@/lib/time";
@@ -294,6 +295,9 @@ const profileSchema = z.object({
   specialties: z.array(z.enum(specialtyIds)).max(6),
   speaks: z.array(z.enum(LANGUAGE_CODES)).max(6),
   isPublic: z.boolean(),
+  website: text(300).default(""),
+  social: z.record(z.string(), text(300)).default({}),
+  qualifications: z.array(text(80)).max(5, "You can add up to 5 qualifications.").default([]),
 });
 
 export async function saveTeacherProfile(input: unknown): Promise<Result> {
@@ -301,6 +305,8 @@ export async function saveTeacherProfile(input: unknown): Promise<Result> {
   const parsed = profileSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const v = parsed.data;
+  const links = checkLinks({ website: v.website, social: v.social });
+  if ("error" in links) return links;
   const supabase = await createClient();
   const { error } = await supabase.from("teacher_profiles").upsert({
     user_id: user.id,
@@ -309,6 +315,9 @@ export async function saveTeacherProfile(input: unknown): Promise<Result> {
     specialties: [...new Set(v.specialties)],
     speaks: [...new Set(v.speaks)],
     is_public: v.isPublic,
+    website_url: links.website,
+    social_links: links.social,
+    qualifications: [...new Set(v.qualifications.filter(Boolean))],
     updated_at: new Date().toISOString(),
   });
   if (error) return { error: SAVE_ERROR };

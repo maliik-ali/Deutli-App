@@ -6,11 +6,13 @@ import { ChevronLeft } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { ClassRow } from "@/components/classes/class-row";
 import { RatingBadge } from "@/components/classes/teacher-card";
+import { ProfileLinks } from "@/components/profile/profile-links";
 import { LanguageFlag } from "@/components/language-flag";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
 import { levelLabel, skillLabel } from "@/lib/classes/constants";
+import { canViewAcademy } from "@/lib/academies/profile";
 import { getCoursesNow, getTeacherDetails, listMyTimetable, listOneToOneSlots, listTeacherUpcoming } from "@/lib/classes/data";
 import { getLanguage } from "@/lib/languages";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -31,6 +33,7 @@ export default async function TeacherProfilePage(props: PageProps<"/dashboard/te
   if (!teacher || (!teacher.isPublic && user.role === "student")) notFound();
   const [courses, upcoming, mine, slots] = await Promise.all([getCoursesNow(admin, id), listTeacherUpcoming(id, user.id), listMyTimetable(user.id), listOneToOneSlots(id, false)]);
   const mineWithTeacher = mine.filter((c) => c.teacher.id === id);
+  const academyLink = teacher.academy && (await canViewAcademy(admin, user, teacher.academy.id)) ? teacher.academy : null;
   const tz = user.timeZone;
   const serverNow = new Date().getTime();
 
@@ -48,6 +51,14 @@ export default async function TeacherProfilePage(props: PageProps<"/dashboard/te
               <h1 className="text-[28px] leading-tight font-extrabold">{teacher.name}</h1>
               {teacher.headline && <p className="text-[16px] font-semibold text-gold-ink">{teacher.headline}</p>}
             </div>
+            {academyLink && (
+              <p className="text-[14px] text-muted-foreground">
+                Teaches at{" "}
+                <Link href={`/dashboard/academies/${academyLink.slug}`} className="font-semibold text-foreground underline underline-offset-4 hover:text-gold-ink">
+                  {academyLink.name}
+                </Link>
+              </p>
+            )}
             {teacher.rating && <RatingBadge rating={teacher.rating} />}
             {teacher.specialties.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
@@ -69,6 +80,16 @@ export default async function TeacherProfilePage(props: PageProps<"/dashboard/te
               </p>
             )}
             {teacher.bio && <p className="max-w-2xl text-[15px] leading-relaxed whitespace-pre-line text-muted-foreground">{teacher.bio}</p>}
+            {teacher.qualifications.length > 0 && (
+              <ul className="flex flex-wrap gap-1.5" aria-label="Qualifications">
+                {teacher.qualifications.map((q) => (
+                  <li key={q}>
+                    <Badge variant="outline">{q}</Badge>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <ProfileLinks links={teacher.links} />
           </div>
         </Card>
 
