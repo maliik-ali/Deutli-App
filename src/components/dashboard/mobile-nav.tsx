@@ -10,7 +10,7 @@ import { SetupSidebarCard } from "@/components/teacher/setup-sidebar-card";
 import type { SetupStep } from "@/lib/setup-step";
 import { NavLinks } from "./nav-links";
 
-export function MobileNav({ footer, examTitle, teacherTools, setup }: { footer: React.ReactNode; examTitle?: string; teacherTools?: boolean; setup?: SetupStep[] }) {
+export function MobileNav({ footer, examTitle, teacherTools, newsUnread, setup }: { footer: React.ReactNode; examTitle?: string; teacherTools?: boolean; newsUnread?: number; setup?: SetupStep[] }) {
   const [open, setOpen] = useState(false);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -31,7 +31,7 @@ export function MobileNav({ footer, examTitle, teacherTools, setup }: { footer: 
         <SheetDescription className="sr-only">Main navigation</SheetDescription>
         <Logo href="/dashboard" className="px-2" />
         <div className="flex-1 overflow-y-auto">
-          <NavLinks examTitle={examTitle} teacherTools={teacherTools} onNavigate={() => setOpen(false)} />
+          <NavLinks examTitle={examTitle} teacherTools={teacherTools} newsUnread={newsUnread} onNavigate={() => setOpen(false)} />
         </div>
         {setup && <SetupSidebarCard steps={setup} homePath="/dashboard" onNavigate={() => setOpen(false)} />}
         {footer}

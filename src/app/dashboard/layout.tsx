@@ -12,6 +12,7 @@ import { hasTeacherTools } from "@/lib/students/teacher-tools";
 import { SetupSidebarCard } from "@/components/teacher/setup-sidebar-card";
 import { requireUser } from "@/lib/auth/dal";
 import { getStudentSetup } from "@/lib/students/setup";
+import { unreadCount } from "@/lib/news/data";
 // import { myExamTitle } from "@/lib/exam/choice"; // MVP: switched off, B1 only
 
 export default async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
@@ -20,10 +21,11 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
   // New students answer a few questions first (asked once; they can skip them).
   if (user.role === "student" && !user.onboardedAt) redirect("/onboarding");
-  const [brand, teacherTools, setup] = await Promise.all([
+  const [brand, teacherTools, setup, newsUnread] = await Promise.all([
     getBrandForUser(user.id),
     user.role === "student" ? hasTeacherTools(user.id, user.teacherId) : Promise.resolve(true),
     user.role === "student" ? getStudentSetup(user.id) : Promise.resolve(undefined),
+    user.role === "student" ? unreadCount(user.id) : Promise.resolve(0),
   ]);
   const name = user.fullName ?? "Student";
   const avatarUrl = await getAvatarUrl(user.avatarPath);
@@ -39,7 +41,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
         <div className="sticky top-0 flex h-dvh flex-col gap-8 px-4 py-6">
           <Logo href="/dashboard" className="px-2" />
           <div className="flex-1 overflow-y-auto">
-            <NavLinks examTitle={examTitle} teacherTools={teacherTools} />
+            <NavLinks examTitle={examTitle} teacherTools={teacherTools} newsUnread={newsUnread} />
           </div>
           {setup && <SetupSidebarCard steps={setup} homePath="/dashboard" />}
           {footer}
@@ -47,7 +49,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
       </aside>
 
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/95 px-2 backdrop-blur md:hidden">
-        <MobileNav footer={footer} examTitle={examTitle} teacherTools={teacherTools} setup={setup} />
+        <MobileNav footer={footer} examTitle={examTitle} teacherTools={teacherTools} newsUnread={newsUnread} setup={setup} />
         <Logo href="/dashboard" />
         <span className="size-11 shrink-0" aria-hidden />
       </header>

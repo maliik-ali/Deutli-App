@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, ClipboardCheck, FileText, GraduationCap, Layers, FolderOpen, LayoutDashboard, Menu, PenLine, ShieldCheck, Star, Users, Video } from "lucide-react";
+import { Building2, ClipboardCheck, FileText, GraduationCap, Layers, FolderOpen, LayoutDashboard, Megaphone, Menu, PenLine, ShieldCheck, Star, Users, Video } from "lucide-react";
 
 import { TEACHER_MENU, UserMenu } from "@/components/dashboard/user-menu";
 import { Logo } from "@/components/logo";
@@ -20,6 +20,7 @@ const ITEMS = [
   { href: "/teacher/students", label: "My students", icon: Users },
   { href: "/teacher/classes", label: "My classes", icon: Video },
   { href: "/teacher/materials", label: "Material", icon: FolderOpen },
+  { href: "/teacher/news", label: "News & info", icon: Megaphone },
   { href: "/teacher/tests", label: "Chapter tests", icon: ClipboardCheck },
   { href: "/teacher/papers", label: "My papers", icon: FileText },
   { href: "/teacher/lessons", label: "1:1 lessons", icon: GraduationCap },

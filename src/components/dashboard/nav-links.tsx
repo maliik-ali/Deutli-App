@@ -12,6 +12,7 @@ import {
   Home,
   Layers,
   Languages,
+  Megaphone,
   MessageCircleQuestion,
   Mic,
   PenLine,
@@ -40,6 +41,7 @@ const ICONS: Record<NavIcon, LucideIcon> = {
   award: Award,
   skills: GraduationCap,
   search: Search,
+  megaphone: Megaphone,
 };
 
 type WithLabel<T> = T extends unknown ? Omit<T, "label"> & { label: string } : never;
@@ -53,7 +55,7 @@ const linkClass = (active: boolean) =>
   );
 
 /** `teacherTools` = the student has a teacher or school, so My batches, Timetable, Tests and Homework are shown. */
-export function NavLinks({ onNavigate, examTitle, teacherTools = true }: { onNavigate?: () => void; examTitle?: string; teacherTools?: boolean }) {
+export function NavLinks({ onNavigate, examTitle, teacherTools = true, newsUnread = 0 }: { onNavigate?: () => void; examTitle?: string; teacherTools?: boolean; newsUnread?: number }) {
   const pathname = usePathname();
   return (
     <nav aria-label="Main">
@@ -65,7 +67,7 @@ export function NavLinks({ onNavigate, examTitle, teacherTools = true }: { onNav
             <NavGroup key={item.href} item={item} items={item.children} pathname={pathname} onNavigate={onNavigate} />
           ) : (
             <li key={item.href}>
-              <NavLink item={item} active={pathname === item.href || (item.href === "/dashboard/exam" && pathname.startsWith("/dashboard/exam/mock")) || (item.href === "/dashboard/classes" && (pathname.startsWith("/dashboard/classes/") || pathname.startsWith("/dashboard/teachers/")))} onNavigate={onNavigate} />
+              <NavLink item={item} active={pathname === item.href || (item.href === "/dashboard/exam" && pathname.startsWith("/dashboard/exam/mock")) || (item.href === "/dashboard/classes" && (pathname.startsWith("/dashboard/classes/") || pathname.startsWith("/dashboard/teachers/")))} onNavigate={onNavigate} badge={item.href === "/dashboard/school" ? newsUnread : 0} />
             </li>
           ));
         })}
@@ -74,7 +76,7 @@ export function NavLinks({ onNavigate, examTitle, teacherTools = true }: { onNav
   );
 }
 
-function NavLink({ item, active, onNavigate }: { item: Item; active: boolean; onNavigate?: () => void }) {
+function NavLink({ item, active, onNavigate, badge = 0 }: { item: Item; active: boolean; onNavigate?: () => void; badge?: number }) {
   const Icon = ICONS[item.icon];
   return (
     <Link
@@ -85,6 +87,12 @@ function NavLink({ item, active, onNavigate }: { item: Item; active: boolean; on
     >
       <Icon className={cn("size-[18px]", active && "text-gold-ink")} aria-hidden />
       <span className="flex-1">{item.label}</span>
+      {badge > 0 && (
+        <span className="grid h-5 min-w-5 place-items-center rounded-full bg-ink px-1.5 text-[11px] font-semibold text-ink-foreground">
+          {badge}
+          <span className="sr-only"> new</span>
+        </span>
+      )}
       {"soon" in item && <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">Soon</span>}
     </Link>
   );
