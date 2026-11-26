@@ -77,6 +77,7 @@ export function DictionaryUpload() {
               { value: "a1", label: "A1 vocabulary" },
               { value: "a2", label: "A2 vocabulary" },
               { value: "b1", label: "B1 vocabulary" },
+              { value: "b2", label: "B2 vocabulary" },
             ]}
           />
           <p className="text-[13px] text-muted-foreground">

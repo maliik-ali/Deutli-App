@@ -49,7 +49,7 @@ export type DictionaryRow = {
   examples: Partial<Record<"de" | LanguageCode, string>>;
 };
 
-export const LEVELS = ["a1", "a2", "b1"] as const;
+export const LEVELS = ["a1", "a2", "b1", "b2"] as const;
 export type Level = (typeof LEVELS)[number];
 export function toLevel(value: unknown): Level | null {
   const v = String(value ?? "").trim().toLowerCase();
@@ -142,7 +142,7 @@ export function readDictionarySheet(text: string): ParsedSheet | { error: string
 
     const rawLevel = get(levelCol);
     const level = toLevel(rawLevel);
-    if (rawLevel && !level) return problems.push({ line, reason: `Level must be A1, A2 or B1 (found "${rawLevel}").` });
+    if (rawLevel && !level) return problems.push({ line, reason: `Level must be A1, A2, B1 or B2 (found "${rawLevel}").` });
     const topic = get(topicCol).slice(0, 80) || null;
     const examples: DictionaryRow["examples"] = {};
     for (const { i, code } of exampleCols) {
