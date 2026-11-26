@@ -6,6 +6,7 @@ import { BorderBeam } from "@/components/magicui/border-beam";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { buildColumns, type ColumnId } from "@/components/vocabulary/columns";
+import { TopicPicker } from "@/components/vocabulary/topic-picker";
 import { VocabTableWithColumns, type TableRow } from "@/components/vocabulary/vocab-table";
 import { requireUser } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
@@ -597,33 +598,21 @@ async function LevelView({
 
           <section aria-label="Topics" className="grid gap-3">
             <h2 className="text-[15px] font-semibold text-muted-foreground">Topics</h2>
-            <nav className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-              {[{ name: null as string | null, translations: {} as Record<string, string>, total: data.words.length, started: totalStarted }, ...data.topics].map(
-                (t) => {
-                  const active = t.name === topic;
-                  return (
-                    <Link
-                      key={t.name ?? "all"}
-                      href={href({ list: level, topic: t.name })}
-                      aria-current={active ? "page" : undefined}
-                      className={cn(
-                        "flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-sm transition-colors",
-                        active
-                          ? "border-gold-ink bg-gold-soft font-semibold"
-                          : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
-                      )}
-                    >
-                      <span lang="de" title={t.name ? Object.values(t.translations ?? {})[0] : undefined}>
-                        {t.name ?? "All topics"}
-                      </span>
-                      <span className="text-[12px] tabular-nums text-subtle-foreground">
-                        {t.started}/{t.total}
-                      </span>
-                    </Link>
-                  );
-                },
-              )}
-            </nav>
+            <TopicPicker
+              allHref={href({ list: level, topic: null })}
+              items={[{ name: null as string | null, translations: {} as Record<string, string>, total: data.words.length, started: totalStarted }, ...data.topics].map((t) => {
+                const code = userLanguages.find((c) => t.translations?.[c]);
+                return {
+                  key: t.name ?? "all",
+                  name: t.name,
+                  meaning: code ? { text: t.translations[code], lang: code } : null,
+                  started: t.started,
+                  total: t.total,
+                  href: href({ list: level, topic: t.name }),
+                  active: t.name === topic,
+                };
+              })}
+            />
           </section>
 
           <Card className="gap-0 overflow-hidden p-0">
