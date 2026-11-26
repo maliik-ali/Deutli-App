@@ -274,7 +274,7 @@ export default async function VocabularyPage(props: PageProps<"/dashboard/vocabu
         <div className="grid gap-2">
           <h1 className="text-[28px] leading-tight font-extrabold sm:text-[32px]">Vocabulary</h1>
           <p className="text-[15px] text-muted-foreground">
-            Words you saved in Improve Accent, plus the A1, A2 and B1 word lists. Practise a little every day so they
+            Words you saved in Improve Accent, plus the A1, A2, B1 and B2 word lists. Practise a little every day so they
             stick.
           </p>
         </div>
