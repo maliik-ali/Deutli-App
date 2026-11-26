@@ -84,11 +84,11 @@ export function UserMenu({ name, email, avatarUrl, items = STUDENT_MENU, isAdmin
       {open && (
         <div
           id={menuId}
-          className="absolute inset-x-0 bottom-full mb-2 grid gap-1 rounded-2xl border border-border bg-ink p-2 shadow-lg shadow-black/40"
+          className="absolute inset-x-0 bottom-full mb-2 grid grid-cols-1 gap-1 rounded-2xl border border-border bg-ink p-2 shadow-lg shadow-black/40"
         >
-          <div className="px-3 pt-1 pb-2">
-            <p className="truncate text-sm font-semibold">{name}</p>
-            {email && <p className="truncate text-[13px] text-subtle-foreground">{email}</p>}
+          <div className="min-w-0 px-3 pt-1 pb-2">
+            <p className="truncate text-sm font-semibold" title={name}>{name}</p>
+            {email && <p className="truncate text-[13px] text-subtle-foreground" title={email}>{email}</p>}
           </div>
           {items.map((item) => {
             const active = isActive(item);
