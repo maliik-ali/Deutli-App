@@ -45,6 +45,9 @@ export async function GET(request: NextRequest) {
   // A teacher or school code given at signup is used now, the first time the email is confirmed.
   const { data: who } = await supabase.auth.getUser();
   if (who.user) await redeemFromSignup(who.user);
+  // Someone who signed up as a teacher sets up their workspace first. (The confirmation email's link always says
+  // /onboarding, the student questions, so the choice made at signup is read from the account here.)
+  if (next === "/onboarding" && who.user?.user_metadata?.intent === "teacher") next = "/onboarding/teacher";
   // "/" sends the user on to the right page for their role.
   return NextResponse.redirect(new URL(next, request.url));
 }

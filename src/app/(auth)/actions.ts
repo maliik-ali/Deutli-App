@@ -60,7 +60,9 @@ export async function signUp(input: unknown): Promise<ActionResult> {
       emailRedirectTo: `${await siteUrl()}/auth/confirm?next=${next}`,
       // Only name and phone are sent. The role is always set to "student"
       // by the database, never from this form.
-      data: { full_name: fullName, phone: phone || null, ...(joinCode ? { join_code: joinCode } : {}) },
+      // `intent` only decides which setup page comes first after the email is confirmed (the confirmation email's own link
+      // always says /onboarding). It grants nothing: teacher setup is open to any new account anyway.
+      data: { full_name: fullName, phone: phone || null, ...(joinCode ? { join_code: joinCode } : {}), ...(intent === "teacher" ? { intent: "teacher" } : {}) },
     },
   });
   if (error) return { error: friendlyAuthError(error.message, error.code) };
