@@ -18,6 +18,8 @@ export type ReviewView = {
   /** The teacher this review is about (shown on academy pages). */
   teacherId: string;
   teacherName: string;
+  /** Who wrote it (never shown; used so authors do not get a Report button on their own review). */
+  studentId: string;
 };
 
 type Row = {
@@ -55,6 +57,7 @@ async function toViews(admin: Admin, rows: Row[]): Promise<ReviewView[]> {
     name: shortName(who.get(r.student_id)),
     teacherId: r.teacher_id,
     teacherName: who.get(r.teacher_id) ?? "Teacher",
+    studentId: r.student_id,
   }));
 }
 

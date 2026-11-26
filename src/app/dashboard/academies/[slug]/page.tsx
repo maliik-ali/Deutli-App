@@ -29,7 +29,7 @@ export default async function AcademyPage(props: PageProps<"/dashboard/academies
           <ChevronLeft className="size-4" aria-hidden /> Classes
         </Link>
         <AcademyProfileView academy={academy} teacherHref={(id) => `/dashboard/teachers/${id}`} />
-        <AcademyReviews admin={admin} academyId={academy.id} />
+        <AcademyReviews admin={admin} academyId={academy.id} viewerId={user.id} />
       </div>
     </main>
   );

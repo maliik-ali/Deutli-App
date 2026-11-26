@@ -65,7 +65,7 @@ export async function TeacherReviews({ admin, teacherId, firstName, viewer }: { 
 }
 
 /** Reviews of everyone at an academy (read only; writing happens on the teacher's page). */
-export async function AcademyReviews({ admin, academyId }: { admin: Admin; academyId: string }) {
+export async function AcademyReviews({ admin, academyId, viewerId }: { admin: Admin; academyId: string; viewerId: string }) {
   const filter: ReviewFilter = { academyId };
   const [reviews, summary] = await Promise.all([listPublishedReviews(admin, filter, 10), getReviewSummary(admin, filter)]);
   if (reviews.length === 0) return null;
@@ -80,7 +80,7 @@ export async function AcademyReviews({ admin, academyId }: { admin: Admin; acade
       <Card>
         <ul className="divide-y divide-border">
           {reviews.map((r) => (
-            <ReviewItem key={r.id} review={r} showTeacher actions={<ReportButton reviewId={r.id} />} />
+            <ReviewItem key={r.id} review={r} showTeacher actions={r.studentId === viewerId ? <p className="text-[13px] text-muted-foreground">This is your review.</p> : <ReportButton reviewId={r.id} />} />
           ))}
         </ul>
       </Card>
