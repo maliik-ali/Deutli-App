@@ -15,7 +15,7 @@ const BORDERS: Record<string, string> = {
   reading: "border-gold/50 group-hover:border-gold",
   listening: "border-brand-cyan/50 group-hover:border-brand-cyan",
   writing: "border-gold-ink/35 group-hover:border-gold-ink/80",
-  speaking: "border-cover-plum group-hover:border-brand-magenta/70",
+  speaking: "border-brand-magenta/50 group-hover:border-brand-magenta",
 };
 
 export default async function SkillsPage() {

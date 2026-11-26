@@ -70,7 +70,8 @@ export default async function ClassPage(props: PageProps<"/dashboard/classes/[id
 
   return (
     <main className="mx-auto grid max-w-[1240px] gap-6 px-4 py-6 sm:px-6 md:px-8 md:py-8">
-      <div className="grid max-w-[1040px] gap-6">
+      <div className="grid max-w-[1040px] gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+        <div className="grid gap-6 lg:col-start-1 lg:row-start-1">
         <div className="grid gap-3">
           {back}
           <p className="text-[13px] font-semibold tracking-wide text-gold-ink uppercase">{c.courseTitle}</p>
@@ -118,8 +119,16 @@ export default async function ClassPage(props: PageProps<"/dashboard/classes/[id
           )}
           {seats && !cancelled && <Badge variant={seats.full ? "outline" : "gold"}>{seats.text}</Badge>}
         </div>
+        </div>
 
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        {/* The teacher sits beside the title and the Register button, not below them. On a phone it follows them. */}
+        {teacher && (
+          <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:pt-11">
+            <TeacherCard teacher={teacher} />
+          </div>
+        )}
+
+        <div className="grid gap-6 lg:col-start-1 lg:row-start-2">
           <div className="grid gap-6">
             {c.description && (
               <div className="rounded-2xl border border-border bg-card px-5 py-4 text-[16px]">{c.description}</div>
@@ -143,7 +152,6 @@ export default async function ClassPage(props: PageProps<"/dashboard/classes/[id
             )}
             {c.registered && started && !cancelled && <RateClass classId={c.id} initial={myRating} />}
           </div>
-          {teacher && <TeacherCard teacher={teacher} />}
         </div>
       </div>
     </main>
