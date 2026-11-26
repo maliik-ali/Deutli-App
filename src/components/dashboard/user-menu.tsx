@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronUp, IdCard, LifeBuoy, LogOut, ShieldCheck, SlidersHorizontal, Sparkles, UserRound, type LucideIcon } from "lucide-react";
+import { ChevronUp, IdCard, LifeBuoy, LogOut, School, ShieldCheck, SlidersHorizontal, Sparkles, UserRound, type LucideIcon } from "lucide-react";
 
 import { signOut } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/avatar";
@@ -28,6 +28,7 @@ export const STUDENT_MENU: UserMenuItem[] = [
 /** What a teacher sees. */
 export const TEACHER_MENU: UserMenuItem[] = [
   { href: "/teacher/profile", label: "My profile", icon: IdCard },
+  { href: "/teacher/academy", label: "Academy profile", icon: School },
   { href: "/teacher/account", label: "Account", icon: UserRound },
   { href: "/teacher/settings", label: "Advanced settings", icon: SlidersHorizontal },
   { href: "/teacher/plan", label: "Plan", icon: Sparkles },
