@@ -35,8 +35,8 @@ export function SignupBody({ joinCode, locked, initialRole }: { joinCode: string
       </div>
       <p className="text-center text-[13px] text-muted-foreground">
         By creating an account you agree to our{" "}
-        <Link href="/terms" className="underline underline-offset-4 hover:text-foreground">Terms</Link> and{" "}
-        <Link href="/privacy" className="underline underline-offset-4 hover:text-foreground">Privacy policy</Link>.
+        <Link href="/terms" prefetch={false} className="underline underline-offset-4 hover:text-foreground">Terms</Link> and{" "}
+        <Link href="/privacy" prefetch={false} className="underline underline-offset-4 hover:text-foreground">Privacy policy</Link>.
       </p>
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
