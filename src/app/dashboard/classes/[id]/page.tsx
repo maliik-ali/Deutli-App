@@ -16,6 +16,7 @@ import { classPhase, durationText, levelLabel, seatsText, skillLabel } from "@/l
 import { RecordingEmbed } from "@/components/classes/recording-embed";
 import { canWatchRecording, getClassDetail, getOneToOneInfo, getRecordingUrl } from "@/lib/classes/data";
 import { youtubeId } from "@/lib/classes/recording";
+import { lessonPriceLabel } from "@/lib/classes/trial";
 import { dayKeyIn, formatClock, formatDayLong, timeZoneLabel } from "@/lib/time";
 
 export const metadata: Metadata = { title: "Class" };
@@ -64,7 +65,7 @@ export default async function ClassPage(props: PageProps<"/dashboard/classes/[id
     { icon: Clock, text: `${formatClock(c.startsAt, tz)} – ${formatClock(end, tz)}` },
     { icon: Hourglass, text: durationText(c.durationMin) },
     oneToOne
-      ? { icon: Euro, text: oneToOne.priceEurCents != null ? `${new Intl.NumberFormat("en", { style: "currency", currency: "EUR" }).format(oneToOne.priceEurCents / 100)} · paid to your teacher directly` : "Price agreed with your teacher" }
+      ? { icon: Euro, text: oneToOne.isTrial ? `${lessonPriceLabel(true, oneToOne.priceEurCents)}${oneToOne.priceEurCents ? " · paid to your teacher directly" : ""}` : oneToOne.priceEurCents != null ? `${new Intl.NumberFormat("en", { style: "currency", currency: "EUR" }).format(oneToOne.priceEurCents / 100)} · paid to your teacher directly` : "Price agreed with your teacher" }
       : { icon: Layers, text: `${skillLabel(c.skill)} · ${levelLabel(c.level)}` },
   ];
 

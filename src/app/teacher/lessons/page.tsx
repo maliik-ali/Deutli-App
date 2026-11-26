@@ -5,6 +5,7 @@ import { DeleteSlot, NewSlotsForm } from "@/components/classes/one-to-one-forms"
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
+import { lessonPriceLabel } from "@/lib/classes/trial";
 import { listOneToOneSlots } from "@/lib/classes/data";
 import { addDays, dayKeyIn, formatClock, formatDayLong, timeZoneLabel } from "@/lib/time";
 
@@ -37,7 +38,7 @@ export default async function TeacherLessonsPage() {
                   <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                     <span className="grid gap-0.5">
                       <span className="font-semibold">{formatDayLong(dayKeyIn(tz, s.startsAt))} · {formatClock(s.startsAt, tz)} · {s.durationMin} min</span>
-                      <span className="text-[13px] text-muted-foreground">{s.priceEurCents != null ? `€${s.priceEurCents / 100}` : "Price to agree"}</span>
+                      <span className="flex items-center gap-2 text-[13px] text-muted-foreground">{s.isTrial && <Badge variant="gold">Trial</Badge>}{s.isTrial || s.priceEurCents != null ? lessonPriceLabel(s.isTrial, s.priceEurCents) : "Price to agree"}</span>
                     </span>
                     {s.booked ? <span className="flex items-center gap-2"><Badge variant="success">Booked{s.bookedBy ? ` by ${s.bookedBy}` : ""}</Badge><Link className="text-[13px] underline underline-offset-4" href={`/teacher/classes/${s.id}`}>Open</Link></span> : <span className="flex items-center gap-2"><Badge variant="outline">Open</Badge><DeleteSlot id={s.id} /></span>}
                   </li>

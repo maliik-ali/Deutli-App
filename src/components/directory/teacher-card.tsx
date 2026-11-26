@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Avatar } from "@/components/avatar";
 import { LanguageFlag } from "@/components/language-flag";
+import { TeacherBadges } from "@/components/reputation/teacher-badges";
 import { Stars } from "@/components/reviews/stars";
 import { Badge } from "@/components/ui/badge";
 import { skillLabel } from "@/lib/classes/constants";
@@ -10,7 +11,7 @@ import { getLanguage } from "@/lib/languages";
 
 /** One teacher in "Find a teacher": who they are, how others rate them, and what they offer right now. */
 export function DirectoryCard({ t }: { t: DirectoryTeacher }) {
-  const offers = [t.openSlots > 0 ? `${t.openSlots} free 1:1 slot${t.openSlots === 1 ? "" : "s"}` : null, t.upcomingClasses > 0 ? `${t.upcomingClasses} upcoming class${t.upcomingClasses === 1 ? "" : "es"}` : null].filter(Boolean);
+  const offers = [t.trialAvailable ? "Trial lesson available" : null, t.openSlots > 0 ? `${t.openSlots} free 1:1 slot${t.openSlots === 1 ? "" : "s"}` : null, t.upcomingClasses > 0 ? `${t.upcomingClasses} upcoming class${t.upcomingClasses === 1 ? "" : "es"}` : null].filter(Boolean);
   return (
     <li>
       <Link
@@ -25,6 +26,7 @@ export function DirectoryCard({ t }: { t: DirectoryTeacher }) {
           </span>
         </span>
         {t.headline && <span className="line-clamp-2 text-[14px] font-medium text-gold-ink">{t.headline}</span>}
+        <TeacherBadges badges={t.badges} max={2} />
         {t.rating ? (
           <span className="flex items-center gap-2 text-[14px]">
             <Stars value={t.rating.average} /> <span className="font-semibold tabular-nums">{t.rating.average.toFixed(1)}</span>

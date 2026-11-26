@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { accentProblem, FONT_OPTIONS, normaliseHex, primaryProblem, themeVars, type FontKey } from "@/lib/branding/colour";
 import { removeLogo, saveBranding, uploadLogo } from "@/lib/branding/actions";
+import { TRIAL_DRAFT_EVENT } from "@/components/logo";
 import { whatsappLink } from "@/lib/support/contact";
 
 export type BrandingValues = { displayName: string; primary: string; accent: string; fontKey: FontKey; logoUrl: string | null };
@@ -85,6 +86,7 @@ export function BrandingEditor({ initial, features, plans, workspaceName }: { in
     try {
       if (missing.length) localStorage.setItem(draftKey, JSON.stringify({ v, logo: logoDraft }));
       else localStorage.removeItem(draftKey);
+      window.dispatchEvent(new Event(TRIAL_DRAFT_EVENT)); // the sidebar logo follows the draft
     } catch { /* storage full or blocked */ }
   }, [v, logoDraft, missing.length, draftKey]);
 

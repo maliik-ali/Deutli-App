@@ -30,25 +30,28 @@ export default async function FindTeacherPage(props: PageProps<"/dashboard/find-
   const lang = typeof sp.lang === "string" && getLanguage(sp.lang) ? sp.lang : undefined;
   const skill = typeof sp.skill === "string" && (SKILL_IDS as readonly string[]).includes(sp.skill) ? sp.skill : undefined;
   const slots = sp.slots === "1";
+  const trial = sp.trial === "1";
   const admin = createAdminClient();
   // Find a teacher is for students who study on their own. A school student has their school.
   if (user.role === "student" && admin && !(await isStandalone(admin, user.id))) redirect("/dashboard");
-  const [all, shown] = admin ? await Promise.all([listDirectory(admin), listDirectory(admin, { lang, skill, slots })]) : [[], []];
+  const [all, shown] = admin ? await Promise.all([listDirectory(admin), listDirectory(admin, { lang, skill, slots, trial })]) : [[], []];
 
-  const href = (next: { lang?: string; skill?: string; slots?: boolean }) => {
+  const href = (next: { lang?: string; skill?: string; slots?: boolean; trial?: boolean }) => {
     const q = new URLSearchParams();
     const l = "lang" in next ? next.lang : lang;
     const k = "skill" in next ? next.skill : skill;
     const s = "slots" in next ? next.slots : slots;
+    const tr = "trial" in next ? next.trial : trial;
     if (l) q.set("lang", l);
     if (k) q.set("skill", k);
     if (s) q.set("slots", "1");
+    if (tr) q.set("trial", "1");
     const str = q.toString();
     return `/dashboard/find-teacher${str ? `?${str}` : ""}`;
   };
   const languages = [...new Set(all.flatMap((t) => t.languages))];
   const skills = SKILL_IDS.filter((s) => s !== "general" && all.some((t) => t.specialties.includes(s)));
-  const filtered = !!(lang || skill || slots);
+  const filtered = !!(lang || skill || slots || trial);
 
   return (
     <main className="mx-auto grid max-w-[1240px] gap-6 px-4 py-6 sm:px-6 md:px-8 md:py-8">
@@ -81,6 +84,9 @@ export default async function FindTeacherPage(props: PageProps<"/dashboard/find-
           )}
           <div className="flex flex-wrap items-center gap-2">
             <span className="w-24 text-[13px] font-medium text-muted-foreground">Available</span>
+            <Chip href={href({ trial: !trial })} on={trial}>
+              Trial lesson
+            </Chip>
             <Chip href={href({ slots: !slots })} on={slots}>
               Free 1:1 slot
             </Chip>

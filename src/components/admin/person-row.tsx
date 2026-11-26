@@ -2,13 +2,14 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import { BadgeCheck, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { setTeacherVerified } from "@/lib/reputation/actions";
 import { assignTeacher, deleteUserAccount, setTeacherRole } from "@/lib/teachers/actions";
 import { OptionSelect } from "@/components/ui/option-select";
 
-export type Person = { id: string; name: string; email: string | null; role: "student" | "teacher"; teacherId: string | null; code: string | null; students: number };
+export type Person = { id: string; name: string; email: string | null; role: "student" | "teacher"; teacherId: string | null; code: string | null; students: number; verified?: boolean };
 
 export function PersonRow({ person, teachers }: { person: Person; teachers: { id: string; name: string }[] }) {
   const router = useRouter();
@@ -32,6 +33,7 @@ export function PersonRow({ person, teachers }: { person: Person; teachers: { id
         <p className="truncate font-semibold">
           {person.name}
           {person.role === "teacher" && <span className="ml-2 rounded-full bg-gold-soft px-2 py-0.5 text-[11px] font-semibold text-gold-ink">Teacher</span>}
+          {person.verified && <span className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-semibold text-success"><BadgeCheck className="size-3" aria-hidden /> Verified</span>}
         </p>
         <p className="truncate text-[13px] text-muted-foreground">
           {person.email ?? "no email"}
@@ -58,6 +60,11 @@ export function PersonRow({ person, teachers }: { person: Person; teachers: { id
               className="h-11 w-auto min-w-52 text-[14px]"
             />
           </>
+        )}
+        {person.role === "teacher" && (
+          <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => run(() => setTeacherVerified(person.id, !person.verified))}>
+            {person.verified ? "Remove verified" : "Mark verified"}
+          </Button>
         )}
         <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => run(() => setTeacherRole(person.id, person.role !== "teacher"))}>
           {person.role === "teacher" ? "Make student" : "Make teacher"}

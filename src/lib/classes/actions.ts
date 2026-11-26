@@ -197,9 +197,18 @@ export async function registerForClass(classId: unknown): Promise<Result> {
   const admin = createAdminClient();
   if (!admin) return { error: NO_ADMIN };
   // Only classes of your own school (or listed teachers, if you study on your own). Checked here, not only in the lists.
-  const { data: cls } = await admin.from("live_classes").select("teacher_id").eq("id", id.data).maybeSingle();
+  const { data: cls } = await admin.from("live_classes").select("teacher_id, is_trial").eq("id", id.data).maybeSingle();
   if (!cls) return { error: REGISTER_MESSAGES.not_found };
   if (!inScope(await getClassScope(user.id), cls.teacher_id as string)) return { error: REGISTER_MESSAGES.not_found };
+  // One trial lesson per student per teacher. A cancelled booking does not count.
+  if (cls.is_trial) {
+    const { data: mine } = await admin.from("class_registrations").select("class_id").eq("user_id", user.id).eq("status", "registered");
+    const ids = ((mine ?? []) as { class_id: string }[]).map((r) => r.class_id).filter((x) => x !== id.data);
+    if (ids.length) {
+      const { data: had } = await admin.from("live_classes").select("id").in("id", ids).eq("teacher_id", cls.teacher_id).eq("is_trial", true).limit(1);
+      if (had?.length) return { error: "You already booked a trial lesson with this teacher. You can book a regular 1:1 lesson or ask to join." };
+    }
+  }
   const { data, error } = await admin.rpc("register_for_class", { p_class: id.data, p_user: user.id });
   if (error) return { error: SAVE_ERROR };
   if (data !== "ok") return { error: REGISTER_MESSAGES[data as string] ?? SAVE_ERROR };
@@ -356,6 +365,7 @@ const slotSchema = z.object({
   durationMin: z.number().int().min(15).max(180),
   priceEur: z.string().trim().refine((v) => v === "" || (Number.isFinite(Number(v.replace(",", "."))) && Number(v.replace(",", ".")) >= 0 && Number(v.replace(",", ".")) <= 1000), "Enter the price in euros, for example 25."),
   repeatWeeks: z.number().int().min(1).max(12),
+  isTrial: z.boolean().default(false),
 });
 
 /** The teacher offers one or more free 1:1 slots (one seat each). The price is agreed and paid outside Deutli. */
@@ -365,13 +375,14 @@ export async function createOneToOneSlots(input: unknown): Promise<{ error: stri
   if (!p.success) return { error: p.error.issues[0].message };
   const admin = createAdminClient();
   if (!admin) return { error: NO_ADMIN };
-  const price = p.data.priceEur === "" ? null : Math.round(Number(p.data.priceEur.replace(",", ".")) * 100);
+  // A trial lesson with no price is free.
+  const price = p.data.priceEur === "" ? (p.data.isTrial ? 0 : null) : Math.round(Number(p.data.priceEur.replace(",", ".")) * 100);
   const rows: Record<string, unknown>[] = [];
   for (let i = 0; i < p.data.repeatWeeks; i++) {
     const startsAt = zonedToUtc(addDays(p.data.date, i * 7), p.data.time, user.timeZone);
     if (!startsAt) return { error: "Pick a valid date and time." };
     if (i === 0 && startsAt.getTime() < Date.now() - 5 * 60_000) return { error: "That time is in the past. Pick a later time." };
-    rows.push({ teacher_id: user.id, created_by: user.id, course_title: "1:1 lesson", title: `1:1 lesson with ${user.fullName ?? "your teacher"}`, skill: "general", level: "b1", starts_at: startsAt.toISOString(), duration_min: p.data.durationMin, capacity: 1, kind: "1to1", price_eur_cents: price });
+    rows.push({ teacher_id: user.id, created_by: user.id, course_title: p.data.isTrial ? "Trial lesson" : "1:1 lesson", title: `${p.data.isTrial ? "Trial lesson" : "1:1 lesson"} with ${user.fullName ?? "your teacher"}`, skill: "general", level: "b1", starts_at: startsAt.toISOString(), duration_min: p.data.durationMin, capacity: 1, kind: "1to1", price_eur_cents: price, is_trial: p.data.isTrial });
   }
   const { error } = await admin.from("live_classes").insert(rows);
   if (error) return { error: SAVE_ERROR };

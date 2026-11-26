@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from "react";
 
-export type BrandView = { name: string | null; logoUrl: string | null; showPoweredBy: boolean } | null;
+export type BrandView = { name: string | null; logoUrl: string | null; showPoweredBy: boolean; trialDraftKey?: string | null } | null;
 
 const BrandContext = createContext<BrandView>(null);
 export const useBrand = () => useContext(BrandContext);

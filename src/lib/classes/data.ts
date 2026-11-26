@@ -417,11 +417,11 @@ export async function getDashboardClass(userId: string): Promise<{ next: ClassCa
 
 /** The recording link of a class, read on its own so a missing column never breaks the class pages. */
 /** For a 1:1 lesson: its price (null = not set). Returns null when the class is not a 1:1 lesson. */
-export async function getOneToOneInfo(classId: string): Promise<{ priceEurCents: number | null } | null> {
+export async function getOneToOneInfo(classId: string): Promise<{ priceEurCents: number | null; isTrial: boolean } | null> {
   const admin = createAdminClient();
   if (!admin) return null;
-  const { data } = await admin.from("live_classes").select("kind, price_eur_cents").eq("id", classId).maybeSingle();
-  return data?.kind === "1to1" ? { priceEurCents: (data.price_eur_cents as number | null) ?? null } : null;
+  const { data } = await admin.from("live_classes").select("kind, price_eur_cents, is_trial").eq("id", classId).maybeSingle();
+  return data?.kind === "1to1" ? { priceEurCents: (data.price_eur_cents as number | null) ?? null, isTrial: !!data.is_trial } : null;
 }
 
 export async function getRecordingUrl(classId: string): Promise<string | null> {
@@ -479,7 +479,7 @@ export async function listMyTimetable(userId: string): Promise<ClassCard[]> {
   return [...out.values()].filter((c) => c.status === "scheduled").sort((a, b) => a.startsAt.localeCompare(b.startsAt));
 }
 
-export type OneToOneSlot = { id: string; startsAt: string; durationMin: number; priceEurCents: number | null; booked: boolean; bookedBy: string | null };
+export type OneToOneSlot = { id: string; startsAt: string; durationMin: number; priceEurCents: number | null; isTrial: boolean; booked: boolean; bookedBy: string | null };
 
 /** Free (and booked) 1:1 slots of a teacher. Students see only the free future ones; the teacher also sees who booked. */
 export async function listOneToOneSlots(teacherId: string, forTeacher: boolean): Promise<OneToOneSlot[]> {
@@ -487,7 +487,7 @@ export async function listOneToOneSlots(teacherId: string, forTeacher: boolean):
   if (!admin) return [];
   const { data, error } = await admin
     .from("live_classes")
-    .select("id, starts_at, duration_min, price_eur_cents")
+    .select("id, starts_at, duration_min, price_eur_cents, is_trial")
     .eq("teacher_id", teacherId)
     .eq("kind", "1to1")
     .eq("status", "scheduled")
@@ -495,7 +495,7 @@ export async function listOneToOneSlots(teacherId: string, forTeacher: boolean):
     .order("starts_at")
     .limit(60);
   if (error) return [];
-  const rows = (data ?? []) as { id: string; starts_at: string; duration_min: number; price_eur_cents: number | null }[];
+  const rows = (data ?? []) as { id: string; starts_at: string; duration_min: number; price_eur_cents: number | null; is_trial: boolean | null }[];
   if (!rows.length) return [];
   const { data: regs } = await admin.from("class_registrations").select("class_id, user_id").in("class_id", rows.map((r) => r.id)).eq("status", "registered");
   const who = new Map(((regs ?? []) as { class_id: string; user_id: string }[]).map((r) => [r.class_id, r.user_id]));
@@ -503,6 +503,6 @@ export async function listOneToOneSlots(teacherId: string, forTeacher: boolean):
   if (forTeacher && who.size) {
     for (const p of ((await admin.from("profiles").select("id, full_name").in("id", [...who.values()])).data ?? []) as { id: string; full_name: string | null }[]) names.set(p.id, p.full_name ?? "Student");
   }
-  const slots = rows.map((r) => ({ id: r.id, startsAt: r.starts_at, durationMin: r.duration_min, priceEurCents: r.price_eur_cents, booked: who.has(r.id), bookedBy: who.has(r.id) ? (names.get(who.get(r.id)!) ?? null) : null }));
+  const slots = rows.map((r) => ({ id: r.id, startsAt: r.starts_at, durationMin: r.duration_min, priceEurCents: r.price_eur_cents, isTrial: !!r.is_trial, booked: who.has(r.id), bookedBy: who.has(r.id) ? (names.get(who.get(r.id)!) ?? null) : null }));
   return forTeacher ? slots : slots.filter((s) => !s.booked);
 }

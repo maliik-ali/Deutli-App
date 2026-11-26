@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 
 import { ReplyForm } from "@/components/reviews/reply-form";
 import { ReviewItem } from "@/components/reviews/review-item";
+import { TeacherBadges } from "@/components/reputation/teacher-badges";
 import { Stars } from "@/components/reviews/stars";
 import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
+import { earnedBadges, nextBadgeHint } from "@/lib/reputation/badges";
+import { getTeacherStats } from "@/lib/reputation/data";
 import { MIN_DAYS_IN_BATCH, MIN_REVIEWS_FOR_AVERAGE } from "@/lib/reviews/constants";
 import { listReviewsForTeacher } from "@/lib/reviews/data";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -18,6 +21,9 @@ export default async function StudentReviewsPage() {
   const shown = reviews.filter((r) => !r.hidden);
   const average = shown.length ? shown.reduce((a, r) => a + r.rating, 0) / shown.length : 0;
   const unanswered = shown.filter((r) => !r.reply).length;
+  const stats = user.role === "teacher" && admin ? (await getTeacherStats(admin, [user.id])).get(user.id)! : null;
+  const badges = stats ? earnedBadges(stats) : [];
+  const hint = stats ? nextBadgeHint(stats) : null;
 
   return (
     <main className="mx-auto grid max-w-[1240px] gap-6 px-4 py-6 sm:px-6 md:px-8 md:py-8">
@@ -27,6 +33,14 @@ export default async function StudentReviewsPage() {
           What your students say about you. Only students who studied with you can write one: {MIN_DAYS_IN_BATCH} days in your batch, or a class they attended. Answer them, it shows you care.
         </p>
       </header>
+
+      {user.role === "teacher" && (
+        <Card className="max-w-[760px] gap-3 p-5">
+          <p className="font-semibold">Your badges</p>
+          {badges.length > 0 ? <TeacherBadges badges={badges} explain /> : <p className="text-[14px] text-muted-foreground">No badges yet. They come from real reviews and classes, nobody can buy them.</p>}
+          {hint && <p className="text-[13px] text-muted-foreground">{hint}</p>}
+        </Card>
+      )}
 
       {user.role !== "teacher" ? (
         <p className="rounded-2xl border border-dashed border-border px-4 py-8 text-center text-[14px] text-muted-foreground">Reviews belong to teachers. Admins moderate them under Reviews in the admin panel.</p>

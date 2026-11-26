@@ -8,7 +8,10 @@ import { ClassRow } from "@/components/classes/class-row";
 import { RatingBadge } from "@/components/classes/teacher-card";
 import { JoinRequestCard } from "@/components/directory/join-request-card";
 import { ProfileLinks } from "@/components/profile/profile-links";
+import { TeacherBadges } from "@/components/reputation/teacher-badges";
 import { TeacherReviews } from "@/components/reviews/reviews-section";
+import { earnedBadges } from "@/lib/reputation/badges";
+import { getTeacherStats } from "@/lib/reputation/data";
 import { LanguageFlag } from "@/components/language-flag";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -16,6 +19,7 @@ import { requireUser } from "@/lib/auth/dal";
 import { levelLabel, skillLabel } from "@/lib/classes/constants";
 import { canViewAcademy } from "@/lib/academies/profile";
 import { getClassScope, inScope } from "@/lib/classes/scope";
+import { lessonPriceLabel } from "@/lib/classes/trial";
 import { getMyJoinRequest, isStandalone } from "@/lib/directory/queue";
 import { getCoursesNow, getTeacherDetails, listMyTimetable, listOneToOneSlots, listTeacherUpcoming } from "@/lib/classes/data";
 import { getLanguage } from "@/lib/languages";
@@ -42,6 +46,7 @@ export default async function TeacherProfilePage(props: PageProps<"/dashboard/te
   const mineWithTeacher = mine.filter((c) => c.teacher.id === id);
   // A learner without a teacher can ask to join a teacher who is listed in Find a teacher.
   const canRequest = user.role === "student" && !!teacher.academy?.listed && teacher.isPublic && (await isStandalone(admin, user.id));
+  const badges = earnedBadges((await getTeacherStats(admin, [id])).get(id)!);
   const myRequest = canRequest ? await getMyJoinRequest(admin, user.id, id) : null;
   const academyLink = teacher.academy && (await canViewAcademy(admin, user, teacher.academy.id)) ? teacher.academy : null;
   const tz = user.timeZone;
@@ -70,6 +75,7 @@ export default async function TeacherProfilePage(props: PageProps<"/dashboard/te
               </p>
             )}
             {teacher.rating && <RatingBadge rating={teacher.rating} />}
+            <TeacherBadges badges={badges} explain />
             {teacher.specialties.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {teacher.specialties.map((s) => (
@@ -145,7 +151,7 @@ export default async function TeacherProfilePage(props: PageProps<"/dashboard/te
                   <li key={sl.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                     <span className="grid gap-0.5">
                       <span className="font-semibold">{formatShortDate(sl.startsAt, tz)} · {formatClock(sl.startsAt, tz)} · {sl.durationMin} min</span>
-                      <span className="text-[13px] text-muted-foreground">{sl.priceEurCents != null ? `€${sl.priceEurCents / 100}` : "Price agreed with the teacher"}</span>
+                      <span className="flex items-center gap-2 text-[13px] text-muted-foreground">{sl.isTrial && <Badge variant="gold">Trial</Badge>}{lessonPriceLabel(sl.isTrial, sl.priceEurCents)}</span>
                     </span>
                     <Link href={`/dashboard/classes/${sl.id}`} className="inline-flex h-11 items-center rounded-full bg-brand-gradient px-5 text-[14px] font-semibold text-white sm:h-9">Book</Link>
                   </li>

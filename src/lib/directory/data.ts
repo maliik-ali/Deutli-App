@@ -2,6 +2,8 @@ import "server-only";
 
 import { getAvatarUrls } from "@/lib/account/avatar";
 import { cleanLanguages } from "@/lib/languages";
+import { earnedBadges, type Badge } from "@/lib/reputation/badges";
+import { getTeacherStats } from "@/lib/reputation/data";
 import { MIN_REVIEWS_FOR_AVERAGE } from "@/lib/reviews/constants";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -22,9 +24,12 @@ export type DirectoryTeacher = {
   qualification: string | null;
   upcomingClasses: number;
   openSlots: number;
+  /** An open trial lesson a new student can book now. */
+  trialAvailable: boolean;
+  badges: Badge[];
 };
 
-export type DirectoryFilters = { lang?: string; skill?: string; slots?: boolean };
+export type DirectoryFilters = { lang?: string; skill?: string; slots?: boolean; trial?: boolean };
 
 /**
  * Teachers of academies that chose to be listed, whose own profile is public. Nobody else appears.
@@ -45,7 +50,7 @@ export async function listDirectory(admin: Admin, filters: DirectoryFilters = {}
     admin.from("profiles").select("id, full_name, avatar_path, role").in("id", ids),
     admin.from("teacher_profiles").select("user_id, headline, specialties, speaks, is_public, qualifications").in("user_id", ids),
     admin.from("teacher_reviews").select("teacher_id, rating").eq("status", "published").in("teacher_id", ids).limit(5000),
-    admin.from("live_classes").select("id, teacher_id, kind").in("teacher_id", ids).eq("status", "scheduled").gte("starts_at", nowIso).limit(2000),
+    admin.from("live_classes").select("id, teacher_id, kind, is_trial").in("teacher_id", ids).eq("status", "scheduled").gte("starts_at", nowIso).limit(2000),
   ]);
 
   const detail = new Map(((details.data ?? []) as { user_id: string; headline: string | null; specialties: string[] | null; speaks: string[] | null; is_public: boolean; qualifications: string[] | null }[]).map((d) => [d.user_id, d]));
@@ -54,14 +59,14 @@ export async function listDirectory(admin: Admin, filters: DirectoryFilters = {}
   const stars = new Map<string, number[]>();
   for (const r of (reviews.data ?? []) as { teacher_id: string; rating: number }[]) stars.set(r.teacher_id, [...(stars.get(r.teacher_id) ?? []), r.rating]);
 
-  const classRows = (classes.data ?? []) as { id: string; teacher_id: string; kind: string | null }[];
+  const classRows = (classes.data ?? []) as { id: string; teacher_id: string; kind: string | null; is_trial: boolean | null }[];
   const oneToOne = classRows.filter((c) => c.kind === "1to1");
   const booked = new Set<string>();
   if (oneToOne.length) {
     const { data: regs } = await admin.from("class_registrations").select("class_id").in("class_id", oneToOne.map((c) => c.id)).eq("status", "registered");
     for (const r of (regs ?? []) as { class_id: string }[]) booked.add(r.class_id);
   }
-  const urls = await getAvatarUrls(people.map((p) => p.avatar_path));
+  const [urls, stats] = await Promise.all([getAvatarUrls(people.map((p) => p.avatar_path)), getTeacherStats(admin, people.map((p) => p.id))]);
 
   const out: DirectoryTeacher[] = [];
   for (const p of people) {
@@ -84,6 +89,8 @@ export async function listDirectory(admin: Admin, filters: DirectoryFilters = {}
       qualification: d?.qualifications?.[0] ?? null,
       upcomingClasses: classRows.filter((c) => c.teacher_id === p.id && c.kind !== "1to1").length,
       openSlots: oneToOne.filter((c) => c.teacher_id === p.id && !booked.has(c.id)).length,
+      badges: earnedBadges(stats.get(p.id)!),
+      trialAvailable: oneToOne.some((c) => c.teacher_id === p.id && c.is_trial && !booked.has(c.id)),
     });
   }
 
@@ -91,5 +98,6 @@ export async function listDirectory(admin: Admin, filters: DirectoryFilters = {}
     .filter((t) => !filters.lang || t.languages.includes(filters.lang))
     .filter((t) => !filters.skill || t.specialties.includes(filters.skill))
     .filter((t) => !filters.slots || t.openSlots > 0)
+    .filter((t) => !filters.trial || t.trialAvailable)
     .sort((a, b) => (b.rating?.average ?? 0) - (a.rating?.average ?? 0) || b.reviewCount - a.reviewCount || a.name.localeCompare(b.name));
 }

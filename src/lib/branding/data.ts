@@ -11,6 +11,8 @@ export type Brand = {
   /** CSS variables to put on the page wrapper (colours and font). Empty = Deutli default. */
   vars: Record<string, string>;
   showPoweredBy: boolean;
+  /** Set when the plan has no logo yet: the owner may try their logo in their own sidebar (kept on their device). */
+  trialDraftKey: string | null;
 };
 
 type Row = {
@@ -51,6 +53,7 @@ function toBrand(r: Row): Brand {
     vars,
     // "Powered by Deutli" can only be hidden on a plan with the remove_branding feature. Checked here, on the server.
     showPoweredBy: r.show_powered_by || !f.includes("remove_branding"),
+    trialDraftKey: f.includes("logo") ? null : `deutli-branding-draft:${r.name}`,
   };
 }
 
@@ -65,8 +68,14 @@ export async function getBrandById(academyId: string | null | undefined): Promis
 export async function getBrandForUser(userId: string): Promise<Brand | null> {
   const admin = createAdminClient();
   if (!admin) return null;
-  const { data: p } = await admin.from("profiles").select("academy_id").eq("id", userId).maybeSingle();
-  return getBrandById(p?.academy_id);
+  const { data: p } = await admin.from("profiles").select("academy_id, teacher_id").eq("id", userId).maybeSingle();
+  if (p?.academy_id) return getBrandById(p.academy_id);
+  // Not attached directly: a teacher belongs to a workspace through membership, a student through their teacher.
+  const who = (p?.teacher_id as string | null) ?? userId;
+  const { data: rows } = await admin.from("academy_members").select("academy_id, role").eq("user_id", who);
+  const mine = (rows ?? []) as { academy_id: string; role: string }[];
+  const pick = mine.find((m) => m.role === "owner") ?? mine[0];
+  return getBrandById(pick?.academy_id);
 }
 
 /** For login/signup before anyone is logged in: a join code or a workspace slug decides the brand. */

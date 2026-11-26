@@ -55,6 +55,8 @@ export default async function AdminTeachersPage(props: PageProps<"/admin/teacher
     );
   }
 
+  const { data: vRows } = admin ? await admin.from("teacher_verifications").select("teacher_id") : { data: [] };
+  const verifiedIds = new Set(((vRows ?? []) as { teacher_id: string }[]).map((v) => v.teacher_id));
   const options = teachers.map((t) => ({ id: t.id, name: t.full_name ?? "Teacher" }));
   const rows: Person[] = people.map((p) => ({
     id: p.id,
@@ -64,6 +66,7 @@ export default async function AdminTeachersPage(props: PageProps<"/admin/teacher
     teacherId: p.teacher_id,
     code: p.teacher_code,
     students: counts.get(p.id) ?? 0,
+    verified: verifiedIds.has(p.id),
   }));
   const pages = Math.max(1, Math.ceil(total / PAGE));
   const href = (n: number) => `/admin/teachers?${new URLSearchParams({ ...(q ? { q } : {}), page: String(n) })}`;

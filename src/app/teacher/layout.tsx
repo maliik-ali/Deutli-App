@@ -30,7 +30,7 @@ export default async function TeacherLayout({ children }: LayoutProps<"/teacher"
   const props = { setup, todo, isAdmin, showSchool, name: user.fullName ?? "Teacher", email: user.email, avatarUrl };
 
   return (
-    <BrandShell brand={brand ? { name: brand.name, logoUrl: brand.logoUrl, showPoweredBy: brand.showPoweredBy } : null} vars={brand?.vars ?? {}}>
+    <BrandShell brand={brand ? { name: brand.name, logoUrl: brand.logoUrl, showPoweredBy: brand.showPoweredBy, trialDraftKey: brand.trialDraftKey } : null} vars={brand?.vars ?? {}}>
     <div className="min-h-dvh md:grid md:grid-cols-[264px_minmax(0,1fr)]">
       {!user.timeZoneSaved && <TimeZoneSync />}
       <aside className="hidden border-r border-border bg-card md:block">
