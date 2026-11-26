@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, ClipboardCheck, FileText, GraduationCap, Layers, FolderOpen, LayoutDashboard, Menu, PenLine, ShieldCheck, Users, Video } from "lucide-react";
+import { Building2, ClipboardCheck, FileText, GraduationCap, Layers, FolderOpen, LayoutDashboard, Menu, PenLine, ShieldCheck, Star, Users, Video } from "lucide-react";
 
 import { TEACHER_MENU, UserMenu } from "@/components/dashboard/user-menu";
 import { Logo } from "@/components/logo";
@@ -24,6 +24,7 @@ const ITEMS = [
   { href: "/teacher/papers", label: "My papers", icon: FileText },
   { href: "/teacher/lessons", label: "1:1 lessons", icon: GraduationCap },
   { href: "/teacher/reviews", label: "Writing reviews", icon: PenLine, badge: true },
+  { href: "/teacher/student-reviews", label: "Student reviews", icon: Star },
 ] as const;
 
 function Links({ todo, isAdmin, showSchool, onNavigate }: { todo: number; isAdmin: boolean; showSchool?: boolean; onNavigate?: () => void }) {

@@ -7,6 +7,7 @@ import { Avatar } from "@/components/avatar";
 import { ClassRow } from "@/components/classes/class-row";
 import { RatingBadge } from "@/components/classes/teacher-card";
 import { ProfileLinks } from "@/components/profile/profile-links";
+import { TeacherReviews } from "@/components/reviews/reviews-section";
 import { LanguageFlag } from "@/components/language-flag";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -145,6 +146,8 @@ export default async function TeacherProfilePage(props: PageProps<"/dashboard/te
             </Card>
           </section>
         )}
+
+        <TeacherReviews admin={admin} teacherId={id} firstName={teacher.name.split(" ")[0]} viewer={user} />
 
         {mineWithTeacher.length > 0 && (
           <section className="grid gap-3" aria-labelledby="mine">

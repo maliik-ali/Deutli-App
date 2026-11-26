@@ -1,4 +1,4 @@
-import { BookA, FileText, Headphones, Building2, LayoutDashboard, LifeBuoy, Sparkles, UserCheck, Video, Wallet, type LucideIcon } from "lucide-react";
+import { BookA, FileText, Headphones, Building2, LayoutDashboard, LifeBuoy, Sparkles, Star, UserCheck, Video, Wallet, type LucideIcon } from "lucide-react";
 
 /** The admin menu. Same look as the student and teacher menus. */
 export const ADMIN_ITEMS: { href: string; label: string; icon: LucideIcon; badge?: "feedback" }[] = [
@@ -11,5 +11,6 @@ export const ADMIN_ITEMS: { href: string; label: string; icon: LucideIcon; badge
   { href: "/admin/teachers", label: "Teachers and students", icon: UserCheck },
   { href: "/admin/payments", label: "Payments", icon: Wallet },
   { href: "/admin/pro-requests", label: "Pro requests", icon: Sparkles },
+  { href: "/admin/reviews", label: "Reviews", icon: Star },
   { href: "/admin/feedback", label: "Feedback", icon: LifeBuoy, badge: "feedback" },
 ];

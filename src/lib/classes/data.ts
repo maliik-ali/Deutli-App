@@ -3,6 +3,8 @@ import "server-only";
 import { getAvatarUrls } from "@/lib/account/avatar";
 import { MIN_RATINGS_TO_SHOW } from "@/lib/classes/constants";
 import { getTeacherAcademy } from "@/lib/academies/profile";
+import { MIN_REVIEWS_FOR_AVERAGE } from "@/lib/reviews/constants";
+import { getReviewSummary } from "@/lib/reviews/data";
 import { toProfileLinks, type ProfileLink, type SocialLinks } from "@/lib/profile/links";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -183,6 +185,9 @@ export async function getTeacherDetails(admin: Admin, teacherId: string): Promis
       rating = { average: values.reduce((a, b) => a + b, 0) / values.length, count: values.length };
     }
   }
+  // Verified reviews are the rating students trust; the older class ratings only fill in until there are enough reviews.
+  const reviewSummary = await getReviewSummary(admin, { teacherId });
+  if (reviewSummary.count >= MIN_REVIEWS_FOR_AVERAGE) rating = { average: reviewSummary.average, count: reviewSummary.count };
   const urls = await getAvatarUrls([profile.avatar_path as string | null]);
   return {
     id: teacherId,

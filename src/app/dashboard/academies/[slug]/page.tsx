@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 
 import { AcademyProfileView } from "@/components/academies/academy-profile-view";
+import { AcademyReviews } from "@/components/reviews/reviews-section";
 import { canViewAcademy, getAcademyProfileBySlug } from "@/lib/academies/profile";
 import { requireUser } from "@/lib/auth/dal";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -28,6 +29,7 @@ export default async function AcademyPage(props: PageProps<"/dashboard/academies
           <ChevronLeft className="size-4" aria-hidden /> Classes
         </Link>
         <AcademyProfileView academy={academy} teacherHref={(id) => `/dashboard/teachers/${id}`} />
+        <AcademyReviews admin={admin} academyId={academy.id} />
       </div>
     </main>
   );
