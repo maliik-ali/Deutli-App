@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 
 import { requireUser } from "@/lib/auth/dal";
@@ -95,6 +95,7 @@ export async function importDictionarySheet(text: unknown, options?: unknown): P
 
   revalidatePath("/admin/dictionary");
   revalidatePath("/dashboard/vocabulary");
+  revalidateTag("level-words", { expire: 0 }); // the cached level lists must show the new words at once
   const updated = keys.filter((k) => existing.has(k)).length;
   return { added: keys.length - updated, updated, levelWords: levelResult.count, problems: sheet.problems };
 }

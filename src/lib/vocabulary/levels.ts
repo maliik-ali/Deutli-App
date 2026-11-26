@@ -1,8 +1,12 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { dictionaryKeys } from "@/lib/dictionary/keys";
 import { LEVELS, type Level } from "@/lib/dictionary/csv";
 import { getLanguage, type LanguageCode } from "@/lib/languages";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getVocabulary, type VocabWord } from "./data";
 import { LEARNED_BOX } from "./srs";
@@ -79,8 +83,7 @@ type WordRow = {
 };
 
 /** All words of a level, 1000 at a time (the database returns at most 1000 rows per request). */
-async function readLevelWords(level: Level): Promise<WordRow[] | null> {
-  const supabase = await createClient();
+async function readLevelWords(level: Level, supabase: SupabaseClient): Promise<WordRow[] | null> {
   const rows: WordRow[] = [];
   for (let from = 0; from < 10000; from += 1000) {
     const { data, error } = await supabase
@@ -97,10 +100,9 @@ async function readLevelWords(level: Level): Promise<WordRow[] | null> {
 }
 
 /** Meanings the list doesn't have in the student's languages, from the shared dictionary (free, no AI). */
-async function fillMeanings(rows: WordRow[], languages: string[]) {
+async function fillMeanings(rows: WordRow[], languages: string[], supabase: SupabaseClient) {
   const missing = rows.filter((r) => languages.some((c) => !r.translations?.[c]));
   if (missing.length === 0) return;
-  const supabase = await createClient();
   const keys = [...new Set(missing.map((r) => r.german.toLowerCase()))];
   const found = new Map<string, Record<string, string>>();
   for (let i = 0; i < keys.length; i += 200) {
@@ -116,11 +118,42 @@ async function fillMeanings(rows: WordRow[], languages: string[]) {
   }
 }
 
+/**
+ * The words of a level with their meanings. The same for every student, so it is kept for 10 minutes
+ * (and dropped when an admin uploads words). Read with the secret key: these lists are readable by every
+ * logged-in student anyway. Without the key, or if the cached read fails, it reads fresh as the student.
+ */
+const cachedLevelWords = unstable_cache(
+  async (level: Level, languages: string[]) => {
+    const admin = createAdminClient();
+    if (!admin) throw new Error("no secret key");
+    const rows = await readLevelWords(level, admin);
+    if (!rows) throw new Error("level words could not be read");
+    await fillMeanings(rows, languages, admin);
+    return rows;
+  },
+  ["level-words"],
+  { revalidate: 600, tags: ["level-words"] },
+);
+
+async function loadLevelWords(level: Level, languages: string[]): Promise<WordRow[] | null> {
+  if (createAdminClient()) {
+    try {
+      return await cachedLevelWords(level, [...languages].sort());
+    } catch {
+      /* fall back to a fresh read below */
+    }
+  }
+  const supabase = await createClient();
+  const rows = await readLevelWords(level, supabase);
+  if (rows) await fillMeanings(rows, languages, supabase);
+  return rows;
+}
+
 /** One level's word list with the student's progress on each word, in topic order. */
 export async function getLevelList(userId: string, level: Level, languages: string[] = []): Promise<LevelList> {
-  const [data, vocab] = await Promise.all([readLevelWords(level), getVocabulary(userId)]);
+  const [data, vocab] = await Promise.all([loadLevelWords(level, languages), getVocabulary(userId)]);
   const error = data === null;
-  if (data) await fillMeanings(data, languages);
   const empty = { level, words: [], topics: [], languages: [], exampleLanguages: [], today: vocab.today };
   if (error || vocab.failed) return { ...empty, failed: true };
 
