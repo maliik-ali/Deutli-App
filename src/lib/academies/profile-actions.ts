@@ -48,7 +48,7 @@ export async function saveAcademyProfile(input: unknown): Promise<{ error: strin
     })
     .eq("id", ws.workspace.id);
   if (error) return { error: "We couldn't save this. Check your internet and try again." };
-  revalidatePath("/teacher/academy");
+  revalidatePath("/teacher/profile");
   revalidatePath("/dashboard", "layout");
   return { ok: true };
 }

@@ -39,7 +39,8 @@ function Links({ todo, isAdmin, showSchool, onNavigate }: { todo: number; isAdmi
         {[...ITEMS, ...(showSchool ? [{ href: "/teacher/school", label: "My school", icon: Building2 } as const] : [])].map(({ href, label, icon: Icon, ...rest }) => {
           const active = href === "/teacher" ? pathname === href : pathname.startsWith(href) || (href === "/teacher/reviews" && pathname.startsWith("/teacher/review/"));
           return (
-            <li key={href}>
+            // School administration is a different job from teaching, so it sits apart under a line.
+            <li key={href} className={href === "/teacher/school" ? "mt-2 border-t border-border pt-3" : undefined}>
               <Link href={href} onClick={onNavigate} aria-current={active ? "page" : undefined} className={cls(active)}>
                 <Icon className={cn("size-[18px]", active && "text-gold-ink")} aria-hidden />
                 <span className="flex-1">{label}</span>
