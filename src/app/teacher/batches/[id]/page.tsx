@@ -10,7 +10,7 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
 import { formatDayMedium } from "@/lib/time";
 import { getBatchAttendance } from "@/lib/school/data";
-import { getManagedBatch, listAddableStudents, listAnnouncements, listBatchClasses, listBatchMembers } from "@/lib/batches/data";
+import { getBatchJoinCode, getManagedBatch, listAddableStudents, listAnnouncements, listBatchClasses, listBatchMembers } from "@/lib/batches/data";
 
 export const metadata: Metadata = { title: "Batch" };
 
@@ -20,7 +20,7 @@ export default async function TeacherBatchPage(props: PageProps<"/teacher/batche
   const { add } = await props.searchParams;
   const batch = await getManagedBatch(id, user.id);
   if (!batch) notFound();
-  const [members, announcements, addable, classes, attendance] = await Promise.all([listBatchMembers(batch.id), listAnnouncements(batch.id), listAddableStudents(batch.teacher_id, batch.id), listBatchClasses(batch.id), getBatchAttendance(batch.id)]);
+  const [members, announcements, addable, classes, attendance, joinCode] = await Promise.all([listBatchMembers(batch.id), listAnnouncements(batch.id), listAddableStudents(batch.teacher_id, batch.id), listBatchClasses(batch.id), getBatchAttendance(batch.id), getBatchJoinCode(batch.id)]);
   const when = (d: string) => new Date(d).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: user.timeZone });
 
   return (
@@ -66,7 +66,7 @@ export default async function TeacherBatchPage(props: PageProps<"/teacher/batche
         </div>
 
         <div className="grid gap-6">
-          <StudentsCard key={add ? "add" : "view"} batchId={batch.id} members={members} addable={addable} openAtStart={!!add} />
+          <StudentsCard key={add ? "add" : "view"} batchId={batch.id} members={members} addable={addable} openAtStart={!!add} joinCode={joinCode} />
           {attendance.held > 0 && (
             <Card>
               <div className="grid gap-1"><CardTitle>Attendance</CardTitle><CardDescription>{attendance.held} class{attendance.held === 1 ? "" : "es"} held. Tick Present on each class to keep this right.</CardDescription></div>

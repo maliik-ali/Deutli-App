@@ -57,6 +57,14 @@ export async function listBatchMembers(batchId: string) {
   return studentLabels(admin, (p ?? []) as { id: string; full_name: string | null }[]);
 }
 
+/** The batch's current join code (the latest one that is switched on), or null if none was made yet. */
+export async function getBatchJoinCode(batchId: string): Promise<string | null> {
+  const admin = createAdminClient();
+  if (!admin) return null;
+  const { data } = await admin.from("join_codes").select("code").eq("batch_id", batchId).eq("active", true).order("created_at", { ascending: false }).limit(1);
+  return (data?.[0]?.code as string | undefined) ?? null;
+}
+
 export async function listAnnouncements(batchId: string, limit = 30): Promise<Announcement[]> {
   const admin = createAdminClient();
   if (!admin) return [];

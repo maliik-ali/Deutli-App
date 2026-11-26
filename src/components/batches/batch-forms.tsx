@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Trash2, UserPlus, X } from "lucide-react";
 
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { CopyButton } from "@/components/dashboard/copy-button";
 import { InviteStudentsForm } from "@/components/students/invite-form";
 import { addStudentsToBatch, createBatch, deleteAnnouncement, deleteBatch, makeBatchJoinCode, postAnnouncement, removeStudentFromBatch, setBatchArchived } from "@/lib/batches/actions";
 
@@ -126,7 +127,7 @@ export function AddStudents({ batchId, students }: { batchId: string; students: 
 }
 
 /** Students of a batch, with one "Add students" button that opens the picker and the batch join code. */
-export function StudentsCard({ batchId, members, addable, openAtStart }: { batchId: string; members: { id: string; name: string }[]; addable: { id: string; name: string }[]; openAtStart: boolean }) {
+export function StudentsCard({ batchId, members, addable, openAtStart, joinCode }: { batchId: string; members: { id: string; name: string }[]; addable: { id: string; name: string }[]; openAtStart: boolean; joinCode: string | null }) {
   const [open, setOpen] = useState(openAtStart);
   return (
     <Card id="students" className="scroll-mt-6">
@@ -153,7 +154,7 @@ export function StudentsCard({ batchId, members, addable, openAtStart }: { batch
           <div className="grid gap-2">
             <p className="text-[14px] font-semibold">Share a code</p>
             <p className="text-[14px] text-muted-foreground">New students who sign up with this code land in this batch.</p>
-            <BatchCode batchId={batchId} />
+            <BatchCode batchId={batchId} initial={joinCode} />
           </div>
         </div>
       )}
@@ -186,16 +187,34 @@ export function ArchiveBatch({ batchId, archived }: { batchId: string; archived:
   );
 }
 
-export function BatchCode({ batchId }: { batchId: string }) {
+export function BatchCode({ batchId, initial }: { batchId: string; initial: string | null }) {
   const { error, busy, run } = useRun();
-  const [code, setCode] = useState<string | null>(null);
+  const [code, setCode] = useState<string | null>(initial);
+  // The full address a student can open, built from the address of this page.
+  const origin = useSyncExternalStore(() => () => {}, () => window.location.origin, () => "");
+  const link = code && origin ? `${origin}/signup?join=${code}` : null;
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-3">
+      {code ? (
+        <>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="font-mono text-xl font-extrabold tracking-[0.2em]">{code}</span>
+            <CopyButton text={code} />
+          </div>
+          {link && (
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="min-w-0 break-all text-[13px] text-muted-foreground">{link}</span>
+              <CopyButton text={link} />
+            </div>
+          )}
+          <p className="text-[13px] text-muted-foreground">Students who join with this code or link land in this batch.</p>
+        </>
+      ) : null}
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => run(() => makeBatchJoinCode(batchId), (r) => setCode(r.code as string))}>{code ? "New batch code" : "Make a code for this batch"}</Button>
-        {code && <span className="font-mono text-xl font-extrabold tracking-[0.2em]">{code}</span>}
+        <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => { if (code && !window.confirm("Make a new code? The old code and link stop working.")) return; run(() => makeBatchJoinCode(batchId), (r) => setCode(r.code as string)); }}>
+          {code ? "Make a new code" : "Make a code for this batch"}
+        </Button>
       </div>
-      {code && <p className="text-[13px] text-muted-foreground">Students who join with this code land in this batch. Link: /signup?join={code}</p>}
       <Err text={error} />
     </div>
   );
