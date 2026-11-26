@@ -257,6 +257,11 @@ More AI-specific UI ideas: **AI Elements** by Vercel (shadcn-based components fo
 ## Definition of Done (follow before every push, even if nobody asks; full list in the `deutli-skills` skill)
 1. Every changed line belongs to the request. 2. Student feature: say what teacher, school admin and Deutli admin get. 3. UI: screenshots at 1440px and 390px. 4. `npm run check` and `npm run build` green. 5. Security-touching change: security review plus RLS check. 6. Database change: migration file, test project first, then live. 7. Branch, pull request, preview, then merge. 8. Test the feature myself in the browser pane as each role it touches (console, network, saving, empty states); Malik gives design feedback only, he does not test. 9. Tell Malik plainly what changed, what I tested and what is unchecked.
 
+## Test environment (set up 26 Nov 2026, use it for every test that needs a login)
+- **Never sign in on the live site with a typed password**, even if Malik pastes one. Test on the **local copy** instead: Docker (Colima) + `npx supabase start` + `node scripts/seed-test.mjs` + the app on `localhost:3123`. Full steps and the four seeded accounts (admin, teacher, student with teacher, student without) are in `docs/TESTING.md`. The local `.env.local` is git-ignored.
+- Every new migration runs on the local copy first (`supabase start` applies all files in `supabase/migrations/`), then on live.
+- On the live site only read-only checks that need no login (public pages, status codes) or pages Malik is already signed in to.
+
 ## Quality routine (set up 23 Nov 2026, keep it running)
 - On every pull request: `.github/workflows/ci.yml` runs `npm run check` (typecheck, lint, tests, `scripts/guard.sh`) and `npm run build`.
 - Weekly: Supabase security advisor, `docs/live-db-check.sql`, `npm audit`; report to Malik in a few lines. If the weekly task is not scheduled, offer to schedule it.
