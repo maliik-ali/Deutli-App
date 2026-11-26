@@ -6,6 +6,7 @@ import { getTeacherAcademy } from "@/lib/academies/profile";
 import { MIN_REVIEWS_FOR_AVERAGE } from "@/lib/reviews/constants";
 import { getReviewSummary } from "@/lib/reviews/data";
 import { toProfileLinks, type ProfileLink, type SocialLinks } from "@/lib/profile/links";
+import { getClassScope, inScope } from "@/lib/classes/scope";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type Admin = NonNullable<ReturnType<typeof createAdminClient>>;
@@ -121,8 +122,9 @@ export async function listClassesBetween(fromIso: string, toIso: string, userId:
     .lt("starts_at", toIso)
     .neq("kind", "1to1") // 1:1 slots are booked on the teacher's page, not in the group class list
     .order("starts_at");
-  const cards = await toCards(admin, (data ?? []) as ClassRow[], userId);
-  return cards.filter((c) => c.status === "scheduled" || c.registered);
+  const [cards, scope] = await Promise.all([toCards(admin, (data ?? []) as ClassRow[], userId), getClassScope(userId)]);
+  // Only your own school's teachers (or listed ones, if you study on your own). A class you registered for always stays.
+  return cards.filter((c) => c.registered || (c.status === "scheduled" && inScope(scope, c.teacher.id)));
 }
 
 /** The classes a student signed up for: still to come (soonest first) and recent ones (newest first). */
@@ -244,7 +246,7 @@ export async function getClassDetail(id: string, userId: string) {
   const { data } = await admin.from("live_classes").select(CLASS_COLS).eq("id", id).maybeSingle();
   if (!data) return null;
   const row = data as ClassRow;
-  const [[card], teacher, { data: mine }] = await Promise.all([
+  const [[card], teacher, { data: mine }, scope] = await Promise.all([
     toCards(admin, [row], userId),
     getTeacherDetails(admin, row.teacher_id),
     admin
@@ -253,7 +255,10 @@ export async function getClassDetail(id: string, userId: string) {
       .eq("class_id", id)
       .eq("user_id", userId)
       .maybeSingle(),
+    getClassScope(userId),
   ]);
+  // The same answer as "no such class" for another school's class you did not register for.
+  if (!card.registered && !inScope(scope, row.teacher_id)) return null;
   return {
     unavailable: false as const,
     card,
@@ -403,13 +408,11 @@ export async function getDashboardClass(userId: string): Promise<{ next: ClassCa
   if (mine.upcoming[0]) return { next: mine.upcoming[0], anyUpcoming: true };
   const admin = createAdminClient();
   if (!admin) return null;
-  const { count } = await admin
-    .from("live_classes")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "scheduled")
-    .neq("kind", "1to1")
-    .gt("starts_at", new Date().toISOString());
-  return { next: null, anyUpcoming: (count ?? 0) > 0 };
+  const [{ data: rows }, scope] = await Promise.all([
+    admin.from("live_classes").select("teacher_id").eq("status", "scheduled").neq("kind", "1to1").gt("starts_at", new Date().toISOString()).limit(500),
+    getClassScope(userId),
+  ]);
+  return { next: null, anyUpcoming: ((rows ?? []) as { teacher_id: string }[]).some((r) => inScope(scope, r.teacher_id)) };
 }
 
 /** The recording link of a class, read on its own so a missing column never breaks the class pages. */

@@ -9,6 +9,7 @@ import { requireUser } from "@/lib/auth/dal";
 import { JOIN_GRACE_MIN, JOIN_OPENS_MIN, LEVEL_IDS, SKILL_IDS, SPECIALTIES } from "@/lib/classes/constants";
 import { LANGUAGE_CODES } from "@/lib/languages";
 import { checkLinks } from "@/lib/profile/links";
+import { getClassScope, inScope } from "@/lib/classes/scope";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { addDays, zonedToUtc } from "@/lib/time";
@@ -195,6 +196,10 @@ export async function registerForClass(classId: unknown): Promise<Result> {
   if (!id.success) return { error: SAVE_ERROR };
   const admin = createAdminClient();
   if (!admin) return { error: NO_ADMIN };
+  // Only classes of your own school (or listed teachers, if you study on your own). Checked here, not only in the lists.
+  const { data: cls } = await admin.from("live_classes").select("teacher_id").eq("id", id.data).maybeSingle();
+  if (!cls) return { error: REGISTER_MESSAGES.not_found };
+  if (!inScope(await getClassScope(user.id), cls.teacher_id as string)) return { error: REGISTER_MESSAGES.not_found };
   const { data, error } = await admin.rpc("register_for_class", { p_class: id.data, p_user: user.id });
   if (error) return { error: SAVE_ERROR };
   if (data !== "ok") return { error: REGISTER_MESSAGES[data as string] ?? SAVE_ERROR };

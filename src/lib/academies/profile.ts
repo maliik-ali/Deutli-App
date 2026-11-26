@@ -117,14 +117,17 @@ export async function getAcademyProfileBySlug(admin: Admin, slug: string): Promi
  */
 export async function canViewAcademy(admin: Admin, user: Pick<CurrentUser, "id" | "role" | "teacherId">, academyId: string): Promise<boolean> {
   if (user.role === "super_admin" || user.role === "academy_admin") return true;
-  // A listed academy is open to every student: that is the point of listing.
-  const { data: listed } = await admin.from("academies").select("is_listed").eq("id", academyId).maybeSingle();
-  if (listed?.is_listed) return true;
   const [mine, member] = await Promise.all([
     admin.from("profiles").select("academy_id").eq("id", user.id).maybeSingle(),
     admin.from("academy_members").select("user_id").eq("academy_id", academyId).in("user_id", [user.id, ...(user.teacherId ? [user.teacherId] : [])]).limit(1),
   ]);
-  return mine.data?.academy_id === academyId || (member.data ?? []).length > 0;
+  if (mine.data?.academy_id === academyId || (member.data ?? []).length > 0) return true;
+  // A listed academy is open to students who study on their own: that is the point of listing.
+  // Students of another school do not see it.
+  const standalone = !mine.data?.academy_id && !user.teacherId;
+  if (!standalone) return false;
+  const { data: listed } = await admin.from("academies").select("is_listed").eq("id", academyId).maybeSingle();
+  return !!listed?.is_listed;
 }
 
 /** The academy a teacher belongs to (their own first), for the "Teaches at …" line. Null if they have none or no short name. */

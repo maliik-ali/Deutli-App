@@ -15,6 +15,7 @@ import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
 import { levelLabel, skillLabel } from "@/lib/classes/constants";
 import { canViewAcademy } from "@/lib/academies/profile";
+import { getClassScope, inScope } from "@/lib/classes/scope";
 import { getMyJoinRequest, isStandalone } from "@/lib/directory/queue";
 import { getCoursesNow, getTeacherDetails, listMyTimetable, listOneToOneSlots, listTeacherUpcoming } from "@/lib/classes/data";
 import { getLanguage } from "@/lib/languages";
@@ -35,6 +36,8 @@ export default async function TeacherProfilePage(props: PageProps<"/dashboard/te
   const teacher = await getTeacherDetails(admin, id);
   // A teacher who hides their profile is still shown to their own students.
   if (!teacher || (!teacher.isPublic && user.role === "student" && user.teacherId !== id)) notFound();
+  // A student sees teachers of their own school (or listed ones, if they study on their own): same answer as "no such teacher".
+  if (user.role === "student" && user.teacherId !== id && !inScope(await getClassScope(user.id), id)) notFound();
   const [courses, upcoming, mine, slots] = await Promise.all([getCoursesNow(admin, id), listTeacherUpcoming(id, user.id), listMyTimetable(user.id), listOneToOneSlots(id, false)]);
   const mineWithTeacher = mine.filter((c) => c.teacher.id === id);
   // A learner without a teacher can ask to join a teacher who is listed in Find a teacher.

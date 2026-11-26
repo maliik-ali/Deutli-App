@@ -92,7 +92,29 @@ let [batch] = await rest(`batches?teacher_id=eq.${ids.teacher}&name=eq.Demo%20ba
 if (!batch) [batch] = await rest("batches", { method: "POST", prefer: "return=representation", body: { academy_id: academy.id, teacher_id: ids.teacher, name: "Demo batch", level: "B1", exam: "Goethe B1" } });
 await rest("batch_members", { method: "POST", prefer: "resolution=merge-duplicates", body: { batch_id: batch.id, student_id: ids.studentWith, academy_id: academy.id, created_at: new Date(Date.now() - 20 * 86_400_000).toISOString() } });
 
+// A second school that is NOT listed, with its own teacher, so class visibility can be tested.
+const OTHER = { key: "otherTeacher", email: "other-teacher@test.local", name: "Other Teacher", role: "teacher" };
+ids.otherTeacher = await ensureUser(OTHER);
+await rest(`profiles?id=eq.${ids.otherTeacher}`, { method: "PATCH", body: { role: "teacher", full_name: OTHER.name, onboarded_at: new Date().toISOString() } });
+let [other] = await rest(`academies?slug=eq.other-private-school&select=id`);
+if (!other) {
+  [other] = await rest("academies", { method: "POST", prefer: "return=representation", body: { name: "Other Private School", kind: "school", slug: "other-private-school", owner_id: ids.otherTeacher, plan_id: plan?.id ?? null, is_listed: false } });
+  await rest("academy_members", { method: "POST", body: { academy_id: other.id, user_id: ids.otherTeacher, role: "owner" } });
+}
+await rest(`profiles?id=eq.${ids.otherTeacher}`, { method: "PATCH", body: { academy_id: other.id } });
+
+// One class each, tomorrow, so the Classes page has something to filter.
+const tomorrow = new Date(Date.now() + 86_400_000);
+tomorrow.setUTCHours(10, 0, 0, 0);
+for (const c of [
+  { teacher: ids.teacher, academy: academy.id, title: "Test class: Perfekt practice" },
+  { teacher: ids.otherTeacher, academy: other.id, title: "Other school class: Konjunktiv" },
+]) {
+  const [have] = await rest(`live_classes?title=eq.${encodeURIComponent(c.title)}&select=id`);
+  if (!have) await rest("live_classes", { method: "POST", body: { academy_id: c.academy, teacher_id: c.teacher, course_title: "Demo course", title: c.title, skill: "grammar", level: "b1", starts_at: tomorrow.toISOString(), duration_min: 60 } });
+}
+
 console.log("Seeded the local test copy.");
 console.log(`Password for all accounts: ${PASSWORD}`);
-for (const a of ACCOUNTS) console.log(`  ${a.role.padEnd(12)} ${a.email}`);
+for (const a of [...ACCOUNTS, OTHER]) console.log(`  ${a.role.padEnd(12)} ${a.email}`);
 console.log("Teacher id:", ids.teacher, " Academy slug: test-german-academy");

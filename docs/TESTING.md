@@ -34,8 +34,12 @@ Stop: `npx supabase stop`.
 | Teacher | `teacher@test.local` (academy "Test German Academy", listed in Find a teacher) |
 | Student with a teacher | `student-with-teacher@test.local` (in "Demo batch" for 20 days, so a verified reviewer) |
 | Student without a teacher | `student-without-teacher@test.local` |
+| Teacher of a second, unlisted school | `other-teacher@test.local` ("Other Private School", one class tomorrow) |
 
 These exist only in the local database. The seed script refuses to run against anything that is not a local address.
+
+## Class visibility (tested this way)
+A school student sees only their school's classes; a student on their own sees listed academies' classes and never the unlisted school's. Direct links to hidden classes, teachers and academies give the 404 page; Find a teacher sends school students back to the dashboard.
 
 ## What was tested this way
 Reviews (write, report, teacher reply, admin hide and restore), Find a teacher (listing, filters), request to join and the

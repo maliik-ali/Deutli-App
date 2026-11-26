@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { DirectoryCard } from "@/components/directory/teacher-card";
 import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/dal";
 import { SKILL_IDS, skillLabel } from "@/lib/classes/constants";
 import { listDirectory } from "@/lib/directory/data";
+import { isStandalone } from "@/lib/directory/queue";
 import { getLanguage } from "@/lib/languages";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { cn } from "@/lib/utils";
@@ -23,12 +25,14 @@ const Chip = ({ href, on, children }: { href: string; on: boolean; children: Rea
 );
 
 export default async function FindTeacherPage(props: PageProps<"/dashboard/find-teacher">) {
-  await requireUser(["student", "academy_admin", "super_admin"]);
+  const user = await requireUser(["student", "academy_admin", "super_admin"]);
   const sp = await props.searchParams;
   const lang = typeof sp.lang === "string" && getLanguage(sp.lang) ? sp.lang : undefined;
   const skill = typeof sp.skill === "string" && (SKILL_IDS as readonly string[]).includes(sp.skill) ? sp.skill : undefined;
   const slots = sp.slots === "1";
   const admin = createAdminClient();
+  // Find a teacher is for students who study on their own. A school student has their school.
+  if (user.role === "student" && admin && !(await isStandalone(admin, user.id))) redirect("/dashboard");
   const [all, shown] = admin ? await Promise.all([listDirectory(admin), listDirectory(admin, { lang, skill, slots })]) : [[], []];
 
   const href = (next: { lang?: string; skill?: string; slots?: boolean }) => {
