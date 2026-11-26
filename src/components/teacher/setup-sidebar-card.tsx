@@ -10,15 +10,15 @@ import type { SetupStep } from "@/lib/setup-step";
 import { cn } from "@/lib/utils";
 
 /**
- * Small "Get started" reminder in the sidebar, so a new teacher always sees the next step on every screen.
- * The full checklist stays on the Overview page, so this hides there, once everything is done, or when hidden.
+ * Small "Get started" reminder in the sidebar, so a new teacher or student always sees the next step on every screen.
+ * The full checklist stays on the home page (`homePath`), so this hides there, once everything is done, or when hidden.
  */
-export function SetupSidebarCard({ steps, onNavigate }: { steps: SetupStep[]; onNavigate?: () => void }) {
+export function SetupSidebarCard({ steps, onNavigate, homePath = "/teacher" }: { steps: SetupStep[]; onNavigate?: () => void; homePath?: string }) {
   const pathname = usePathname();
   const hidden = useSyncExternalStore(subscribe, isHidden, () => false);
   const done = steps.filter((s) => s.done).length;
   const next = steps.find((s) => !s.done);
-  if (!next || hidden || pathname === "/teacher") return null;
+  if (!next || hidden || pathname === homePath) return null;
 
   return (
     <Link

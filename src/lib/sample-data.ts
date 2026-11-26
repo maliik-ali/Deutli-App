@@ -7,6 +7,7 @@ export const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: "home" },
   // Learn on your own, easiest first, then the exam, then everything that needs a teacher.
   { href: "/dashboard/vocabulary", label: "Vocabulary", icon: "languages" },
+  { href: "/dashboard/exam", label: "My Exam", icon: "timer" },
   { href: "/dashboard/daily-practice", label: "Improve Accent", icon: "speech" },
   {
     href: "/dashboard/skills",
@@ -19,7 +20,6 @@ export const NAV_ITEMS = [
       { href: "/dashboard/exam/speaking", label: "Speaking" },
     ],
   },
-  { href: "/dashboard/exam", label: "My Exam", icon: "timer" },
   { href: "/dashboard/classes", label: "Classes", icon: "video" },
   { href: "/dashboard/batches", label: "My batches", icon: "layers" },
   { href: "/dashboard/timetable", label: "Timetable", icon: "calendar" },

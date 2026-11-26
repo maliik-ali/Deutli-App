@@ -6,9 +6,11 @@ import { Menu } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { SetupSidebarCard } from "@/components/teacher/setup-sidebar-card";
+import type { SetupStep } from "@/lib/setup-step";
 import { NavLinks } from "./nav-links";
 
-export function MobileNav({ footer, examTitle, teacherTools }: { footer: React.ReactNode; examTitle?: string; teacherTools?: boolean }) {
+export function MobileNav({ footer, examTitle, teacherTools, setup }: { footer: React.ReactNode; examTitle?: string; teacherTools?: boolean; setup?: SetupStep[] }) {
   const [open, setOpen] = useState(false);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -31,6 +33,7 @@ export function MobileNav({ footer, examTitle, teacherTools }: { footer: React.R
         <div className="flex-1 overflow-y-auto">
           <NavLinks examTitle={examTitle} teacherTools={teacherTools} onNavigate={() => setOpen(false)} />
         </div>
+        {setup && <SetupSidebarCard steps={setup} homePath="/dashboard" onNavigate={() => setOpen(false)} />}
         {footer}
       </SheetContent>
     </Sheet>

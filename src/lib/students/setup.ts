@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import type { SetupStep } from "@/lib/setup-step";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -7,7 +9,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * The first things a new learner does, easiest first, and which are already done.
  * Each step ticks itself off from the student's own activity; nothing is stored. Server only.
  */
-export async function getStudentSetup(userId: string): Promise<SetupStep[]> {
+// `cache`: the sidebar and the dashboard page ask in the same request and share one answer.
+export const getStudentSetup = cache(async (userId: string): Promise<SetupStep[]> => {
   const admin = createAdminClient();
   if (!admin) return [];
   const mine = (table: string) => admin.from(table).select("*", { count: "exact", head: true }).eq("user_id", userId);
@@ -23,4 +26,4 @@ export async function getStudentSetup(userId: string): Promise<SetupStep[]> {
     { key: "mock", title: "Try a mock exam", hint: "The first one is free. You see your score for every skill.", href: "/dashboard/exam", done: (mocks.count ?? 0) > 0 },
     { key: "class", title: "Join a live class", hint: "Register, and the join link appears when the class opens.", href: "/dashboard/classes", done: (classes.count ?? 0) > 0 },
   ];
-}
+});

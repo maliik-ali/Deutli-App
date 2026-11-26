@@ -9,7 +9,9 @@ import { getAvatarUrl } from "@/lib/account/avatar";
 import { TimeZoneSync } from "@/components/account/time-zone-sync";
 import { getBrandForUser } from "@/lib/branding/data";
 import { hasTeacherTools } from "@/lib/students/teacher-tools";
+import { SetupSidebarCard } from "@/components/teacher/setup-sidebar-card";
 import { requireUser } from "@/lib/auth/dal";
+import { getStudentSetup } from "@/lib/students/setup";
 // import { myExamTitle } from "@/lib/exam/choice"; // MVP: switched off, B1 only
 
 export default async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
@@ -18,7 +20,11 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
   const user = await requireUser(["student", "academy_admin", "super_admin"]);
   // New students answer a few questions first (asked once; they can skip them).
   if (user.role === "student" && !user.onboardedAt) redirect("/onboarding");
-  const [brand, teacherTools] = await Promise.all([getBrandForUser(user.id), user.role === "student" ? hasTeacherTools(user.id, user.teacherId) : Promise.resolve(true)]);
+  const [brand, teacherTools, setup] = await Promise.all([
+    getBrandForUser(user.id),
+    user.role === "student" ? hasTeacherTools(user.id, user.teacherId) : Promise.resolve(true),
+    user.role === "student" ? getStudentSetup(user.id) : Promise.resolve(undefined),
+  ]);
   const name = user.fullName ?? "Student";
   const avatarUrl = await getAvatarUrl(user.avatarPath);
   // MVP: the menu always says "My Exam". Later: const examTitle = myExamTitle(user.exam); (follows the chosen exam level)
@@ -35,12 +41,13 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
           <div className="flex-1 overflow-y-auto">
             <NavLinks examTitle={examTitle} teacherTools={teacherTools} />
           </div>
+          {setup && <SetupSidebarCard steps={setup} homePath="/dashboard" />}
           {footer}
         </div>
       </aside>
 
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/95 px-2 backdrop-blur md:hidden">
-        <MobileNav footer={footer} examTitle={examTitle} teacherTools={teacherTools} />
+        <MobileNav footer={footer} examTitle={examTitle} teacherTools={teacherTools} setup={setup} />
         <Logo href="/dashboard" />
         <span className="size-11 shrink-0" aria-hidden />
       </header>
