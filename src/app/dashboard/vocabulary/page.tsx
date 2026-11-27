@@ -283,7 +283,7 @@ export default async function VocabularyPage(props: PageProps<"/dashboard/vocabu
 
   return (
     <main className="mx-auto grid max-w-[1240px] gap-6 px-4 py-6 sm:px-6 md:px-8 md:py-8">
-      <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <header className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div className="grid gap-2">
           <h1 className="text-[28px] leading-tight font-extrabold sm:text-[32px]">Vocabulary</h1>
           <p className="text-[15px] text-muted-foreground">
@@ -292,7 +292,7 @@ export default async function VocabularyPage(props: PageProps<"/dashboard/vocabu
           </p>
         </div>
         {c.all > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 xl:shrink-0 xl:flex-nowrap">
             {nounCount >= 4 && (
               <Button asChild variant="outline">
                 <Link href={gameHref(null, null)}>
