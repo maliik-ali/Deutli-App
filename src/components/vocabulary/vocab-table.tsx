@@ -34,6 +34,8 @@ export type TableRow = {
   starred: boolean;
   due: boolean;
   removable: boolean;
+  /** A marked word from a level list: it leaves this list when the star is taken off (its progress is kept). */
+  leavesWhenUnmarked?: boolean;
 };
 
 export type { Column, ColumnId } from "./columns";
@@ -243,7 +245,7 @@ export function VocabTable({ rows, columns }: { rows: TableRow[]; columns: Colum
       if ("error" in result) {
         setStarred((m) => new Map(m).set(r.key, !next));
         setError(result.error);
-      } else if (r.levelWordId && !r.wordId) router.refresh();
+      } else if ((r.levelWordId && !r.wordId) || (r.leavesWhenUnmarked && !next)) router.refresh();
     });
   }
 

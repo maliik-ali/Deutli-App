@@ -92,7 +92,8 @@ export default async function VocabPracticePage(props: PageProps<"/vocabulary/pr
   // The student's own saved words.
   const set = (SETS.find((s) => s === sp.set) ?? "due") as VocabSet;
   const { words: all, today } = await getVocabulary(user.id);
-  const words = all.filter((w) => w.source !== "level");
+  // The student's own saved words, plus the words marked with a star in a level list (same list as My words).
+  const words = all.filter((w) => w.source !== "level" || w.starred);
   const first = user.languages[0];
 
   // Words that are due first (oldest due date first), then the newest.

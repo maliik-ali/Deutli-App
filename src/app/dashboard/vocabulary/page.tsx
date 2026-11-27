@@ -172,7 +172,7 @@ export default async function VocabularyPage(props: PageProps<"/dashboard/vocabu
 
   const switcher = (
     <nav aria-label="Choose a word list" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-      {[{ key: null as Level | null, label: "My words", sub: "Saved while reading" }, ...LEVELS.map((l) => ({ key: l, label: `${levelLabel(l)} words`, sub: counts[l] ? `${counts[l]} words` : "Coming soon" }))].map(
+      {[{ key: null as Level | null, label: "My words", sub: "Saved and marked" }, ...LEVELS.map((l) => ({ key: l, label: `${levelLabel(l)} words`, sub: counts[l] ? `${counts[l]} words` : "Coming soon" }))].map(
         (item) => {
           const active = item.key === list;
           const empty = item.key !== null && counts[item.key] === 0;
@@ -220,7 +220,7 @@ export default async function VocabularyPage(props: PageProps<"/dashboard/vocabu
     );
   }
 
-  // MY WORDS: words saved while reading in Improve Accent.
+  // MY WORDS: words saved while reading in Improve Accent, plus the words marked with a star in the level lists.
   const MY_PAGE = 25;
   const TABS: { set: VocabSet; label: string }[] = [
     { set: "all", label: "All words" },
@@ -230,7 +230,7 @@ export default async function VocabularyPage(props: PageProps<"/dashboard/vocabu
   ];
   const set = (TABS.find((t) => t.set === sp.set)?.set ?? "all") as VocabSet;
   const vocab = await getVocabulary(user.id);
-  const words = vocab.words.filter((w) => w.source !== "level");
+  const words = vocab.words.filter((w) => w.source !== "level" || w.starred);
   const today = vocab.today;
   const c = {
     all: words.length,
@@ -262,11 +262,13 @@ export default async function VocabularyPage(props: PageProps<"/dashboard/vocabu
       sub: w.dueOn <= today ? (showSaved ? w.word : null) : `${showSaved ? `${w.word} · ` : ""}Saved ${date.format(new Date(w.savedAt))}`,
       translations: w.translations,
       examples: w.context ? { de: w.context } : ({} as Record<string, string>),
-      from: w.track ? { label: w.track.title, href: `/practice/${w.track.id}` } : null,
+      from: w.track ? { label: w.track.title, href: `/practice/${w.track.id}` } : w.source === "level" ? { label: "Word list" } : null,
       box: w.box,
       starred: w.starred,
       due: w.dueOn <= today,
-      removable: true,
+      // A word from a level list is only un-marked here, never deleted: that would erase the student's progress on it.
+      removable: w.source !== "level",
+      leavesWhenUnmarked: w.source === "level",
     };
   });
   const columns = buildColumns({ languages: user.languages, exampleLanguages: ["de"], fromLabel: "From" });
@@ -281,8 +283,8 @@ export default async function VocabularyPage(props: PageProps<"/dashboard/vocabu
         <div className="grid gap-2">
           <h1 className="text-[28px] leading-tight font-extrabold sm:text-[32px]">Vocabulary</h1>
           <p className="text-[15px] text-muted-foreground">
-            Words you saved in Improve Accent, plus the A1, A2, B1 and B2 word lists. Practise a little every day so they
-            stick.
+            Words you saved in Improve Accent or marked with a star, plus the A1, A2, B1 and B2 word lists. Practise a little
+            every day so they stick.
           </p>
         </div>
         {c.all > 0 && (
@@ -333,12 +335,12 @@ export default async function VocabularyPage(props: PageProps<"/dashboard/vocabu
           <div className="grid gap-2">
             <h2 className="text-lg font-bold">No saved words yet</h2>
             <p className="max-w-sm text-muted-foreground">
-              Open a text in Improve Accent and select a word you don&apos;t know. Tap “Save word” and it appears here
-              with its meaning. Or learn the A1 words above.
+              Mark a word with a star in a word list, or select a word you don&apos;t know in Improve Accent and tap “Save
+              word”. It appears here with its meaning.
             </p>
           </div>
           <Button asChild>
-            <Link href="/dashboard/daily-practice">Go to Improve Accent</Link>
+            <Link href="/dashboard/vocabulary?list=a1">Practise or learn words</Link>
           </Button>
         </Card>
       ) : (
