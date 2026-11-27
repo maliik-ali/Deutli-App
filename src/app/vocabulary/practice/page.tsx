@@ -16,12 +16,13 @@ import {
 export const metadata: Metadata = { title: "Practise words" };
 
 const SESSION_SIZE = 10;
-const SETS: VocabSet[] = ["all", "due", "marked", "learned"];
+const SETS: VocabSet[] = ["all", "due", "marked", "learned", "weak"];
 const LABELS: Record<string, string> = {
   all: "All words",
   due: "Due today",
   marked: "Marked words",
   learned: "Learned words",
+  weak: "Words that need work",
   learning: "Learning",
   learn: "New words",
 };
@@ -93,13 +94,14 @@ export default async function VocabPracticePage(props: PageProps<"/vocabulary/pr
   const set = (SETS.find((s) => s === sp.set) ?? "due") as VocabSet;
   const { words: all, today } = await getVocabulary(user.id);
   // The student's own saved words, plus the words marked with a star in a level list (same list as My words).
-  const words = all.filter((w) => w.source !== "level" || w.starred);
+  // "Needs work" covers every word the student has answered, from any list; the other sets are My words.
+  const words = set === "weak" ? all : all.filter((w) => w.source !== "level" || w.starred);
   const first = user.languages[0];
 
   // Words that are due first (oldest due date first), then the newest.
   const pool = words
     .filter((w) => inSet(w, set, today))
-    .sort((a, b) => (a.dueOn === b.dueOn ? 0 : a.dueOn < b.dueOn ? -1 : 1))
+    .sort((a, b) => (set === "weak" ? b.wrongCount - b.rightCount - (a.wrongCount - a.rightCount) : a.dueOn === b.dueOn ? 0 : a.dueOn < b.dueOn ? -1 : 1))
     .slice(0, SESSION_SIZE);
 
   const toPractice = (w: (typeof words)[number]): PracticeWord => ({

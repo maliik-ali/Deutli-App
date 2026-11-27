@@ -19,7 +19,7 @@ export type VocabWord = SavedWord & {
   source: "reading" | "level";
 };
 
-export type VocabSet = "all" | "marked" | "due" | "learned";
+export type VocabSet = "all" | "marked" | "due" | "learned" | "weak";
 
 const COLUMNS =
   "id, word, dictionaryForm:dictionary_form, translations, context, starred, box, dueOn:due_on, savedAt:created_at, rightCount:right_count, wrongCount:wrong_count, source, practice_tracks (id, title)";
@@ -51,5 +51,6 @@ export function inSet(word: VocabWord, set: VocabSet, today: string) {
   if (set === "marked") return word.starred;
   if (set === "due") return word.dueOn <= today;
   if (set === "learned") return word.box >= LEARNED_BOX;
+  if (set === "weak") return word.wrongCount > word.rightCount;
   return true;
 }

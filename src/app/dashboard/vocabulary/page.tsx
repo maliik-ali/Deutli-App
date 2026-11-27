@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { buildColumns, type ColumnId } from "@/components/vocabulary/columns";
 import { TopicPicker } from "@/components/vocabulary/topic-picker";
+import { ProgressStrip } from "@/components/vocabulary/progress-strip";
+import { getVocabProgress } from "@/lib/vocabulary/progress";
 import { VocabTableWithColumns, type TableRow } from "@/components/vocabulary/vocab-table";
 import { requireUser } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
@@ -232,11 +234,13 @@ export default async function VocabularyPage(props: PageProps<"/dashboard/vocabu
   const vocab = await getVocabulary(user.id);
   const words = vocab.words.filter((w) => w.source !== "level" || w.starred);
   const today = vocab.today;
+  const progress = await getVocabProgress(user.id, today, vocab.words);
   const c = {
     all: words.length,
     due: words.filter((w) => inSet(w, "due", today)).length,
     marked: words.filter((w) => w.starred).length,
     learned: words.filter((w) => w.box >= LEARNED_BOX).length,
+    weak: words.filter((w) => inSet(w, "weak", today)).length,
   };
   const needle = q.toLowerCase();
   const filtered = words
@@ -312,6 +316,8 @@ export default async function VocabularyPage(props: PageProps<"/dashboard/vocabu
       </header>
 
       {switcher}
+
+      {progress.hasData && <ProgressStrip progress={progress} languages={user.languages} />}
 
       <Stats
         items={[

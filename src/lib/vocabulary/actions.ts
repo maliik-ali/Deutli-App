@@ -38,6 +38,15 @@ export async function recordReview(
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
+/** Counts one answer for today in the student's daily activity (for "Your progress"). Never blocks the answer itself. */
+async function logAnswer(supabase: Supabase, right: boolean) {
+  try {
+    await supabase.rpc("log_vocab_answer", { p_right: right, p_day: await todayForUser() });
+  } catch {
+    /* the answer is saved either way */
+  }
+}
+
 async function saveAnswer(
   supabase: Supabase,
   wordId: string,
@@ -62,6 +71,7 @@ async function saveAnswer(
     })
     .eq("id", wordId);
   if (error) return { error: ERROR };
+  await logAnswer(supabase, right);
   revalidatePath("/dashboard/vocabulary");
   return next;
 }
@@ -155,6 +165,7 @@ export async function recordArticleAnswer(input: unknown, right: unknown): Promi
       .maybeSingle();
     rowId = (mine?.id as string | undefined) ?? null;
   }
+  await logAnswer(supabase, right);
   if (!rowId) return { ok: true };
 
   const { data: row } = await supabase
@@ -196,5 +207,6 @@ export async function recordVerbAnswer(verbId: unknown, right: unknown): Promise
     { onConflict: "user_id,verb_id" },
   );
   if (error) return { error: ERROR };
+  await logAnswer(supabase, right);
   return { ok: true };
 }
